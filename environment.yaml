@@ -1,6 +1,8 @@
-name: squarer
+name: torch
 channels:
   - defaults
   - conda-forge
+  - pytorch
 dependencies:
   - numpy
+  - pytorch
