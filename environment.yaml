@@ -1,0 +1,6 @@
+name: squarer
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - numpy
