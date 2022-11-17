@@ -4,7 +4,7 @@ Atomic data
 
 PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010).
 Rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018).
-Also new super heavies Cn,Nh,Fl,Lv,Og and Am-Rg calculated at 4c-PBE/Dyall-AE4Z 
+Also new super heavies Cn,Nh,Fl,Lv,Og and Am-Rg calculated at 4c-PBE/Dyall-AE4Z
 (Dirac 2022).
 """
 

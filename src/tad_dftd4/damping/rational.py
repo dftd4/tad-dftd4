@@ -1,3 +1,7 @@
+"""
+Rational (Becke-Johnson) damping. Default damping scheme.
+"""
+
 import torch
 
 from ..typing import Tensor
@@ -6,7 +10,6 @@ from ..typing import Tensor
 def rational_damping(
     order: int,
     distances: Tensor,
-    rvdw: Tensor,
     qq: Tensor,
     a1: float = 0.4,
     a2: float = 5.0,

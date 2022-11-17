@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from tad_dftd4.data import cov_rad_d3
-from tad_dftd4.ncoord import get_coordination_number, erf_count
+from tad_dftd4.ncoord import erf_count, get_coordination_number
 from tad_dftd4.utils import pack
 
 from .samples import samples
@@ -25,8 +25,6 @@ def test_single(dtype: torch.dtype, name: str) -> None:
     ref = sample["cn"].type(dtype)
 
     cn = get_coordination_number(numbers, positions, erf_count, rcov)
-    print(cn)
-    print(ref)
     assert pytest.approx(cn) == ref
 
 

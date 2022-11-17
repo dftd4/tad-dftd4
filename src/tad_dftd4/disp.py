@@ -1,15 +1,15 @@
 import torch
 
+from . import data
 from .damping import rational_damping
-from .utils import real_pairs
 from .typing import DampingFunction, Tensor
+from .utils import real_pairs
 
 
 def dispersion(
     numbers: Tensor,
     positions: Tensor,
     c6: Tensor,
-    rvdw: Tensor | None = None,
     r4r2: Tensor | None = None,
     damping_function: DampingFunction = rational_damping,
     cutoff: Tensor | None = None,
@@ -43,10 +43,7 @@ def dispersion(
         cutoff = torch.tensor(50.0, dtype=positions.dtype)
     if r4r2 is None:
         r4r2 = data.sqrt_z_r4_over_r2[numbers].type(positions.dtype)
-    if rvdw is None:
-        rvdw = data.vdw_rad_d3[numbers.unsqueeze(-1), numbers.unsqueeze(-2)].type(
-            positions.dtype
-        )
+
     if numbers.shape != positions.shape[:-1]:
         raise ValueError("Shape of positions is not consistent with atomic numbers")
     if numbers.shape != r4r2.shape:
@@ -54,12 +51,11 @@ def dispersion(
             "Shape of expectation values is not consistent with atomic numbers"
         )
 
-    eps = torch.tensor(torch.finfo(positions.dtype).eps, dtype=positions.dtype)
     mask = real_pairs(numbers, diagonal=False)
     distances = torch.where(
         mask,
         torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        eps,
+        positions.new_tensor(torch.finfo(positions.dtype).eps),
     )
 
     qq = 3 * r4r2.unsqueeze(-1) * r4r2.unsqueeze(-2)
@@ -67,13 +63,13 @@ def dispersion(
 
     t6 = torch.where(
         mask * (distances <= cutoff),
-        damping_function(6, distances, rvdw, qq, **kwargs),
-        torch.tensor(0.0, dtype=distances.dtype),
+        damping_function(6, distances, qq, **kwargs),
+        positions.new_tensor(0.0),
     )
     t8 = torch.where(
         mask * (distances <= cutoff),
-        damping_function(8, distances, rvdw, qq, **kwargs),
-        torch.tensor(0.0, dtype=distances.dtype),
+        damping_function(8, distances, qq, **kwargs),
+        positions.new_tensor(0.0),
     )
 
     e6 = -0.5 * torch.sum(c6 * t6, dim=-1)

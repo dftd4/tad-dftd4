@@ -4,11 +4,11 @@ Calculation of coordination number with various counting functions.
 
 import torch
 
-from .count import erf_count
 from .. import defaults
 from ..data import cov_rad_d3, pauling_en
-from ..utils import real_pairs
 from ..typing import CountingFunction, Tensor
+from ..utils import real_pairs
+from .count import erf_count
 
 
 def get_coordination_number(
