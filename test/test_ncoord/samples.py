@@ -21,6 +21,17 @@ class Record(Molecule, Refs):
 
 
 refs: dict[str, Refs] = {
+    "SiH4": {
+        "cn": torch.tensor(
+            [
+                3.64990496420721e0,
+                9.12476241051802e-1,
+                9.12476241051802e-1,
+                9.12476241051802e-1,
+                9.12476241051802e-1,
+            ]
+        )
+    },
     "MB16_43_01": {
         "cn": torch.tensor(
             [
