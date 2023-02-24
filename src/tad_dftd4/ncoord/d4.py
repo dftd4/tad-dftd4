@@ -1,46 +1,64 @@
 """
-Calculation of coordination number with various counting functions.
+Coordination number: D4
+=======================
+
+Calculation of D4 coordination number. Includes electronegativity-
+dependent term.
 """
 
 import torch
 
 from .. import defaults
 from ..data import cov_rad_d3, pauling_en
-from ..typing import CountingFunction, Tensor
-from ..utils import real_pairs
+from ..typing import CountingFunction, Tensor, Any
+from ..util import real_pairs
 from .count import erf_count
 
+__all__ = ["get_coordination_number_d4"]
 
-def get_coordination_number(
+
+def get_coordination_number_d4(
     numbers: Tensor,
     positions: Tensor,
     counting_function: CountingFunction = erf_count,
     rcov: Tensor | None = None,
     en: Tensor | None = None,
     cutoff: Tensor | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Tensor:
     """
     Compute fractional coordination number using an exponential counting function.
 
-    Args:
-        numbers (Tensor): Atomic numbers of molecular structure.
-        positions (Tensor): Atomic positions of molecular structure
-        counting_function (Callable): Calculate weight for pairs.
-        rcov (Tensor, optional): Covalent radii for each species. Defaults to `None`.
-        cutoff (Tensor, optional): Real-space cutoff. Defaults to `None`.
-        kwargs: Pass-through arguments for counting function.
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers of molecular structure.
+    positions : Tensor
+        Atomic positions of molecular structure.
+    counting_function : CountingFunction
+        Calculate weight for pairs. Defaults to `erf_count`.
+    rcov : Tensor | None, optional
+        Covalent radii for each species. Defaults to `None`.
+    en : Tensor | None, optional
+        Electronegativities for all atoms. Defaults to `None`.
+    cutoff : Tensor | None, optional
+        Real-space cutoff. Defaults to `None`.
+    kwargs : dict[str, Any]
+        Pass-through arguments for counting function.
 
-    Raises:
-        ValueError: If shape mismatch between `numbers`, `positions` and `rcov`
-        is detected.
+    Returns
+    -------
+    Tensor
+        Coordination numbers for all atoms.
 
-    Returns:
-        cn (Tensor): Coordination numbers for all atoms
+    Raises
+    ------
+    ValueError
+        If shape mismatch between `numbers`, `positions` and `rcov` is detected.
     """
 
     if cutoff is None:
-        cutoff = torch.tensor(defaults.D4_CN_CUTOFF, dtype=positions.dtype)
+        cutoff = positions.new_tensor(defaults.D4_CN_CUTOFF)
 
     if rcov is None:
         rcov = cov_rad_d3[numbers]

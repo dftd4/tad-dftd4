@@ -1,5 +1,5 @@
 """
-Atomic data required within `tad-dftd4`.
+Atomic data required within `tad_dftd4`.
 """
 
 from .en import *

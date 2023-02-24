@@ -1,5 +1,5 @@
 """
-Atomic data: Effective nucleare charges
+Atomic data: Effective nuclear charges
 =======================================
 
 Effective nuclear charges from the def2-ECPs used for calculating the reference
@@ -8,10 +8,10 @@ polarizibilities for DFT-D4.
 
 import torch
 
-__all__ = ["effective_nuclear_charge"]
+__all__ = ["zeff"]
 
 # fmt: off
-effective_nuclear_charge = torch.tensor([
+zeff = torch.tensor([
      0, # None
      1,                                                 2,   # H-He
      3, 4,                               5, 6, 7, 8, 9,10,   # Li-Ne

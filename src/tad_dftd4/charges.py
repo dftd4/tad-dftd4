@@ -35,7 +35,10 @@ import math
 import torch
 
 from .typing import Tensor, TensorLike
-from .utils import real_atoms, real_pairs
+from .util import real_atoms, real_pairs
+from .ncoord import get_coordination_number_eeq
+
+__all__ = ["ChargeModel", "solve", "get_charges"]
 
 
 class ChargeModel(TensorLike):
@@ -387,3 +390,35 @@ def solve(
     x = torch.linalg.solve(matrix, rhs)
     e = x * (0.5 * torch.einsum("...ij,...j->...i", matrix, x) - rhs)
     return e[..., :-1], x[..., :-1]
+
+
+def get_charges(
+    numbers: Tensor,
+    positions: Tensor,
+    chrg: Tensor,
+    cutoff: Tensor | None = None,
+) -> Tensor:
+    """
+    Calculate atomic EEQ charges.
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers of all atoms in the system.
+    positions : Tensor
+        Cartesian coordinates of all atoms in the system.
+    chrg : Tensor
+        Total charge of system.
+    cutoff : Tensor | None, optional
+        Real-space cutoff. Defaults to `None`.
+
+    Returns
+    -------
+    Tensor
+        Atomic charges.
+    """
+    eeq = ChargeModel.param2019().to(positions.device).type(positions.dtype)
+    cn = get_coordination_number_eeq(numbers, positions, cutoff=cutoff)
+    _, qat = solve(numbers, positions, chrg, eeq, cn)
+
+    return qat

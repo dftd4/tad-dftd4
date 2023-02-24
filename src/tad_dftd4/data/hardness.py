@@ -8,9 +8,9 @@ to extrapolate the C6 coefficients in DFT-D4.
 
 import torch
 
-__all__ = ["chemical_hardness"]
+__all__ = ["gam"]
 
-chemical_hardness = torch.tensor(
+gam = torch.tensor(
     [
         0.00000000,  # None
         0.47259288,
