@@ -10,8 +10,8 @@ import torch
 
 from .. import defaults
 from ..data import cov_rad_d3, pauling_en
-from ..typing import CountingFunction, Tensor, Any
-from ..util import real_pairs
+from .._typing import CountingFunction, Tensor, Any
+from ..utils import real_pairs
 from .count import erf_count
 
 __all__ = ["get_coordination_number_d4"]

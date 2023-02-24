@@ -4,10 +4,10 @@ Data for testing D4 coordination number (taken from D4 testsuite).
 
 import torch
 
-from tad_dftd4.typing import Molecule, Tensor, TypedDict
+from tad_dftd4._typing import Molecule, Tensor, TypedDict
 
 from ..molecules import merge_nested_dicts, mols
-from ..util import reshape_fortran
+from ..utils import reshape_fortran
 
 
 class Refs(TypedDict):

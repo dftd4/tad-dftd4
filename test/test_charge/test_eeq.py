@@ -19,9 +19,9 @@ from math import sqrt
 import pytest
 import torch
 
-from dxtb import charges
-from dxtb._types import Tensor
-from dxtb.utils import batch
+from tad_dftd4 import charges
+from tad_dftd4._typing import Tensor
+from tad_dftd4.utils import pack
 
 from ..utils import get_device_from_str
 from .samples import samples
@@ -107,26 +107,26 @@ def test_batch(dtype: torch.dtype):
         samples["PbH4-BiH3"],
         samples["C6H5I-CH3SH"],
     )
-    numbers = batch.pack(
+    numbers = pack(
         (
             sample1["numbers"],
             sample2["numbers"],
         )
     )
-    positions = batch.pack(
+    positions = pack(
         (
             sample1["positions"].type(dtype),
             sample2["positions"].type(dtype),
         )
     )
     total_charge = torch.tensor([0.0, 0.0], dtype=dtype)
-    eref = batch.pack(
+    eref = pack(
         (
             sample1["energy"].type(dtype),
             sample2["energy"].type(dtype),
         )
     )
-    qref = batch.pack(
+    qref = pack(
         (
             sample1["q"].type(dtype),
             sample2["q"].type(dtype),

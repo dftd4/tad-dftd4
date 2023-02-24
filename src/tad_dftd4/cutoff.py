@@ -1,4 +1,4 @@
-from .typing import Tensor
+from ._typing import Tensor
 from . import defaults
 import torch
 

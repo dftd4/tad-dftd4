@@ -34,8 +34,8 @@ import math
 
 import torch
 
-from .typing import Tensor, TensorLike
-from .util import real_atoms, real_pairs
+from ._typing import Tensor, TensorLike
+from .utils import real_atoms, real_pairs
 from .ncoord import get_coordination_number_eeq
 
 __all__ = ["ChargeModel", "solve", "get_charges"]
@@ -102,71 +102,6 @@ class ChargeModel(TensorLike):
             _kcn2019,
             _eta2019,
             _rad2019,
-        )
-
-    def to(self, device: torch.device) -> "ChargeModel":
-        """
-        Returns a copy of the `ChargeModel` instance on the specified device.
-
-        This method creates and returns a new copy of the `ChargeModel` instance
-        on the specified device "``device``".
-
-        Parameters
-        ----------
-        device : torch.device
-            Device to which all associated tensors should be moved.
-
-        Returns
-        -------
-        ChargeModel
-            A copy of the `ChargeModel` instance placed on the specified device.
-
-        Notes
-        -----
-        If the `ChargeModel` instance is already on the desired device `self`
-        will be returned.
-        """
-        if self.device == device:
-            return self
-
-        return self.__class__(
-            self.chi.to(device=device),
-            self.kcn.to(device=device),
-            self.eta.to(device=device),
-            self.rad.to(device=device),
-            device=device,
-        )
-
-    def type(self, dtype: torch.dtype) -> "ChargeModel":
-        """
-        Returns a copy of the `ChargeModel` instance with specified floating point type.
-        This method creates and returns a new copy of the `ChargeModel` instance
-        with the specified dtype.
-
-        Parameters
-        ----------
-        dtype : torch.dtype
-            Type of the
-
-        Returns
-        -------
-        ChargeModel
-            A copy of the `ChargeModel` instance with the specified dtype.
-
-        Notes
-        -----
-        If the `ChargeModel` instance has already the desired dtype `self` will
-        be returned.
-        """
-        if self.dtype == dtype:
-            return self
-
-        return self.__class__(
-            self.chi.type(dtype),
-            self.kcn.type(dtype),
-            self.eta.type(dtype),
-            self.rad.type(dtype),
-            dtype=dtype,
         )
 
 

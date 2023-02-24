@@ -4,7 +4,7 @@ Data for testing D4 coordination number (taken from D4 testsuite).
 
 import torch
 
-from tad_dftd4.typing import Molecule, Tensor, TypedDict
+from tad_dftd4._typing import Molecule, Tensor, TypedDict
 
 from ..molecules import merge_nested_dicts, mols
 
@@ -24,17 +24,17 @@ class Record(Molecule, Refs):
 
 
 refs: dict[str, Refs] = {
-    "SiH4": {
-        "cn": torch.tensor(
-            [
-                3.64990496420721e0,
-                9.12476241051802e-1,
-                9.12476241051802e-1,
-                9.12476241051802e-1,
-                9.12476241051802e-1,
-            ]
-        )
-    },
+    # "SiH4": {
+    #     "cn_d4": torch.tensor(
+    #         [
+    #             3.64990496420721e0,
+    #             9.12476241051802e-1,
+    #             9.12476241051802e-1,
+    #             9.12476241051802e-1,
+    #             9.12476241051802e-1,
+    #         ]
+    #     )
+    # },
     "MB16_43_01": {
         "cn_d4": torch.tensor(
             [

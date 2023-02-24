@@ -22,7 +22,7 @@ symbols and atomic numbers.
 
 import torch
 
-from .typing import Size, TensorOrTensors, Tensor
+from ._typing import Size, TensorOrTensors, Tensor
 
 
 def real_atoms(numbers: Tensor) -> Tensor:

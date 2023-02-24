@@ -7,7 +7,7 @@ import torch
 
 from tad_dftd4.data import cov_rad_d3
 from tad_dftd4.ncoord import get_coordination_number_eeq as get_cn
-from tad_dftd4.util import pack
+from tad_dftd4.utils import pack
 
 from .samples import samples
 

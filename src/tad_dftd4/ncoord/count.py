@@ -16,7 +16,7 @@ from math import pi, sqrt
 import torch
 
 from .. import defaults
-from ..typing import Tensor
+from .._typing import Tensor
 
 
 def exp_count(r: Tensor, r0: Tensor, kcn: float = defaults.D4_KCN) -> Tensor:

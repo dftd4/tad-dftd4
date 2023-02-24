@@ -4,8 +4,8 @@ Data for testing repulsion taken from https://github.com/grimme-lab/mstore.
 
 import torch
 
-from tad_dftd4.typing import Molecule
-from tad_dftd4.util import to_number
+from tad_dftd4._typing import Molecule
+from tad_dftd4.utils import to_number
 
 
 def merge_nested_dicts(a: dict, b: dict) -> dict:

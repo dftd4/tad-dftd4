@@ -3,14 +3,14 @@ import torch
 from . import data
 from .model import D4Model
 from .damping import rational_damping, dispersion_atm
-from .typing import DampingFunction, Tensor, Any
-from .util import real_pairs
+from ._typing import DampingFunction, Tensor, Any
+from .utils import real_pairs
 from ncoord import get_coordination_number_d4, erf_count
 from charges import get_charges
 from . import defaults
 from .cutoff import Cutoff
 
-from .typing import CountingFunction, WeightingFunction
+from ._typing import CountingFunction, WeightingFunction
 
 
 def dftd4(

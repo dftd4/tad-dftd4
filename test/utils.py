@@ -4,7 +4,7 @@ Collection of utility functions for testing.
 
 import torch
 
-from tad_dftd4.typing import Tensor
+from tad_dftd4._typing import Tensor
 
 
 def reshape_fortran(x: Tensor, shape: torch.Size | tuple):

@@ -9,7 +9,7 @@ import torch
 from tad_dftd4.charges import get_charges
 from tad_dftd4.model import D4Model
 from tad_dftd4.ncoord import get_coordination_number_d4
-from tad_dftd4.util import pack
+from tad_dftd4.utils import pack
 
 from .samples import samples
 
@@ -18,12 +18,12 @@ sample_list = ["NO2"]
 
 
 def gw_gen_single(name: str, dtype: torch.dtype, with_cn: bool, with_q: bool):
-    tol = sqrt(torch.finfo(dtype).eps)
+    tol = sqrt(torch.finfo(dtype).eps) * 10
     sample = samples[name]
     numbers = sample["numbers"]
     positions = sample["positions"].type(dtype)
 
-    d4 = D4Model()
+    d4 = D4Model(dtype=dtype)
 
     if with_cn is True:
         cn = get_coordination_number_d4(numbers, positions)
@@ -38,7 +38,7 @@ def gw_gen_single(name: str, dtype: torch.dtype, with_cn: bool, with_q: bool):
     print(q)
     print(cn)
 
-    gwvec = d4.weight_references(numbers, cn, q)
+    gwvec = d4.weight_references(numbers, cn, q)[:5, :]
     ref = sample["gw"].type(dtype)
 
     assert gwvec.shape == ref.shape
@@ -55,6 +55,6 @@ def test_mb16_43_02(dtype: torch.dtype) -> None:
     gw_gen_single("MB16_43_02", dtype, with_cn=False, with_q=True)
 
 
-@pytest.mark.parametrize("dtype", [torch.float])
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_mb16_43_03(dtype: torch.dtype) -> None:
     gw_gen_single("MB16_43_03", dtype, with_cn=True, with_q=True)

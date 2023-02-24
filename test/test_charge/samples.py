@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import torch
 
-from tad_dftd4.typing import Molecule, Tensor, TypedDict
+from tad_dftd4._typing import Molecule, Tensor, TypedDict
 
 from ..molecules import merge_nested_dicts, mols
 

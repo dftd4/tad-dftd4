@@ -19,8 +19,8 @@ Axilrod-Teller-Muto dispersion term.
 import torch
 
 from .. import defaults
-from ..typing import Tensor
-from ..util import real_pairs, real_triples
+from .._typing import Tensor
+from ..utils import real_pairs, real_triples
 from ..data import sqrt_z_r4_over_r2 as r4r2
 
 
