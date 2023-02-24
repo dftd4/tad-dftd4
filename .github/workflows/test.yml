@@ -6,14 +6,16 @@ on:
       - master
     paths-ignore:
       - "docs/**"
-      - "*.md"
-      - "*.rst"
+      - "**/*.md"
+      - "**/*.rst"
+      - "**/*.ya?ml"
 
   pull_request:
     paths-ignore:
       - "docs/**"
-      - "*.md"
-      - "*.rst"
+      - "**/*.md"
+      - "**/*.rst"
+      - "**/*.ya?ml"
 
   workflow_dispatch:
 
