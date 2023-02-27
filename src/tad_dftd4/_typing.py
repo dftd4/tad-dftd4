@@ -2,6 +2,8 @@
 Type annotations for `tad-dftd4`.
 """
 
+from __future__ import annotations
+
 # pylint: disable=unused-import
 from typing import Any, TypedDict
 
