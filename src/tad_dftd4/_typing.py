@@ -46,6 +46,7 @@ if sys.version_info >= (3, 10):
     Sliceable = list[Tensor] | tuple[Tensor, ...]
     Size = tuple[int] | torch.Size
     TensorOrTensors = list[Tensor] | tuple[Tensor, ...] | Tensor
+    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 elif sys.version_info >= (3, 9):
     # in Python 3.9, "from __future__ import annotations" works with type
     # aliases but requires using `Union` from typing
@@ -54,7 +55,6 @@ elif sys.version_info >= (3, 9):
     Sliceable = Union[list[Tensor], tuple[Tensor, ...]]
     Size = Union[tuple[int], torch.Size]
     TensorOrTensors = Union[list[Tensor], tuple[Tensor, ...], Tensor]
-    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases

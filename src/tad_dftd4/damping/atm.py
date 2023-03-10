@@ -26,7 +26,7 @@ from ..data import sqrt_z_r4_over_r2 as r4r2
 from ..utils import real_pairs, real_triples
 
 
-def dispersion_atm(
+def get_atm_dispersion(
     numbers: Tensor,
     positions: Tensor,
     cutoff: Tensor,
