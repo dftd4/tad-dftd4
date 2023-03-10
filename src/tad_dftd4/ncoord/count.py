@@ -2,12 +2,12 @@
 Coordination number: Counting functions
 =======================================
 
-This module contains the exponential and the error function counting functions 
+This module contains the exponential and the error function counting functions
 for the determination of the coordination number.
 
 The exponential counting function is used within the D3 model but not within
 the D4 model. Nevertheless, it is included here.
-Additionally, the analytical derivatives for both counting functions are also 
+Additionally, the analytical derivatives for both counting functions are also
 provided and can be used for checking the autograd results.
 """
 
