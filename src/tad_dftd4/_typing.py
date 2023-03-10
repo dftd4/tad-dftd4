@@ -21,35 +21,54 @@ else:
     from typing_extensions import Self
 
 # Python 3.10
-# if sys.version_info >= (3, 10):
-#     from typing import TypeGuard
-# else:
-#     from typing_extensions import TypeGuard
+if sys.version_info >= (3, 10):
+    from typing import TypeGuard
+else:
+    from typing_extensions import TypeGuard
 
-# Python 3.9 + "from __future__ import annotations"
+# starting with Python 3.9, type hinting generics have been moved
+# from the "typing" to the "collections" module
+# (see PEP 585: https://peps.python.org/pep-0585/)
 if sys.version_info >= (3, 9):
-    # starting with Python 3.9, type hinting generics have been moved
-    # from the "typing" to the "collections" module
-    # (see PEP 585: https://peps.python.org/pep-0585/)
     from collections.abc import Callable, Generator, Sequence
+else:
+    from typing import Callable, Generator, Sequence
+
+# type aliases that do not require "from __future__ import annotations"
+CountingFunction = Callable[[Tensor, Tensor], Tensor]
+WeightingFunction = Callable[[Tensor, Any], Tensor]
+
+
+if sys.version_info >= (3, 10):
+    # "from __future__ import annotations" only affects type annotations
+    # not type aliases, hence "|" is not allowed before Python 3.10
 
     Sliceable = list[Tensor] | tuple[Tensor, ...]
     Size = tuple[int] | torch.Size
     TensorOrTensors = list[Tensor] | tuple[Tensor, ...] | Tensor
-    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
-else:
-    from typing import Callable, Dict, Generator, List, Sequence, Tuple, Union
+elif sys.version_info >= (3, 9):
+    # in Python 3.9, "from __future__ import annotations" works with type
+    # aliases but requires using `Union` from typing
+    from typing import Union
 
+    Sliceable = Union[list[Tensor], tuple[Tensor, ...]]
+    Size = Union[tuple[int], torch.Size]
+    TensorOrTensors = Union[list[Tensor], tuple[Tensor, ...], Tensor]
+    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
+elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases
+    from typing import Dict, List, Tuple, Union
+
     Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
     Size = Union[Tuple[int], torch.Size]
     TensorOrTensors = Union[List[Tensor], Tuple[Tensor, ...], Tensor]
     DampingFunction = Callable[[int, Tensor, Tensor, Dict[str, Tensor]], Tensor]
-
-
-CountingFunction = Callable[[Tensor, Tensor], Tensor]
-WeightingFunction = Callable[[Tensor, Any], Tensor]
+else:
+    raise RuntimeError(
+        f"'tad_dftd4' requires at least Python 3.8 (Python {sys.version_info.major}."
+        f"{sys.version_info.minor}.{sys.version_info.micro} found)."
+    )
 
 
 class Molecule(TypedDict):
