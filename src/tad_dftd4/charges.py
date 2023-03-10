@@ -29,14 +29,15 @@ tensor(-0.1750)
 >>> print(qat)
 tensor([-0.8347, -0.8347,  0.2731,  0.2886,  0.2731,  0.2731,  0.2886,  0.2731])
 """
+from __future__ import annotations
 
 import math
 
 import torch
 
 from ._typing import Tensor, TensorLike
-from .utils import real_atoms, real_pairs
 from .ncoord import get_coordination_number_eeq
+from .utils import real_atoms, real_pairs
 
 __all__ = ["ChargeModel", "solve", "get_charges"]
 
@@ -88,7 +89,7 @@ class ChargeModel(TensorLike):
             raise RuntimeError("All tensors must have the same dtype!")
 
     @classmethod
-    def param2019(cls) -> "ChargeModel":
+    def param2019(cls) -> ChargeModel:
         """
         Electronegativity equilibration charge model published in
 

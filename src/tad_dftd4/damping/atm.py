@@ -16,12 +16,14 @@ Axilrod-Teller-Muto dispersion term.
     f_\text{damp} &=
     \dfrac{1}{1+ 6 \left(\overline{R}_\text{ABC}\right)^{-16}}
 """
+from __future__ import annotations
+
 import torch
 
 from .. import defaults
 from .._typing import Tensor
-from ..utils import real_pairs, real_triples
 from ..data import sqrt_z_r4_over_r2 as r4r2
+from ..utils import real_pairs, real_triples
 
 
 def dispersion_atm(

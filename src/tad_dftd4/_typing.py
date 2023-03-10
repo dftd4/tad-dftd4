@@ -4,10 +4,10 @@ Type annotations for `tad-dftd4`.
 
 from __future__ import annotations
 
+import sys
+
 # pylint: disable=unused-import
 from typing import Any, TypedDict
-
-import sys
 
 import torch
 from torch import Tensor
@@ -36,19 +36,20 @@ if sys.version_info >= (3, 9):
     Sliceable = list[Tensor] | tuple[Tensor, ...]
     Size = tuple[int] | torch.Size
     TensorOrTensors = list[Tensor] | tuple[Tensor, ...] | Tensor
+    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 else:
-    from typing import Callable, Generator, List, Sequence, Tuple, Union
+    from typing import Callable, Dict, Generator, List, Sequence, Tuple, Union
 
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases
     Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
-    Size = Union[tuple[int], torch.Size]
+    Size = Union[Tuple[int], torch.Size]
     TensorOrTensors = Union[List[Tensor], Tuple[Tensor, ...], Tensor]
+    DampingFunction = Callable[[int, Tensor, Tensor, Dict[str, Tensor]], Tensor]
 
 
 CountingFunction = Callable[[Tensor, Tensor], Tensor]
 WeightingFunction = Callable[[Tensor, Any], Tensor]
-DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 
 
 class Molecule(TypedDict):

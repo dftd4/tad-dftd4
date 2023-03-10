@@ -19,6 +19,7 @@ Miscellaneous functions
 Utilities for working with tensors as well as translating between element
 symbols and atomic numbers.
 """
+from __future__ import annotations
 
 import torch
 
