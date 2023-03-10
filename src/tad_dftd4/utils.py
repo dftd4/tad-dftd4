@@ -22,7 +22,7 @@ symbols and atomic numbers.
 
 import torch
 
-from ._typing import Size, TensorOrTensors, Tensor
+from ._typing import Size, Tensor, TensorOrTensors
 
 
 def real_atoms(numbers: Tensor) -> Tensor:
@@ -54,6 +54,7 @@ def pack(
     """
     Pad a list of variable length tensors with zeros, or some other value, and
     pack them into a single tensor.
+
     Parameters
     ----------
     tensors : list[Tensor] | tuple[Tensor] | Tensor
@@ -66,6 +67,7 @@ def pack(
     size :
         Size of each dimension to which tensors should be padded.
         This to the largest size encountered along each dimension.
+
     Returns
     -------
     padded : Tensor
