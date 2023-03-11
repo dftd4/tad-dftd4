@@ -66,12 +66,6 @@ class D4Model(TensorLike):
     numbers: Tensor
     """Atomic numbers."""
 
-    unique: Tensor
-    """Unique species (elements) in molecule(s). Sorted in ascending order."""
-
-    atom_to_unique: Tensor
-    """Mapping of atoms to unique species"""
-
     ga: float
     """Maximum charge scaling height for partial charge extrapolation."""
 
@@ -81,15 +75,10 @@ class D4Model(TensorLike):
     wf: float
     """Weighting factor for coordination number interpolation."""
 
-    __slots__ = (
-        "numbers",
-        "unique",
-        "atom_to_unique",
-        "ga",
-        "gc",
-        "wf",
-        "alpha",
-    )
+    alpha: Tensor
+    """Reference polarizabilities of unique species."""
+
+    __slots__ = ("numbers", "ga", "gc", "wf", "alpha")
 
     def __init__(
         self,
@@ -97,17 +86,31 @@ class D4Model(TensorLike):
         ga: float = ga_default,
         gc: float = gc_default,
         wf: float = wf_default,
+        alpha: Tensor | None = None,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
         super().__init__(device, dtype)
+        self.numbers = numbers
+
         self.ga = ga
         self.gc = gc
         self.wf = wf
 
-        self.numbers = numbers
-        self.unique, self.atom_to_unique = torch.unique(numbers, return_inverse=True)
-        self.alpha = self._set_refalpha_eeq()
+        if alpha is None:
+            self.alpha = self._set_refalpha_eeq()
+
+    @property
+    def unique(self) -> Tensor:
+        """
+        Unique species (elements) in molecule(s). Sorted in ascending order.
+        """
+        return torch.unique(self.numbers, return_inverse=True)[0]
+
+    @property
+    def atom_to_unique(self) -> Tensor:
+        """Mapping of atoms to unique species"""
+        return torch.unique(self.numbers, return_inverse=True)[1]
 
     def weight_references(
         self,
