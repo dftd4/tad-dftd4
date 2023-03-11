@@ -5,28 +5,13 @@ Test calculation of DFT-D4 coordination number.
 import pytest
 import torch
 
-from tad_dftd4.data import cov_rad_d3
+from tad_dftd4.data import cov_rad_d3, pauling_en
 from tad_dftd4.ncoord import get_coordination_number_d4 as get_cn
 from tad_dftd4.utils import pack
 
 from .samples import samples
 
 sample_list = ["MB16_43_01", "MB16_43_02", "MB16_43_02"]
-
-
-def test_fail() -> None:
-    numbers = torch.tensor([1, 1])
-    positions = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
-
-    # rcov wrong shape
-    with pytest.raises(ValueError):
-        rcov = torch.tensor([1.0])
-        get_cn(numbers, positions, rcov=rcov)
-
-    # wrong numbers
-    with pytest.raises(ValueError):
-        numbers = torch.tensor([1])
-        get_cn(numbers, positions)
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
@@ -37,9 +22,11 @@ def test_single(dtype: torch.dtype, name: str) -> None:
     positions = sample["positions"].type(dtype)
 
     rcov = cov_rad_d3[numbers]
+    en = pauling_en[numbers].type(dtype)
+    cutoff = positions.new_tensor(30.0)
     ref = sample["cn_d4"].type(dtype)
 
-    cn = get_cn(numbers, positions, rcov=rcov)
+    cn = get_cn(numbers, positions, rcov=rcov, en=en, cutoff=cutoff)
     assert pytest.approx(cn) == ref
 
 

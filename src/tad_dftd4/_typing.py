@@ -7,7 +7,7 @@ from __future__ import annotations
 import sys
 
 # pylint: disable=unused-import
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Protocol
 
 import torch
 from torch import Tensor
