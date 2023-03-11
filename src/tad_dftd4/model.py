@@ -1,48 +1,12 @@
+from __future__ import annotations
+
 import torch
-import numpy as np
-from pathlib import Path
 
-from ._typing import Tensor, Any, TensorLike
-from . import data
+from . import data, params
+from ._typing import Tensor, TensorLike
 
 
-ref = np.load(Path(Path(__file__).parent, "params.npz"))
-
-# fmt: off
-refn = torch.tensor([
-  0, 2, 1, 3, 4, 5, 7, 5, 4, 2, 1, 3, 4, 4, 5, 4, 3, 2, 1, 3, 4, 4,
-  4, 4, 4, 3, 3, 4, 4, 2, 2, 3, 5, 4, 3, 2, 1, 3, 4, 3, 4, 4, 4, 3,
-  3, 4, 3, 2, 2, 4, 5, 4, 3, 2, 1, 3, 4, 3, 1, 2, 2, 2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2, 2, 4, 4, 3, 3, 3, 5, 3, 2, 2, 4, 5, 4, 3, 2, 1,
-])
-# fmt: on
-
-THOPI = 3.0 / 3.141592653589793238462643383279502884197
-
-
-def load_from_npz(npzfile: Any, name: str, dtype: torch.dtype) -> Tensor:
-    """
-    Get torch tensor from npz file.
-
-    Parameters
-    ----------
-    npzfile : Any
-        Loaded npz file.
-    name : str
-        Name of the tensor in the npz file.
-    dtype : torch.dtype
-        Data type of the tensor.
-
-    Returns
-    -------
-    Tensor
-        Tensor from the npz file.
-    """
-    name = name.replace("-", "").replace("+", "").lower()
-    return torch.from_numpy(npzfile[name]).type(dtype)
-
-
-def trapzd(polarizability_a: Tensor, polarizability_b: Tensor) -> Tensor:
+def trapzd(polarizability: Tensor) -> Tensor:
     """
     Numerical Casimir--Polder integration.
 
@@ -56,52 +20,37 @@ def trapzd(polarizability_a: Tensor, polarizability_b: Tensor) -> Tensor:
     Tensor
         C6 coefficients.
     """
+    thopi = 3.0 / 3.141592653589793238462643383279502884197
+
     weights = torch.tensor(
         [
-            0.0499990000000000,
-            0.0999990000000000,
+            2.4999500000000000e-002,
+            4.9999500000000000e-002,
+            7.5000000000000010e-002,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
             0.1500000000000000,
             0.2000000000000000,
             0.2000000000000000,
             0.2000000000000000,
             0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.3000000000000000,
-            0.4000000000000000,
-            0.4000000000000000,
-            0.4000000000000000,
-            0.4000000000000000,
-            0.7000000000000000,
+            0.3500000000000000,
+            0.5000000000000000,
+            0.7500000000000000,
             1.0000000000000000,
-            1.5000000000000000,
-            2.0000000000000000,
-            3.5000000000000000,
-            5.0000000000000000,
+            1.7500000000000000,
             2.5000000000000000,
+            1.2500000000000000,
         ]
     )
 
-    c6 = 0.0
-    for w in range(23):
-        c6 += weights[w] * polarizability_a[w] * polarizability_b[w]
-    return 0.5 * c6
-
-    # return torch.sum(weights * polarizability, dim=-1)
-
-
-def weight_cn(wf: float, cn: Tensor, cnref: Tensor):
-    dcn = cn - cnref
-    return torch.exp(-wf * dcn * dcn)
-
-
-def zeta(a, c, qref, qmod):
-    if qmod <= 0.0:
-        return torch.exp(a)
-
-    return torch.exp(a * (1.0 - torch.exp(c * (1.0 - qref / qmod))))
+    return thopi * torch.sum(weights * polarizability, dim=-1)
 
 
 ga_default = 3.0
@@ -114,17 +63,37 @@ class D4Model(TensorLike):
     The D4 dispersion model.
     """
 
-    ga: float = ga_default
+    numbers: Tensor
+    """Atomic numbers."""
+
+    unique: Tensor
+    """Unique species (elements) in molecule(s). Sorted in ascending order."""
+
+    atom_to_unique: Tensor
+    """Mapping of atoms to unique species"""
+
+    ga: float
     """Maximum charge scaling height for partial charge extrapolation."""
 
-    gc: float = gc_default
+    gc: float
     """Charge scaling steepness for partial charge extrapolation."""
 
-    wf: float = wf_default
+    wf: float
     """Weighting factor for coordination number interpolation."""
+
+    __slots__ = (
+        "numbers",
+        "unique",
+        "atom_to_unique",
+        "ga",
+        "gc",
+        "wf",
+        "alpha",
+    )
 
     def __init__(
         self,
+        numbers: Tensor,
         ga: float = ga_default,
         gc: float = gc_default,
         wf: float = wf_default,
@@ -136,40 +105,54 @@ class D4Model(TensorLike):
         self.gc = gc
         self.wf = wf
 
+        self.numbers = numbers
+        self.unique, self.atom_to_unique = torch.unique(numbers, return_inverse=True)
+        self.alpha = self._set_refalpha_eeq()
+
     def weight_references(
         self,
-        numbers: Tensor,
         cn: Tensor | None = None,
         q: Tensor | None = None,
     ) -> Tensor:
         if cn is None:
-            cn = torch.zeros_like(numbers, dtype=self.dtype)
+            cn = torch.zeros_like(self.numbers, dtype=self.dtype)
         if q is None:
-            q = torch.zeros_like(numbers, dtype=self.dtype)
+            q = torch.zeros_like(self.numbers, dtype=self.dtype)
 
-        mref = torch.max(refn[numbers])
-        gwvec = torch.zeros(mref, numbers.size(0), dtype=self.dtype)
+        refc = params.refc[self.numbers].to(self.device)
+        refq = params.refq[self.numbers].type(self.dtype).to(self.device)
+        mask = refc > 0
 
-        refc = load_from_npz(ref, "refc", torch.int8)
-        refcn = load_from_npz(ref, "refcn", self.dtype)
-        refq = load_from_npz(ref, "refq", self.dtype)
-        mask = refc[numbers] > 0
+        # Due to the exponentiation, `norm` and `expw` may become very small
+        # (down to 1e-300). This causes problems for the division by `norm`,
+        # since single precision, i.e. `torch.float`, only goes to around 1e-38.
+        # Consequently, some values become zero although the actual result
+        # should be close to one. The problem does not arise when using `torch.
+        # double`. In order to avoid this error, which is also difficult to
+        # detect, this part always uses `torch.double`. `params.refcn` is saved
+        # with `torch.double`.
+        refcn = params.refcn[self.numbers].to(self.device)
 
-        # zeff = data.zeff[numbers]
-        # gam = data.gam[numbers] * self.gc
-        # maxcn = torch.max(refcn[numbers], dim=-1)[0]
-        dcn = cn.unsqueeze(-1) - refcn[numbers]
+        # For vectorization, we reformulate the Gaussian weighting function:
+        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
+        # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
+        dcn = cn.unsqueeze(-1).type(torch.double) - refcn
         tmp = torch.exp(-dcn * dcn)
 
+        # Gaussian weighting function part 2: tmp^(wf * igw)
+        # (While the Fortran version just loops over the number of gaussian
+        # weights `igw`, we have to use masks and explicitly implement the
+        # formulas for exponentiation. Luckily, `igw` only takes on the values
+        # 1 and 3.)
         expw = torch.where(
             mask,
             torch.where(
-                refc[numbers] == 3,
+                refc == 3,
                 torch.pow(tmp, self.wf)
                 + torch.pow(tmp, 2 * self.wf)
                 + torch.pow(tmp, 3 * self.wf),
                 torch.where(
-                    refc[numbers] == 1,
+                    refc == 1,
                     torch.pow(tmp, self.wf),
                     tmp,
                 ),
@@ -177,161 +160,92 @@ class D4Model(TensorLike):
             dcn.new_tensor(0.0),
         )
 
+        # normalize weights
         norm = torch.sum(expw, dim=-1, keepdim=True)
+        gw_temp = (expw / norm).type(self.dtype)
 
-        maxcn = torch.max(refcn[numbers], dim=-1, keepdim=True)[0]
-
-        print(refcn[numbers] == maxcn)
-
-        print("maxcn\n", torch.max(refcn[numbers], dim=-1))
-        print("maxcn\n", torch.max(refcn[numbers]))
-
-        gwk = expw / norm
+        # maximum reference CN for each atom
+        maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
 
         # prevent division by 0 and small values
-        exceptional = (torch.isnan(norm)) | (norm > torch.finfo(self.dtype).max)
-        print(exceptional)
-        print("norm\n", norm)
-        print("gwk\n", gwk)
-        f = torch.where(
+        exceptional = (torch.isnan(gw_temp)) | (gw_temp > torch.finfo(self.dtype).max)
+
+        gw = torch.where(
             exceptional,
             torch.where(
-                refcn[numbers] == maxcn,
-                gwk.new_tensor(1.0),
-                gwk.new_tensor(0.0),
+                refcn == maxcn,
+                gw_temp.new_tensor(1.0),
+                gw_temp.new_tensor(0.0),
             ),
-            gwk,
+            gw_temp,
         )
 
-        print(torch.where(exceptional, torch.ones_like(gwk), torch.zeros_like(gwk)))
-
-        print("gwk\n", f)
-        # zeta(self.ga, gi, refq[izp][iref] + zi, q[iat] + zi)
-        def zeta2(scale, gam, qref, qmod):
-            return torch.where(
-                qmod <= 0.0,
-                torch.exp(qmod.new_tensor(scale)),
-                torch.exp(scale * (1.0 - torch.exp(gam * (1.0 - qref / qmod)))),
-            )
-
         # unsqueeze for reference dimension
-        zeff = data.zeff[numbers].unsqueeze(-1)
-        gam = data.gam[numbers].unsqueeze(-1) * self.gc
+        zeff = data.zeff[self.numbers].unsqueeze(-1)
+        gam = data.gam[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
-        # FIXME: stop transposing
-        z = zeta2(self.ga, gam, refq[numbers] + zeff, q + zeff)
+        # charge scaling
+        zeta = torch.where(
+            mask,
+            self._zeta(gam, refq + zeff, q + zeff),
+            gw_temp.new_tensor(0.0),
+        )
 
-        print("zeta\n", z)
+        return zeta * gw
 
-        print((f * z).mT)
-
-        gwks = torch.zeros_like(refq[numbers])
-
-        for iat, izp in enumerate(numbers):
-            izp = int(izp)
-            zi = data.zeff[izp]
-            gi = data.gam[izp] * self.gc
-
-            norm = 0.0
-            for iref in range(refn[izp]):
-                dcn = cn[iat] - refcn[izp][iref]
-                tmp = torch.exp(-dcn * dcn)
-                for igw in range(refc[izp][iref]):
-                    twf = (igw + 1) * self.wf
-                    norm += torch.pow(tmp, twf)
-
-            norm = 1.0 / norm
-
-            for iref in range(refn[izp]):
-                expw = 0.0
-
-                for igw in range(refc[izp][iref]):
-                    twf = (igw + 1) * self.wf
-                    expw += weight_cn(twf, cn[iat], refcn[izp][iref])
-
-                gwk = expw * norm
-
-                if torch.isnan(torch.tensor(gwk)):
-                    if refcn[izp][iref] == maxcn:
-                        gwk = 1.0
-                    else:
-                        gwk = 0.0
-
-                gwks[iat, iref] = gwk
-
-                z = zeta(self.ga, gi, refq[izp][iref] + zi, q[iat] + zi)
-                gwvec[iref, iat] = z * gwk
-
-        print("\nrefs")
-        print("gwks\n", gwks)
-        print("gwvec\n", gwvec)
-
-        return (f * z).mT
-        return gwvec
-
-    def _set_refalpha_eeq(self, numbers: Tensor):
-        refsys = load_from_npz(ref, "refsys", torch.int8)
-        refsq = load_from_npz(ref, "refsq", torch.float)
-        refascale = load_from_npz(ref, "refascale", torch.float)
-        refalpha = load_from_npz(ref, "refalpha", torch.float)
-        refscount = load_from_npz(ref, "refscount", torch.float)
-        secscale = load_from_npz(ref, "secscale", torch.float)
-        secalpha = load_from_npz(ref, "secalpha", torch.float)
-
-        mref = torch.max(refn[numbers])
-        alpha = torch.zeros(numbers.size(-1), 23 * mref)
-
-        for iat, izp in enumerate(numbers):
-            izp = int(izp)
-
-            for iref in range(refn[izp]):
-                isys = refsys[izp][iref]
-                iz = data.zeff[isys]
-                ig = data.gam[isys] * self.gc
-
-                for k in range(23):
-                    aiw = (
-                        secscale[isys]
-                        * secalpha[isys][k]
-                        * zeta(self.ga, ig, iz, refsq[izp][iref])
-                    )
-                    alpha[iat, 23 * iref + k] = max(
-                        0.0,
-                        float(
-                            refascale[izp][iref]
-                            * (
-                                refalpha[izp][23 * iref + k]
-                                - refscount[izp][iref] * aiw
-                            )
-                        ),
-                    )
-
-        return alpha
-
-    def get_atomic_c6(self, numbers: Tensor, gwvec: Tensor) -> Tensor:
+    def get_atomic_c6(self, gw: Tensor) -> Tensor:
         """
         Calculate atomic dispersion coefficients.
         """
+        alpha = self.alpha[self.atom_to_unique]
 
-        alpha = self._set_refalpha_eeq(numbers)
+        # shape of alpha: (b, nat, nref, 23)
+        # (b, 1, nat, 1, nref, 23) * (b, nat, 1, nref, 1, 23) =
+        # (b, nat, nat, nref, nref, 23)
+        rc6 = trapzd(
+            alpha.unsqueeze(-4).unsqueeze(-3) * alpha.unsqueeze(-3).unsqueeze(-2)
+        )
 
-        c6 = torch.zeros(numbers.size(-1), numbers.size(-1))
+        # shape of gw: (batch, natoms, nref)
+        # (b, 1, nat, 1, nref)*(b, nat, 1, nref, 1) = (b, nat, nat, nref, nref)
+        g = gw.unsqueeze(-3).unsqueeze(-2) * gw.unsqueeze(-2).unsqueeze(-1)
 
-        for iat, izp in enumerate(numbers):
-            izp = int(izp)
-            for jat, jzp in enumerate(numbers):
-                jzp = int(jzp)
+        return torch.sum(g * rc6, dim=(-2, -1))
 
-                dc6 = 0.0
-                for iref in range(refn[izp]):
-                    for jref in range(refn[jzp]):
-                        refc6 = THOPI * trapzd(
-                            alpha[iat][23 * iref], alpha[jat][23 * jref]
-                        )
-                        dc6 += gwvec[iref, iat] * gwvec[jref, jat] * refc6
+    def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor):
+        return torch.where(
+            qmod > 0.0,
+            torch.exp(self.ga * (1.0 - torch.exp(gam * (1.0 - qref / qmod)))),
+            torch.exp(qmod.new_tensor(self.ga)),
+        )
 
-                c6[iat, jat] = dc6
-                c6[jat, iat] = dc6
+    def _set_refalpha_eeq(self):
+        numbers = self.unique
+        refsys = params.refsys[numbers].to(self.device)
+        refsq = params.refsq[numbers].type(self.dtype).to(self.device)
+        refascale = params.refascale[numbers].type(self.dtype).to(self.device)
+        refalpha = params.refalpha[numbers].type(self.dtype).to(self.device)
+        refscount = params.refscount[numbers].type(self.dtype).to(self.device)
+        secscale = params.secscale.type(self.dtype).to(self.device)
+        secalpha = params.secalpha.type(self.dtype).to(self.device)
 
-        return c6
+        mask = refsys > 0
+
+        zeff = data.zeff[refsys].to(self.device)
+        gam = data.gam[refsys].type(self.dtype).to(self.device) * self.gc
+
+        aiw = secscale[refsys] * secalpha[refsys]
+
+        # charge scaling
+        zeta = torch.where(
+            mask,
+            self._zeta(gam, zeff, refsq + zeff),
+            gam.new_tensor(0.0),
+        )
+
+        aiw = secscale[refsys] * secalpha[refsys] * zeta.unsqueeze(-1)
+        h = refalpha - refscount.unsqueeze(-1) * aiw
+        alpha = refascale.unsqueeze(-1) * h
+
+        return torch.where(alpha > 0.0, alpha, alpha.new_tensor(0.0))

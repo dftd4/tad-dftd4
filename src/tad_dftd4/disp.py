@@ -1,16 +1,15 @@
+from __future__ import annotations
+
 import torch
-
-from . import data
-from .model import D4Model
-from .damping import rational_damping, dispersion_atm
-from ._typing import DampingFunction, Tensor, Any
-from .utils import real_pairs
-from ncoord import get_coordination_number_d4, erf_count
 from charges import get_charges
-from . import defaults
-from .cutoff import Cutoff
+from ncoord import erf_count, get_coordination_number_d4
 
-from ._typing import CountingFunction, WeightingFunction
+from . import data, defaults
+from ._typing import Any, CountingFunction, DampingFunction, Tensor, WeightingFunction
+from .cutoff import Cutoff
+from .damping import dispersion_atm, rational_damping
+from .model import D4Model
+from .utils import real_pairs
 
 
 def dftd4(

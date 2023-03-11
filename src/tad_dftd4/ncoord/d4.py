@@ -5,12 +5,13 @@ Coordination number: D4
 Calculation of D4 coordination number. Includes electronegativity-
 dependent term.
 """
+from __future__ import annotations
 
 import torch
 
 from .. import defaults
+from .._typing import Any, CountingFunction, Tensor
 from ..data import cov_rad_d3, pauling_en
-from .._typing import CountingFunction, Tensor, Any
 from ..utils import real_pairs
 from .count import erf_count
 

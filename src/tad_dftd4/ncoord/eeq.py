@@ -4,12 +4,13 @@ Coordination number: EEQ
 
 Calculation of coordination number for the EEQ model.
 """
+from __future__ import annotations
 
 import torch
 
 from .. import defaults
+from .._typing import Any, CountingFunction, Tensor
 from ..data import cov_rad_d3
-from .._typing import CountingFunction, Tensor, Any
 from ..utils import real_pairs
 from .count import erf_count
 

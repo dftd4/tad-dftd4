@@ -7,7 +7,6 @@ This module defines the default values for all parameters within `tad-dftd4`.
 
 import torch
 
-
 # PyTorch
 
 TORCH_DTYPE = torch.float32
