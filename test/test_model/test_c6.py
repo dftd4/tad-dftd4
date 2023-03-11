@@ -23,7 +23,7 @@ def test_single(name: str, dtype: torch.dtype) -> None:
     numbers = sample["numbers"]
     ref = sample["c6"]
 
-    d4 = D4Model(dtype=dtype)
+    d4 = D4Model(numbers, dtype=dtype)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
     src = sample["gw"].type(dtype)
@@ -34,7 +34,7 @@ def test_single(name: str, dtype: torch.dtype) -> None:
         value=0,
     ).mT
 
-    c6 = d4.get_atomic_c6(numbers, gw)
+    c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(ref, rel=tol) == c6
 
 
@@ -57,7 +57,7 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
-    d4 = D4Model(dtype=dtype)
+    d4 = D4Model(numbers, dtype=dtype)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
     src1 = sample1["gw"].type(dtype)
@@ -75,5 +75,5 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
-    c6 = d4.get_atomic_c6(numbers, gw)
+    c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(refs, rel=tol) == c6

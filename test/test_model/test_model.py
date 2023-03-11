@@ -16,58 +16,30 @@ from .samples import samples
 sample_list = ["LiH", "SiH4", "MB16_43_03"]
 
 
-@pytest.mark.parametrize("name", ["LiH", "SiH4"])
-def test_single_float(name: str) -> None:
-    single(name, torch.float, tol=1e-5)
-
-
-@pytest.mark.xfail
-@pytest.mark.parametrize("name", ["MB16_43_03"])
-def test_single_float_fail(name: str) -> None:
-    single(name, torch.float, tol=1e-5)
-
-
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
-def test_single_double(name: str) -> None:
-    single(name, torch.double, tol=1e-5)
-
-
-def single(name: str, dtype: torch.dtype, tol: float) -> None:
+def test_single(name: str, dtype: torch.dtype) -> None:
+    tol = 1e-5
     sample = samples[name]
     numbers = sample["numbers"]
     positions = sample["positions"].type(dtype)
     ref = sample["c6"]
 
-    d4 = D4Model(dtype=dtype)
+    d4 = D4Model(numbers, dtype=dtype)
 
     cn = get_coordination_number_d4(numbers, positions)
     q = get_charges(numbers, positions, positions.new_tensor(0.0))
 
-    gw = d4.weight_references(numbers, cn=cn, q=q)
-    c6 = d4.get_atomic_c6(numbers, gw)
+    gw = d4.weight_references(cn=cn, q=q)
+    c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(ref, abs=tol, rel=tol) == c6
 
 
-@pytest.mark.parametrize("name1", ["LiH"])
-@pytest.mark.parametrize("name2", ["LiH", "SiH4"])
-def test_batch_float(name1: str, name2: str) -> None:
-    batch(name1, name2, torch.float, tol=1e-5)
-
-
-@pytest.mark.xfail
-@pytest.mark.parametrize("name1", ["LiH"])
-@pytest.mark.parametrize("name2", ["MB16_43_03"])
-def test_batch_float_fail(name1: str, name2: str) -> None:
-    batch(name1, name2, torch.float, tol=1e-5)
-
-
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", sample_list)
-def test_batch_double(name1: str, name2: str) -> None:
-    batch(name1, name2, torch.double, tol=1e-5)
-
-
-def batch(name1: str, name2: str, dtype: torch.dtype, tol: float) -> None:
+def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
+    tol = 1e-5
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
@@ -88,11 +60,11 @@ def batch(name1: str, name2: str, dtype: torch.dtype, tol: float) -> None:
         ]
     )
 
-    d4 = D4Model(dtype=dtype)
+    d4 = D4Model(numbers, dtype=dtype)
 
     cn = get_coordination_number_d4(numbers, positions)
     q = get_charges(numbers, positions, positions.new_zeros(numbers.shape[0]))
 
-    gw = d4.weight_references(numbers, cn=cn, q=q)
-    c6 = d4.get_atomic_c6(numbers, gw)
+    gw = d4.weight_references(cn=cn, q=q)
+    c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(refs, abs=tol, rel=tol) == c6
