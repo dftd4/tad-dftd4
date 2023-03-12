@@ -19,8 +19,8 @@
 Parameters
 ==========
 
-This module contains all parameters the computation of the C6 coefficients 
-(reference systems, reference polarizabilites, ...). 
+This module contains all parameters the computation of the C6 coefficients
+(reference systems, reference polarizabilites, ...).
 """
 import torch
 
