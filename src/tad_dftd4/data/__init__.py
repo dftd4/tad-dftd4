@@ -1,5 +1,13 @@
 """
-Atomic data required within `tad_dftd4`.
+Atomic data
+===========
+
+Atomic data required within `tad_dftd4`:
+ - chemical hardness
+ - Pauling electronegativities
+ - expectation values
+ - covalent radii
+ - effective nuclear charge
 """
 
 from .en import *

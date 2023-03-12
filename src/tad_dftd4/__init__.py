@@ -49,7 +49,7 @@ Example
 ...     ]),
 ... ))
 >>>
->>> # total charge of both system
+>>> # total charge of both systems
 >>> charge = torch.tensor([0.0, 0.0])
 >>>
 >>> # TPSS0-D4-ATM parameters
@@ -63,14 +63,15 @@ Example
 >>>
 >>> # calculate dispersion energy in Hartree
 >>> energy = torch.sum(d4.dftd4(numbers, positions, charge, param), -1)
->>> torch.set_printoptions(precision=7)
+>>> torch.set_printoptions(precision=10)
 >>> print(energy)
-tensor([-0.0088341, -0.0027014])
+tensor([-0.0088341432, -0.0027013607])
 >>> print(energy[0] - 2*energy[1])
-tensor(-0.0034314)
+tensor(-0.0034314217)
 """
 import torch
 
 from .__version__ import __version__
 from .disp import dftd4, dispersion2, dispersion3
 from .model import D4Model
+from .ncoord import get_coordination_number_d4, erf_count
