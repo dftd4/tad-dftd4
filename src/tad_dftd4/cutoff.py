@@ -1,4 +1,7 @@
 """
+Cutoff
+======
+
 Real-space cutoffs for the two-body and three-body dispersion energy
 as well as the coordination number within D4 and the EEQ Model.
 """

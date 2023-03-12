@@ -1,5 +1,11 @@
 """
-Type annotations for `tad-dftd4`.
+Type annotations
+================
+
+This module contains all type annotations for this project.
+
+Since typing still significantly changes across different Python versions,
+all the special cases are handled here as well.
 """
 
 from __future__ import annotations
@@ -7,7 +13,7 @@ from __future__ import annotations
 import sys
 
 # pylint: disable=unused-import
-from typing import Any, TypedDict
+from typing import Any, Protocol, TypedDict
 
 import torch
 from torch import Tensor
@@ -44,16 +50,19 @@ if sys.version_info >= (3, 10):
     # not type aliases, hence "|" is not allowed before Python 3.10
 
     Sliceable = list[Tensor] | tuple[Tensor, ...]
-    Size = tuple[int] | torch.Size
+    Size = list[int] | tuple[int] | torch.Size
     TensorOrTensors = list[Tensor] | tuple[Tensor, ...] | Tensor
+    DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 elif sys.version_info >= (3, 9):
     # in Python 3.9, "from __future__ import annotations" works with type
     # aliases but requires using `Union` from typing
     from typing import Union
 
     Sliceable = Union[list[Tensor], tuple[Tensor, ...]]
-    Size = Union[tuple[int], torch.Size]
+    Size = Union[list[int], tuple[int], torch.Size]
     TensorOrTensors = Union[list[Tensor], tuple[Tensor, ...], Tensor]
+
+    # no Union here, same as 3.10
     DampingFunction = Callable[[int, Tensor, Tensor, dict[str, Tensor]], Tensor]
 elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
@@ -61,7 +70,7 @@ elif sys.version_info >= (3, 8):
     from typing import Dict, List, Tuple, Union
 
     Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
-    Size = Union[Tuple[int], torch.Size]
+    Size = Union[List[int], Tuple[int], torch.Size]
     TensorOrTensors = Union[List[Tensor], Tuple[Tensor, ...], Tensor]
     DampingFunction = Callable[[int, Tensor, Tensor, Dict[str, Tensor]], Tensor]
 else:

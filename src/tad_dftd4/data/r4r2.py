@@ -1,16 +1,16 @@
 """
-Atomic data
-===========
+Atomic data: Expectation values
+===============================
 
 PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010).
 Rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018).
-Also new super heavies Cn,Nh,Fl,Lv,Og and Am-Rg calculated at 4c-PBE/Dyall-AE4Z
-(Dirac 2022).
+Also new super heavies Cn, Nh, Fl, Lv, Og and Am-Rg calculated at
+4c-PBE/Dyall-AE4Z level (Dirac 2022).
 """
 
 import torch
 
-__all__ = ["sqrt_z_r4_over_r2"]
+__all__ = ["r4r2"]
 
 # fmt: off
 r4_over_r2 = torch.tensor([
@@ -42,7 +42,5 @@ r4_over_r2 = torch.tensor([
 # fmt: on
 
 
-sqrt_z_r4_over_r2 = torch.sqrt(
-    0.5 * (r4_over_r2 * torch.sqrt(torch.arange(r4_over_r2.shape[0])))
-)
-"""Square root."""
+r4r2 = torch.sqrt(0.5 * (r4_over_r2 * torch.sqrt(torch.arange(r4_over_r2.shape[0]))))
+"""r⁴ over r² expectation values"""

@@ -23,25 +23,26 @@ def get_coordination_number_eeq(
     counting_function: CountingFunction = erf_count,
     rcov: Tensor | None = None,
     cutoff: Tensor | None = None,
-    cn_max: Tensor | float | None = defaults.D4_CN_EEQ_MAX,
+    cn_max: Tensor | float | int | None = defaults.D4_CN_EEQ_MAX,
     **kwargs: Any,
 ) -> Tensor:
     """
-    Compute fractional coordination number using an exponential counting function.
+    Compute fractional coordination number using an exponential counting
+    function.
 
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of molecular structure.
+        Atomic numbers of the atoms in the system.
     positions : Tensor
-        Atomic positions of molecular structure.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     counting_function : CountingFunction
         Calculate weight for pairs. Defaults to `erf_count`.
     rcov : Tensor | None, optional
         Covalent radii for each species. Defaults to `None`.
     cutoff : Tensor | None, optional
         Real-space cutoff. Defaults to `None`.
-    cn_max : Tensor | float | None, optional
+    cn_max : Tensor | float | int | None, optional
         Maximum coordination number. Defaults to `8.0` (float).
     kwargs : dict[str, Any]
         Pass-through arguments for counting function.
@@ -102,9 +103,12 @@ def get_coordination_number_eeq(
 
 
 def cut_coordination_number(
-    cn: Tensor, cn_max: Tensor | float = defaults.D4_CN_EEQ_MAX
+    cn: Tensor, cn_max: Tensor | float | int = defaults.D4_CN_EEQ_MAX
 ):
-    if isinstance(cn_max, float):
+    if isinstance(cn_max, (float, int)):
         cn_max = cn.new_tensor(cn_max)
+
+    if cn_max > 50:
+        return cn
 
     return torch.log(1.0 + torch.exp(cn_max)) - torch.log(1.0 + torch.exp(cn_max - cn))

@@ -22,11 +22,11 @@ import torch
 
 from .. import defaults
 from .._typing import Tensor
-from ..data import sqrt_z_r4_over_r2 as r4r2
+from ..data import r4r2
 from ..utils import real_pairs, real_triples
 
 
-def dispersion_atm(
+def get_atm_dispersion(
     numbers: Tensor,
     positions: Tensor,
     cutoff: Tensor,
@@ -105,7 +105,7 @@ def dispersion_atm(
     r3 = r1 * r2
     r5 = r2 * r3
 
-    fdamp = 1.0 / (1.0 + 6.0 * (r0 / r1) ** ((alp + 2.0) / 3.0))
+    fdamp = 1.0 / (1.0 + 6.0 * (r0 / r1) ** (alp / 3.0))
 
     s = (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) * (-r2ij + r2jk + r2ik)
     ang = torch.where(

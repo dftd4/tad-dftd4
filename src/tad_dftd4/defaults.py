@@ -2,7 +2,7 @@
 Default values
 ==============
 
-This module defines the default values for all parameters within `tad-dftd4`.
+This module defines the default values for all parameters within `tad_dftd4`.
 """
 
 import torch
@@ -57,16 +57,19 @@ A2 = 5.0
 """Offset parameter for the critical radius (5.0)."""
 
 S6 = 1.0
-"""Scaling factor for the C6 interaction (1.0)."""
+"""Default scaling of dipole-dipole term (1.0 to retain correct limit)."""
 
 S8 = 1.0
-"""Scaling factor for the C8 interaction (1.0)."""
+"""Default scaling of dipole-quadrupole term (1.0)."""
 
 S9 = 1.0
-"""Scaling for dispersion coefficients (1.0)."""
+"""Default scaling of three-body term (1.0)."""
+
+S10 = 0.0
+"""Default scaling of quadrupole-quadrupole term (0.0)."""
 
 RS9 = 4.0 / 3.0
 """Scaling for van-der-Waals radii in damping function (4.0/3.0)."""
 
-ALP = 14.0
-"""Exponent of zero damping function (14.0)."""
+ALP = 16.0
+"""Exponent of zero damping function (16.0)."""

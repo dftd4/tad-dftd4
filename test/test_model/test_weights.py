@@ -32,12 +32,12 @@ def single(
     if with_cn is True:
         cn = get_coordination_number_d4(numbers, positions)
     else:
-        cn = positions.new_zeros(numbers.shape)
+        cn = None  # positions.new_zeros(numbers.shape)
 
     if with_q is True:
         q = get_charges(numbers, positions, positions.new_tensor(0.0))
     else:
-        q = positions.new_zeros(numbers.shape)
+        q = None  # positions.new_zeros(numbers.shape)
 
     gwvec = d4.weight_references(cn, q)
 

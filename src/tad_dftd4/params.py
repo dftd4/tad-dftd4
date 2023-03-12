@@ -19433,7 +19433,8 @@ refsys = torch.tensor(
         [1, 1, 1, 0, 0, 0, 0],
         [1, 1, 0, 0, 0, 0, 0],
         [1, 0, 0, 0, 0, 0, 0],
-    ], dtype=torch.long
+    ],
+    dtype=torch.long,
 )
 refc = torch.tensor(
     [
