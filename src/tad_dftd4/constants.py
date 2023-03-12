@@ -1,5 +1,9 @@
 """
-This module contains fundamental constants and conversion factors.
+Constants and Tables
+====================
+
+This module contains fundamental constants and conversion factors and tables
+like the periodic system.
 """
 
 BOHR_TO_ANGSTROM = 0.529177210903
@@ -8,9 +12,7 @@ BOHR_TO_ANGSTROM = 0.529177210903
 ANGSTROM_TO_BOHR = 1.0 / BOHR_TO_ANGSTROM
 """Conversion factor from Angstrom to Bohr."""
 
-"""
-Chemical constants.
-"""
+# Chemical constants.
 
 PSE = {
     0: "X",

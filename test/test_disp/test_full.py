@@ -7,11 +7,11 @@ import pytest
 import torch
 
 from tad_dftd4 import data
-from tad_dftd4.disp import dftd4
-from tad_dftd4.utils import pack
-from tad_dftd4.model import D4Model
-from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.charges import get_charges
+from tad_dftd4.cutoff import Cutoff
+from tad_dftd4.disp import dftd4
+from tad_dftd4.model import D4Model
+from tad_dftd4.utils import pack
 
 from .samples import samples
 
@@ -53,7 +53,7 @@ def single(name: str, dtype: torch.dtype) -> None:
 
     model = D4Model(numbers, dtype=dtype)
     rcov = data.cov_rad_d3[numbers].type(positions.dtype)
-    r4r2 = data.sqrt_z_r4_over_r2[numbers].type(positions.dtype)
+    r4r2 = data.r4r2[numbers].type(positions.dtype)
     q = get_charges(numbers, positions, charge)
     cutoff = Cutoff(dtype=positions.dtype)
 

@@ -7,8 +7,8 @@ import pytest
 import torch
 
 from tad_dftd4.disp import dispersion3
-from tad_dftd4.ncoord import get_coordination_number_d4
 from tad_dftd4.model import D4Model
+from tad_dftd4.ncoord import get_coordination_number_d4
 from tad_dftd4.utils import pack
 
 from .samples import samples

@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from tad_dftd4._typing import CountingFunction
-from tad_dftd4.ncoord import dexp_count, exp_count, derf_count, erf_count
+from tad_dftd4.ncoord import derf_count, dexp_count, erf_count, exp_count
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])

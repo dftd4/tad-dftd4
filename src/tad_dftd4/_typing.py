@@ -1,5 +1,11 @@
 """
-Type annotations for `tad-dftd4`.
+Type annotations
+================
+
+This module contains all type annotations for this project.
+
+Since typing still significantly changes across different Python versions,
+all the special cases are handled here as well.
 """
 
 from __future__ import annotations
@@ -7,7 +13,7 @@ from __future__ import annotations
 import sys
 
 # pylint: disable=unused-import
-from typing import Any, TypedDict, Protocol
+from typing import Any, Protocol, TypedDict
 
 import torch
 from torch import Tensor

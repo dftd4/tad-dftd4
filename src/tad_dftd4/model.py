@@ -1,57 +1,32 @@
+"""
+DFT-D4 Model
+============
+
+This module contains the definition of the D4 dispersion model for the
+evaluation of C6 coefficients.
+
+Upon instantiation, the reference polarizabilities are calculated for the
+unique species/elements of the molecule(s) and stored in the model class.
+
+
+Example
+-------
+>>> import torch
+>>> import tad_dftd4 as d4
+>>>
+>>> numbers = torch.tensor([14, 1, 1, 1, 1]) # SiH4
+>>> model = d4.D4Model(numbers)
+>>>
+>>> # calculate Gaussian weights, optionally pass CN and partial charges
+>>> gw = model.weight_references()
+>>> c6 = d4.get_atomic_c6(gw)
+"""
 from __future__ import annotations
 
 import torch
 
 from . import data, params
 from ._typing import Tensor, TensorLike
-
-
-def trapzd(polarizability: Tensor) -> Tensor:
-    """
-    Numerical Casimir--Polder integration.
-
-    Parameters
-    ----------
-    polarizability : Tensor
-        Polarizabilities.
-
-    Returns
-    -------
-    Tensor
-        C6 coefficients.
-    """
-    thopi = 3.0 / 3.141592653589793238462643383279502884197
-
-    weights = torch.tensor(
-        [
-            2.4999500000000000e-002,
-            4.9999500000000000e-002,
-            7.5000000000000010e-002,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1500000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.3500000000000000,
-            0.5000000000000000,
-            0.7500000000000000,
-            1.0000000000000000,
-            1.7500000000000000,
-            2.5000000000000000,
-            1.2500000000000000,
-        ]
-    )
-
-    return thopi * torch.sum(weights * polarizability, dim=-1)
-
 
 ga_default = 3.0
 gc_default = 2.0
@@ -252,3 +227,50 @@ class D4Model(TensorLike):
         alpha = refascale.unsqueeze(-1) * h
 
         return torch.where(alpha > 0.0, alpha, alpha.new_tensor(0.0))
+
+
+def trapzd(polarizability: Tensor) -> Tensor:
+    """
+    Numerical Casimir--Polder integration.
+
+    Parameters
+    ----------
+    polarizability : Tensor
+        Polarizabilities.
+
+    Returns
+    -------
+    Tensor
+        C6 coefficients.
+    """
+    thopi = 3.0 / 3.141592653589793238462643383279502884197
+
+    weights = torch.tensor(
+        [
+            2.4999500000000000e-002,
+            4.9999500000000000e-002,
+            7.5000000000000010e-002,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1500000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.3500000000000000,
+            0.5000000000000000,
+            0.7500000000000000,
+            1.0000000000000000,
+            1.7500000000000000,
+            2.5000000000000000,
+            1.2500000000000000,
+        ]
+    )
+
+    return thopi * torch.sum(weights * polarizability, dim=-1)

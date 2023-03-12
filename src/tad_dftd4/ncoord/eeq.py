@@ -27,14 +27,15 @@ def get_coordination_number_eeq(
     **kwargs: Any,
 ) -> Tensor:
     """
-    Compute fractional coordination number using an exponential counting function.
+    Compute fractional coordination number using an exponential counting
+    function.
 
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of molecular structure.
+        Atomic numbers of the atoms in the system.
     positions : Tensor
-        Atomic positions of molecular structure.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     counting_function : CountingFunction
         Calculate weight for pairs. Defaults to `erf_count`.
     rcov : Tensor | None, optional

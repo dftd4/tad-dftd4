@@ -1,14 +1,23 @@
+"""
+Dispersion energy
+=================
+
+This module provides the dispersion energy evaluation for the pairwise
+interactions. It contains the main entrypoint for the dispersion energy
+(`dftd4`) as well as wrappers for the two-body (`dispersion2`) and the
+three-body (`dispersion3`) dispersion energy.
+"""
 from __future__ import annotations
 
 import torch
-from .charges import get_charges
-from .ncoord import erf_count, get_coordination_number_d4
 
 from . import data, defaults
 from ._typing import Any, CountingFunction, DampingFunction, Tensor
+from .charges import get_charges
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
+from .ncoord import erf_count, get_coordination_number_d4
 from .utils import real_pairs
 
 
@@ -26,6 +35,52 @@ def dftd4(
     counting_function: CountingFunction = erf_count,
     damping_function: DampingFunction = rational_damping,
 ) -> Tensor:
+    """
+    Evaluate DFT-D4 dispersion energy for a (batch of) molecule(s).
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers of the atoms in the system.
+    positions : Tensor
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
+    charge : Tensor
+        Total charge of the system.
+    param : dict[str, Tensor]
+        DFT-D4 damping parameters.
+    model : D4Model | None, optional
+        The DFT-D4 dispersion model for the evaluation of the C6 coefficients.
+        Defaults to `None`.
+    rcov : Tensor | None, optional
+        Covalent radii of the atoms in the system. Defaults to
+        `None`, i.e., default values are used.
+    r4r2 : Tensor | None, optional
+        r⁴ over r² expectation values of the atoms in the system. Defaults to
+        `None`, i.e., default values are used.
+    q : Tensor | None, optional
+        Atomic partial charges. Defaults to `None`, i.e., EEQ charges are
+        calculated using the total `charge`.
+    cutoff : Cutoff | None, optional
+        Collection of real-space cutoffs. Defaults to `None`, i.e., `Cutoff` is
+        initialized with its defaults.
+    counting_function : CountingFunction, optional
+        Counting function used for the DFT-D4 coordination number. Defaults to
+        the error function counting function `erf_count`.
+    damping_function : DampingFunction, optional
+        Damping function to evaluate distance dependent contributions. Defaults
+        to the Becke-Johnson rational damping function `rational_damping`.
+
+    Returns
+    -------
+    Tensor
+        Atom-resolved DFT-D4 dispersion energy.
+
+    Raises
+    ------
+    ValueError
+        Shape inconsistencies between `numbers`, `positions`, `r4r2`, or,
+        `rcov`.
+    """
     if model is None:
         model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
     if cutoff is None:
@@ -34,9 +89,7 @@ def dftd4(
     if rcov is None:
         rcov = data.cov_rad_d3[numbers].type(positions.dtype).to(positions.device)
     if r4r2 is None:
-        r4r2 = (
-            data.sqrt_z_r4_over_r2[numbers].type(positions.dtype).to(positions.device)
-        )
+        r4r2 = data.r4r2[numbers].type(positions.dtype).to(positions.device)
     if q is None:
         q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 
@@ -105,7 +158,7 @@ def dispersion2(
     numbers : Tensor
         Atomic numbers of the atoms in the system.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     param : dict[str, Tensor]
         DFT-D3 damping parameters.
     c6 : Tensor
@@ -186,7 +239,7 @@ def dispersion3(
     numbers : Tensor
         Atomic numbers of the atoms in the system.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     param : dict[str, Tensor]
         Dictionary of dispersion parameters. Default values are used for
         missing keys.

@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import pytest
 import torch
+
+from tad_dftd4._typing import Any, CountingFunction, Protocol, Tensor
 from tad_dftd4.ncoord import (
+    erf_count,
+    exp_count,
     get_coordination_number_d4,
     get_coordination_number_eeq,
-    exp_count,
-    erf_count,
 )
-from tad_dftd4._typing import Tensor, CountingFunction, Protocol, Any
 
 
 class CNFunction(Protocol):

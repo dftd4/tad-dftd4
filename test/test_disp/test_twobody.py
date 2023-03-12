@@ -7,10 +7,10 @@ import pytest
 import torch
 
 from tad_dftd4 import data
-from tad_dftd4.disp import dispersion2, dftd4
-from tad_dftd4.ncoord import get_coordination_number_d4
-from tad_dftd4.model import D4Model
 from tad_dftd4.charges import get_charges
+from tad_dftd4.disp import dftd4, dispersion2
+from tad_dftd4.model import D4Model
+from tad_dftd4.ncoord import get_coordination_number_d4
 from tad_dftd4.utils import pack
 
 from .samples import samples
@@ -51,7 +51,7 @@ def single(name: str, dtype: torch.dtype) -> None:
         "a2": positions.new_tensor(4.60230534),
     }
 
-    r4r2 = data.sqrt_z_r4_over_r2[numbers].type(positions.dtype)
+    r4r2 = data.r4r2[numbers].type(positions.dtype)
     model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
     cn = get_coordination_number_d4(numbers, positions)
     q = get_charges(numbers, positions, charge)
@@ -175,7 +175,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         "a2": positions.new_tensor(4.60230534),
     }
 
-    r4r2 = data.sqrt_z_r4_over_r2[numbers].type(positions.dtype)
+    r4r2 = data.r4r2[numbers].type(positions.dtype)
     model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
     cn = get_coordination_number_d4(numbers, positions)
     q = get_charges(numbers, positions, charge)

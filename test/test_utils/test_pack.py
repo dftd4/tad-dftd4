@@ -6,7 +6,6 @@ import torch
 
 from tad_dftd4.utils import pack
 
-
 mol1 = torch.tensor([1, 1])  # H2
 mol2 = torch.tensor([8, 1, 1])  # H2O
 

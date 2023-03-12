@@ -219,7 +219,7 @@ def solve(
     numbers : Tensor
         Atomic numbers of all atoms in the system.
     positions : Tensor
-        Cartesian coordinates of all atoms in the system.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     total_charge : Tensor
         Total charge of the system.
     model : ChargeModel
@@ -342,7 +342,7 @@ def get_charges(
     numbers : Tensor
         Atomic numbers of all atoms in the system.
     positions : Tensor
-        Cartesian coordinates of all atoms in the system.
+        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
     chrg : Tensor
         Total charge of system.
     cutoff : Tensor | None, optional

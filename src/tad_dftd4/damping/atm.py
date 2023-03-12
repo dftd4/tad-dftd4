@@ -22,7 +22,7 @@ import torch
 
 from .. import defaults
 from .._typing import Tensor
-from ..data import sqrt_z_r4_over_r2 as r4r2
+from ..data import r4r2
 from ..utils import real_pairs, real_triples
 
 
