@@ -71,5 +71,5 @@ S10 = 0.0
 RS9 = 4.0 / 3.0
 """Scaling for van-der-Waals radii in damping function (4.0/3.0)."""
 
-ALP = 14.0
-"""Exponent of zero damping function (14.0)."""
+ALP = 16.0
+"""Exponent of zero damping function (16.0)."""

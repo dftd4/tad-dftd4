@@ -26,7 +26,7 @@ warn_unused_ignores = true
 [tool.coverage.run]
 plugins = ["covdefaults"]
 source = ["./src"]
-omit = ["./src/dxtb/_typing.py"]
+omit = ["./src/tad_dftd4/_typing.py"]
 
 [tool.coverage.report]
 fail_under = 70

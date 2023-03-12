@@ -105,7 +105,7 @@ def get_atm_dispersion(
     r3 = r1 * r2
     r5 = r2 * r3
 
-    fdamp = 1.0 / (1.0 + 6.0 * (r0 / r1) ** ((alp + 2.0) / 3.0))
+    fdamp = 1.0 / (1.0 + 6.0 * (r0 / r1) ** (alp / 3.0))
 
     s = (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) * (-r2ij + r2jk + r2ik)
     ang = torch.where(

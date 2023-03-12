@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import torch
-from charges import get_charges
-from ncoord import erf_count, get_coordination_number_d4
+from .charges import get_charges
+from .ncoord import erf_count, get_coordination_number_d4
 
 from . import data, defaults
 from ._typing import Any, CountingFunction, DampingFunction, Tensor
@@ -27,7 +27,7 @@ def dftd4(
     damping_function: DampingFunction = rational_damping,
 ) -> Tensor:
     if model is None:
-        model = D4Model(device=positions.device, dtype=positions.dtype)
+        model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
     if cutoff is None:
         cutoff = Cutoff(device=positions.device, dtype=positions.dtype)
 
@@ -37,23 +37,35 @@ def dftd4(
         r4r2 = (
             data.sqrt_z_r4_over_r2[numbers].type(positions.dtype).to(positions.device)
         )
+    if q is None:
+        q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
+
     if numbers.shape != positions.shape[:-1]:
         raise ValueError(
-            "Shape of positions is not consistent with atomic numbers.",
+            f"Shape of positions ({positions.shape}) is not consistent "
+            f"with atomic numbers ({numbers.shape}).",
         )
     if numbers.shape != r4r2.shape:
         raise ValueError(
-            "Shape of expectation values is not consistent with atomic numbers.",
+            f"Shape of expectation values r4r2 ({r4r2.shape}) is not "
+            f"consistent with atomic numbers ({numbers.shape}).",
         )
-
-    if q is None:
-        q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
+    if numbers.shape != rcov.shape:
+        raise ValueError(
+            f"Shape of covalent radii ({rcov.shape}) is not consistent with "
+            f"atomic numbers ({numbers.shape}).",
+        )
+    if numbers.shape != q.shape:
+        raise ValueError(
+            f"Shape of atomic charges ({q.shape}) is not consistent with "
+            f"atomic numbers ({numbers.shape}).",
+        )
 
     cn = get_coordination_number_d4(
         numbers, positions, counting_function, rcov, cutoff=cutoff.cn
     )
-    weights = model.weight_references(numbers, cn, q)
-    c6 = model.get_atomic_c6(numbers, weights)
+    weights = model.weight_references(cn, q)
+    c6 = model.get_atomic_c6(weights)
 
     energy = dispersion2(
         numbers,
@@ -67,8 +79,8 @@ def dftd4(
 
     # three-body dispersion
     if "s9" in param and param["s9"] != 0.0:
-        weights = model.weight_references(numbers, cn, q=None)
-        c6 = model.get_atomic_c6(numbers, weights)
+        weights = model.weight_references(cn, q=None)
+        c6 = model.get_atomic_c6(weights)
 
         energy += dispersion3(numbers, positions, param, c6, cutoff.disp3)
 
@@ -81,8 +93,8 @@ def dispersion2(
     param: dict[str, Tensor],
     c6: Tensor,
     r4r2: Tensor,
-    damping_function: DampingFunction,
-    cutoff: Tensor,
+    damping_function: DampingFunction = rational_damping,
+    cutoff: Tensor | None = None,
     **kwargs: Any,
 ) -> Tensor:
     """
@@ -100,15 +112,22 @@ def dispersion2(
         Atomic C6 dispersion coefficients.
     r4r2 : Tensor
         r⁴ over r² expectation values of the atoms in the system.
-    damping_function : Callable
+    damping_function : DampingFunction, optional
         Damping function evaluate distance dependent contributions.
         Additional arguments are passed through to the function.
+        Defaults to `rational_damping`.
+    cutoff : Tensor | None, optional
+        Real-space cutoff for two-body dispersion. Defaults to `None`, which
+        will be evaluated to `defaults.D4_DISP2_CUTOFF`.
 
     Returns
     -------
     Tensor
         Atom-resolved two-body dispersion energy.
     """
+    if cutoff is None:
+        cutoff = positions.new_tensor(defaults.D4_DISP2_CUTOFF)
+
     mask = real_pairs(numbers, diagonal=False)
     distances = torch.where(
         mask,
@@ -139,7 +158,7 @@ def dispersion2(
     edisp = s6 * e6 + s8 * e8
 
     if "s10" in param and param["s10"] != 0.0:
-        c10 = 49.0 / 40.0 * pow(qq, 2)
+        c10 = c6 * torch.pow(qq, 2) * 49.0 / 40.0
         t10 = torch.where(
             mask * (distances <= cutoff),
             damping_function(10, distances, qq, param, **kwargs),
