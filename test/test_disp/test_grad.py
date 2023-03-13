@@ -23,11 +23,11 @@ from __future__ import annotations
 import pytest
 import torch
 from torch.autograd.gradcheck import gradcheck
-from tad_dftd4.disp import dftd4
+
 from tad_dftd4._typing import Tensor
+from tad_dftd4.disp import dftd4
 
 from .samples import samples
-
 
 sample_list = ["LiH", "SiH4", "MB16_43_01"]
 
