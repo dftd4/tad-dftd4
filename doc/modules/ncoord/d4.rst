@@ -1,0 +1,2 @@
+.. automodule:: tad_dftd4.ncoord.d4
+   :members:

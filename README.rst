@@ -58,7 +58,7 @@ Installation
 pip
 ~~~
 
-The project can easily be installed with ``pip``.
+*tad-dftd4* can easily be installed with ``pip``.
 
 .. code::
 

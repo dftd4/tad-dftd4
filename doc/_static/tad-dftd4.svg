@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="37.211128mm"
+   height="18.8976mm"
+   viewBox="0 0 37.211129 18.897599"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (1:1.2.2+202212051550+b0a8486541)"
+   sodipodi:docname="tad-dftd3.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="4.9699601"
+     inkscape:cx="33.903693"
+     inkscape:cy="56.33848"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="text1178"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-nodes="true"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-47.640812,-88.418034)">
+    <g
+       aria-label="D3"
+       id="text1178"
+       style="font-weight:600;font-size:25.4px;line-height:1.25;font-family:'Source Sans Pro';-inkscape-font-specification:'Source Sans Pro Semi-Bold';text-align:center;text-anchor:middle;stroke-width:0.264583">
+      <g
+         aria-label="D"
+         id="text11992"
+         style="stroke-width:0.0700042" />
+      <g
+         aria-label="δ"
+         id="text15893"
+         style="text-align:start;text-anchor:start;fill:#909085;stroke-width:0.0700042">
+        <path
+           d="m 51.882612,107.31563 c 3.5814,0 6.0198,-3.5052 6.0198,-7.467596 0,-2.8956 -1.3716,-4.0132 -2.921,-5.207 -1.651,-1.2954 -2.8702,-2.413 -2.8702,-3.7084 0,-1.0414 0.6604,-1.6764 2.2352,-1.6764 1.1938,0 2.9464,0.4826 5.0292,1.905 l 0.508,-0.7112 c -1.9304,-1.4224 -3.81,-2.032 -5.5118,-2.032 -2.3368,0 -3.2004,1.143 -3.2004,2.54 0,1.3716 1.3208,2.794 2.8194,4.0132 -3.7338,0.4572 -6.35,3.9878 -6.35,7.569196 0,3.048 1.905,4.7752 4.2418,4.7752 z m -3.2766,-4.9784 c 0,-2.971796 2.2098,-6.603996 6.223,-6.705596 1.2446,1.016 2.1082,2.0066 2.1082,4.419596 0,3.2512 -2.032,6.4008 -4.9784,6.4008 -1.9812,0 -3.3528,-1.5494 -3.3528,-4.1148 z"
+           style="font-style:italic;font-weight:300;-inkscape-font-specification:'Source Sans Pro Light Italic'"
+           id="path39681" />
+      </g>
+      <path
+         id="path15478"
+         style="fill:#f36818;stroke-width:0.180132;stroke-linecap:round;stroke-linejoin:round"
+         d="m 66.134598,91.162476 a 0.87599999,0.87599999 0 0 1 -0.876,0.876 0.87599999,0.87599999 0 0 1 -0.876,-0.876 0.87599999,0.87599999 0 0 1 0.876,-0.876 0.87599999,0.87599999 0 0 1 0.876,0.876 z M 61.196057,90.283553 V 106.9461 h 4.267439 c 5.0292,0 7.772136,-3.09915 7.772136,-8.407754 0,-4.034111 -1.599524,-6.720612 -4.640027,-7.765417 -0.0097,-0.0033 -0.01925,-0.0048 -0.02894,-0.0067 a 0.93880949,0.93880949 0 0 0 -0.319877,-0.05633 0.93880949,0.93880949 0 0 0 -0.938961,0.938961 0.93880949,0.93880949 0 0 0 0.59583,0.873848 c 1.45e-4,6.1e-5 3.71e-4,-6.2e-5 5.17e-4,0 2.084147,0.882247 3.121773,2.943814 3.121773,6.015653 0,4.216404 -1.9305,6.654894 -5.816699,6.654894 H 63.329777 V 92.035901 90.283553 Z" />
+      <path
+         d="m 80.55697,92.532439 -4.839396,8.779221 h 4.839396 z m -0.502918,-1.9387 c 0.842886,-0.163669 1.53626,-0.157361 2.41021,0 v 10.717921 h 2.02116 c 0.151033,0.55402 0.259983,1.12556 0,1.85057 h -2.02116 v 3.8774 c -0.678403,0.27859 -1.298529,0.18678 -1.907292,0 v -3.8774 h -6.395594 c -0.09474,-0.43212 -0.221128,-1.28797 0,-2.14799 z"
+         id="path7607"
+         sodipodi:nodetypes="cccccccccccccccc"
+         style="font-weight:normal;font-size:20.9382px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#00961a;stroke-width:0.138499" />
+    </g>
+  </g>
+</svg>
