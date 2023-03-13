@@ -13,9 +13,9 @@ Torch autodiff for DFT-D4
     :target: https://pypi.org/project/tad-dftd4/
     :alt: PyPI
 
-.. image:: https://img.shields.io/github/license/dftd4/tad-dftd4
-    :target: LICENSE
-    :alt: Apache-2.0
+.. image:: https://img.shields.io/badge/License-LGPL_v3-blue.svg
+    :target: https://www.gnu.org/licenses/lgpl-3.0
+    :alt: LGPL-3.0
 
 .. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml
@@ -49,7 +49,7 @@ For alternative implementations, also check out
 `dftd4 <https://dftd4.readthedocs.io>`__:
   Implementation of the DFT-D4 dispersion model in Fortran with Python bindings.
 
-`cpp-dftd4 <https://github.com/dftd4/cpp-d4>`__:
+`cpp-d4 <https://github.com/dftd4/cpp-d4>`__:
   Implementation of the DFT-D4 dispersion model in C++.
 
 Installation
@@ -58,7 +58,7 @@ Installation
 pip
 ~~~
 
-The project can easily be installed with ``pip``.
+*tad-dftd4* can easily be installed with ``pip``.
 
 .. code::
 
@@ -118,7 +118,8 @@ Note that this randomizes the order of tests but skips "large" tests. To modify 
 
     tox -- test
 
-## Examples
+Examples
+--------
 
 The following example shows how to calculate the DFT-D3 dispersion energy for a single structure.
 
@@ -172,13 +173,13 @@ The next example shows the calculation of dispersion energies for a batch of str
 
     import torch
     import tad_dftd4 as d4
-    
+
     # S22 system 4: formamide dimer
     numbers = d4.utils.pack((
         d4.utils.to_number("C C N N H H H H H H O O".split()),
         d4.utils.to_number("C O N H H H".split()),
     ))
-    
+
     # coordinates in Bohr
     positions = d4.utils.pack((
         torch.tensor([
@@ -204,10 +205,10 @@ The next example shows the calculation of dispersion energies for a batch of str
             [-2.63139587595376, +0.96447869452240, 0.00000000000000],
         ]),
     ))
-    
+
     # total charge of both system
     charge = torch.tensor([0.0, 0.0])
-    
+
     # TPSS0-D4-ATM parameters
     param = {
         "s6": positions.new_tensor(1.0),
@@ -216,7 +217,7 @@ The next example shows the calculation of dispersion energies for a batch of str
         "a1": positions.new_tensor(0.44286966),
         "a2": positions.new_tensor(4.60230534),
     }
-    
+
     # calculate dispersion energy in Hartree
     energy = torch.sum(d4.dftd4(numbers, positions, charge, param), -1)
     torch.set_printoptions(precision=10)
