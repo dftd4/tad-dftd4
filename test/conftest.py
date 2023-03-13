@@ -1,6 +1,6 @@
 # This file is part of tad-dftd4.
 #
-# SPDX-Identifier: LGPL-3.0-or-later
+# SPDX-Identifier: LGPL-3.0
 # Copyright (C) 2022 Marvin Friede
 #
 # tad-dftd4 is free software: you can redistribute it and/or modify it under
