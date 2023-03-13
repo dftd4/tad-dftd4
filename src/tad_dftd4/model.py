@@ -36,7 +36,7 @@ Example
 >>>
 >>> # calculate Gaussian weights, optionally pass CN and partial charges
 >>> gw = model.weight_references()
->>> c6 = d4.get_atomic_c6(gw)
+>>> c6 = model.get_atomic_c6(gw)
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class D4Model(TensorLike):
     """
 
     numbers: Tensor
-    """Atomic numbers."""
+    """Atomic numbers of all atoms in the system."""
 
     ga: float
     """Maximum charge scaling height for partial charge extrapolation."""
@@ -82,6 +82,29 @@ class D4Model(TensorLike):
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """
+        Instantiate `D4Model`.
+
+        Parameters
+        ----------
+        numbers : Tensor
+            Atomic numbers of all atoms in the system.
+        ga : float, optional
+            Maximum charge scaling height for partial charge extrapolation.
+            Defaults to `ga_default`.
+        gc : float, optional
+            Charge scaling steepness for partial charge extrapolation.
+            Defaults to `gc_default`.
+        wf : float, optional
+            Weighting factor for coordination number interpolation.
+            Defaults to `wf_default`.
+        alpha : Tensor | None, optional
+            Reference polarizabilities of unique species. Defaults to `None`.
+        device : torch.device | None, optional
+            Pytorch device for calculations. Defaults to `None`.
+        dtype : torch.dtype | None, optional
+            Pytorch dtype for calculations. Defaults to `None`.
+        """
         super().__init__(device, dtype)
         self.numbers = numbers
 
@@ -96,12 +119,24 @@ class D4Model(TensorLike):
     def unique(self) -> Tensor:
         """
         Unique species (elements) in molecule(s). Sorted in ascending order.
+
+        Returns
+        -------
+        Tensor
+            Unique species within `D4Model.numbers`.
         """
-        return torch.unique(self.numbers, return_inverse=True)[0]
+        return torch.unique(self.numbers)
 
     @property
     def atom_to_unique(self) -> Tensor:
-        """Mapping of atoms to unique species"""
+        """
+        Mapping of atoms to unique species.
+
+        Returns
+        -------
+        Tensor
+            Mapping of atoms (`D4Model.numbers`) to unique species.
+        """
         return torch.unique(self.numbers, return_inverse=True)[1]
 
     def weight_references(
@@ -109,6 +144,21 @@ class D4Model(TensorLike):
         cn: Tensor | None = None,
         q: Tensor | None = None,
     ) -> Tensor:
+        """
+        Calculate the weights of the reference system.
+
+        Parameters
+        ----------
+        cn : Tensor | None, optional
+            Coordination number of every atom. Defaults to `None` (0).
+        q : Tensor | None, optional
+            Partial charge of every atom. Defaults to `None` (0).
+
+        Returns
+        -------
+        Tensor
+            Weights for the atomic reference systems.
+        """
         if cn is None:
             cn = torch.zeros_like(self.numbers, dtype=self.dtype)
         if q is None:
@@ -191,7 +241,17 @@ class D4Model(TensorLike):
 
     def get_atomic_c6(self, gw: Tensor) -> Tensor:
         """
-        Calculate atomic dispersion coefficients.
+        Calculate atomic C6 dispersion coefficients.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems.
+
+        Returns
+        -------
+        Tensor
+            C6 coefficients for all atom pairs.
         """
         alpha = self.alpha[self.atom_to_unique]
 
@@ -208,14 +268,39 @@ class D4Model(TensorLike):
 
         return torch.sum(g * rc6, dim=(-2, -1))
 
-    def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor):
+    def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
+        """
+        charge scaling function.
+
+        Parameters
+        ----------
+        gam : Tensor
+            Chemical hardness.
+        qref : Tensor
+            Reference charges.
+        qmod : Tensor
+            Modified charges.
+
+        Returns
+        -------
+        Tensor
+            Scaled charges.
+        """
         return torch.where(
             qmod > 0.0,
             torch.exp(self.ga * (1.0 - torch.exp(gam * (1.0 - qref / qmod)))),
             torch.exp(qmod.new_tensor(self.ga)),
         )
 
-    def _set_refalpha_eeq(self):
+    def _set_refalpha_eeq(self) -> Tensor:
+        """
+        Set the reference polarizibilities for unique species.
+
+        Returns
+        -------
+        Tensor
+            Reference polarizibilities for unique species (not all atoms).
+        """
         numbers = self.unique
         refsys = params.refsys[numbers].to(self.device)
         refsq = params.refsq[numbers].type(self.dtype).to(self.device)

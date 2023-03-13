@@ -56,8 +56,9 @@ r4_over_r2 = torch.tensor([
     7.5667, 6.9456, 6.3946, 5.9159, 5.4929,  # -Cn
     6.7286, 6.5144,10.9169,10.3600, 9.4723, 8.6641,  # Nh-Og
 ])
+"""Acutally calculated r⁴ over r² expectation values."""
 # fmt: on
 
 
 r4r2 = torch.sqrt(0.5 * (r4_over_r2 * torch.sqrt(torch.arange(r4_over_r2.shape[0]))))
-"""r⁴ over r² expectation values"""
+"""r⁴ over r² expectation values."""
