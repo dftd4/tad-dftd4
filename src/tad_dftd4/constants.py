@@ -152,5 +152,7 @@ PSE = {
     117: "Ts",
     118: "Og",
 }
+"""Periodic table with atomic number as key and element symbol as value."""
 
 ATOMIC_NUMBER = {sym: num for num, sym in PSE.items()}
+"""Periodic table with element symbol as key and atomic number as value."""

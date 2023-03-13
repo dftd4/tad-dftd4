@@ -32,7 +32,7 @@ Install the required dependencies from the conda-forge channel.
     mamba activate torch
 
 Development
------------
+~~~~~~~~~~~
 
 For development, additionally install the following tools in your environment.
 
