@@ -25,7 +25,7 @@ Torch autodiff for DFT-D4
     :target: https://tad-dftd4.readthedocs.io
     :alt: Documentation Status
 
-.. image:: https://codecov.io/gh/dftd4/tad-dftd4/branch/main/graph/badge.svg?token=OGJJnZ6t4G 
+.. image:: https://codecov.io/gh/dftd4/tad-dftd4/branch/main/graph/badge.svg?token=OGJJnZ6t4G
     :target: https://codecov.io/gh/dftd4/tad-dftd4
     :alt: Coverage
 
