@@ -17,16 +17,16 @@ Torch autodiff for DFT-D4
     :target: https://www.gnu.org/licenses/lgpl-3.0
     :alt: LGPL-3.0
 
-.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg
-    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml
+.. image:: https://github.com/dftd4/dftd4/workflows/CI/badge.svg
+    :target: https://github.com/dftd4/dftd4/actions
     :alt: CI
 
 .. image:: https://readthedocs.org/projects/tad-dftd4/badge/?version=latest
     :target: https://tad-dftd4.readthedocs.io
     :alt: Documentation Status
 
-.. image:: https://codecov.io/gh/marvinfriede/tad-dftd4/branch/master/graph/badge.svg?token=OGJJnZ6t4G
-    :target: https://codecov.io/gh/marvinfriede/tad-dftd4
+.. image:: https://codecov.io/gh/dftd4/tad-dftd4/branch/main/graph/badge.svg?token=OGJJnZ6t4G 
+    :target: https://codecov.io/gh/dftd4/tad-dftd4
     :alt: Coverage
 
 .. image:: https://results.pre-commit.ci/badge/github/dftd4/tad-dftd4/main.svg
