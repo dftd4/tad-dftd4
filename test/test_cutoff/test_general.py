@@ -30,33 +30,41 @@ from ..utils import get_device_from_str
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.float32, torch.float64])
 def test_change_type(dtype: torch.dtype) -> None:
-    model = Cutoff().type(dtype)
-    assert model.dtype == dtype
+    cutoff = Cutoff().type(dtype)
+    assert cutoff.dtype == dtype
+    assert cutoff.disp2.dtype == dtype
+    assert cutoff.disp3.dtype == dtype
+    assert cutoff.cn.dtype == dtype
+    assert cutoff.cn_eeq.dtype == dtype
 
 
 def test_change_type_fail() -> None:
-    model = Cutoff()
+    cutoff = Cutoff()
 
     # trying to use setter
     with pytest.raises(AttributeError):
-        model.dtype = torch.float64
+        cutoff.dtype = torch.float64
 
     # passing disallowed dtype
     with pytest.raises(ValueError):
-        model.type(torch.bool)
+        cutoff.type(torch.bool)
 
 
 @pytest.mark.cuda
 @pytest.mark.parametrize("device_str", ["cpu", "cuda"])
 def test_change_device(device_str: str) -> None:
     device = get_device_from_str(device_str)
-    model = Cutoff().to(device)
-    assert model.device == device
+    cutoff = Cutoff().to(device)
+    assert cutoff.device == device
+    assert cutoff.disp2.device == device
+    assert cutoff.disp3.device == device
+    assert cutoff.cn.device == device
+    assert cutoff.cn_eeq.device == device
 
 
 def test_change_device_fail() -> None:
-    model = Cutoff()
+    cutoff = Cutoff()
 
     # trying to use setter
     with pytest.raises(AttributeError):
-        model.device = "cpu"
+        cutoff.device = "cpu"
