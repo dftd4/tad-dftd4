@@ -49,7 +49,7 @@ For alternative implementations, also check out
 `dftd4 <https://dftd4.readthedocs.io>`__:
   Implementation of the DFT-D4 dispersion model in Fortran with Python bindings.
 
-`cpp-dftd4 <https://github.com/dftd4/cpp-d4>`__:
+`cpp-d4 <https://github.com/dftd4/cpp-d4>`__:
   Implementation of the DFT-D4 dispersion model in C++.
 
 Installation
