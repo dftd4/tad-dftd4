@@ -106,7 +106,7 @@ For development, additionally install the following tools in your environment.
 
     mamba install black covdefaults coverage mypy pre-commit pylint tox
 
-With pip, add the option ``-e`` for installing in development mode, and add ``[dev]`` for the development dependencies 
+With pip, add the option ``-e`` for installing in development mode, and add ``[dev]`` for the development dependencies
 
 .. code::
 
