@@ -50,7 +50,7 @@ References
 Examples
 --------
 
-The following example shows how to calculate the DFT-D3 dispersion energy for a single structure.
+The following example shows how to calculate the DFT-D4 dispersion energy for a single structure.
 
 .. code:: python
 

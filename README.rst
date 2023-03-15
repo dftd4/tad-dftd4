@@ -85,6 +85,18 @@ Install the required dependencies from the conda-forge channel.
     mamba env create -n torch -f environment.yaml
     mamba activate torch
 
+Install this project with ``pip`` in the environment
+
+.. code::
+
+    pip install .
+
+The following dependencies are required
+
+- `numpy <https://numpy.org/>`__
+- `torch <https://pytorch.org/>`__
+- `pytest <https://docs.pytest.org/>`__ (tests only)
+
 Development
 -----------
 
@@ -94,7 +106,7 @@ For development, additionally install the following tools in your environment.
 
     mamba install black covdefaults coverage mypy pre-commit pylint tox
 
-With pip, add the option ``-e`` and the development dependencies for installing in development mode.
+With pip, add the option ``-e`` for installing in development mode, and add ``[dev]`` for the development dependencies
 
 .. code::
 
@@ -112,7 +124,7 @@ For testing all Python environments, simply run `tox`.
 
     tox
 
-Note that this randomizes the order of tests but skips "large" tests. To modify this behavior, `tox` has to skip the optional _posargs_.
+Note that this randomizes the order of tests but skips "large" tests. To modify this behavior, `tox` has to skip the optional *posargs*.
 
 .. code::
 
@@ -121,7 +133,7 @@ Note that this randomizes the order of tests but skips "large" tests. To modify 
 Examples
 --------
 
-The following example shows how to calculate the DFT-D3 dispersion energy for a single structure.
+The following example shows how to calculate the DFT-D4 dispersion energy for a single structure.
 
 .. code:: python
 

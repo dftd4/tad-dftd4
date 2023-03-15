@@ -19,7 +19,7 @@
 Atomic data: Radii
 ==================
 
-Covalent radii for DFT-D3 coordination number.
+Covalent radii for DFT-D4 coordination number.
 """
 
 import torch
