@@ -159,6 +159,9 @@ class D4Model(TensorLike):
         Tensor
             Weights for the atomic reference systems.
         """
+        dd = {"device": self.device, "dtype": self.dtype}
+        zero = torch.tensor(0.0, **dd)
+
         if cn is None:
             cn = torch.zeros_like(self.numbers, dtype=self.dtype)
         if q is None:
@@ -202,7 +205,7 @@ class D4Model(TensorLike):
                     tmp,
                 ),
             ),
-            dcn.new_tensor(0.0),
+            zero,
         )
 
         # normalize weights
@@ -219,8 +222,8 @@ class D4Model(TensorLike):
             exceptional,
             torch.where(
                 refcn == maxcn,
-                gw_temp.new_tensor(1.0),
-                gw_temp.new_tensor(0.0),
+                torch.tensor(1.0, **dd),
+                zero,
             ),
             gw_temp,
         )
@@ -234,7 +237,7 @@ class D4Model(TensorLike):
         zeta = torch.where(
             mask,
             self._zeta(gam, refq + zeff, q + zeff),
-            gw_temp.new_tensor(0.0),
+            zero,
         )
 
         return zeta * gw
@@ -289,7 +292,7 @@ class D4Model(TensorLike):
         return torch.where(
             qmod > 0.0,
             torch.exp(self.ga * (1.0 - torch.exp(gam * (1.0 - qref / qmod)))),
-            torch.exp(qmod.new_tensor(self.ga)),
+            torch.exp(torch.tensor(self.ga, device=self.device, dtype=self.dtype)),
         )
 
     def _set_refalpha_eeq(self) -> Tensor:
@@ -301,6 +304,8 @@ class D4Model(TensorLike):
         Tensor
             Reference polarizibilities for unique species (not all atoms).
         """
+        zero = torch.tensor(0.0, device=self.device, dtype=self.dtype)
+
         numbers = self.unique
         refsys = params.refsys[numbers].to(self.device)
         refsq = params.refsq[numbers].type(self.dtype).to(self.device)
@@ -321,14 +326,14 @@ class D4Model(TensorLike):
         zeta = torch.where(
             mask,
             self._zeta(gam, zeff, refsq + zeff),
-            gam.new_tensor(0.0),
+            zero,
         )
 
         aiw = secscale[refsys] * secalpha[refsys] * zeta.unsqueeze(-1)
         h = refalpha - refscount.unsqueeze(-1) * aiw
         alpha = refascale.unsqueeze(-1) * h
 
-        return torch.where(alpha > 0.0, alpha, alpha.new_tensor(0.0))
+        return torch.where(alpha > 0.0, alpha, zero)
 
 
 def trapzd(polarizability: Tensor) -> Tensor:

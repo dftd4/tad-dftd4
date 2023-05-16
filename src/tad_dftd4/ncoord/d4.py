@@ -74,9 +74,10 @@ def get_coordination_number_d4(
     ValueError
         If shape mismatch between `numbers`, `positions` and `rcov` is detected.
     """
+    dd = {"device": positions.device, "dtype": positions.dtype}
 
     if cutoff is None:
-        cutoff = positions.new_tensor(defaults.D4_CN_CUTOFF)
+        cutoff = torch.tensor(defaults.D4_CN_CUTOFF, **dd)
 
     if rcov is None:
         rcov = cov_rad_d3[numbers]
@@ -102,7 +103,7 @@ def get_coordination_number_d4(
     distances = torch.where(
         mask,
         torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        positions.new_tensor(torch.finfo(positions.dtype).eps),
+        torch.tensor(torch.finfo(positions.dtype).eps, **dd),
     )
 
     # Eq. 6
@@ -115,6 +116,6 @@ def get_coordination_number_d4(
     cf = torch.where(
         mask * (distances <= cutoff),
         den * counting_function(distances, rc, **kwargs),
-        positions.new_tensor(0.0),
+        torch.tensor(0.0, **dd),
     )
     return torch.sum(cf, dim=-1)

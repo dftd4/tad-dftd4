@@ -82,6 +82,8 @@ def get_atm_dispersion(
     Tensor
         Atom-resolved ATM dispersion energy.
     """
+    dd = {"device": positions.device, "dtype": positions.dtype}
+
     s9 = s9.type(positions.dtype).to(positions.device)
     alp = alp.type(positions.dtype).to(positions.device)
 
@@ -109,7 +111,7 @@ def get_atm_dispersion(
             torch.cdist(
                 positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"
             ),
-            positions.new_tensor(torch.finfo(positions.dtype).eps),
+            torch.tensor(torch.finfo(positions.dtype).eps, **dd),
         ),
         2.0,
     )
@@ -131,7 +133,7 @@ def get_atm_dispersion(
         * (r2jk <= cutoff2)
         * (r2jk <= cutoff2),
         0.375 * s / r5 + 1.0 / r3,
-        positions.new_tensor(0.0),
+        torch.tensor(0.0, **dd),
     )
 
     energy = ang * fdamp * c9

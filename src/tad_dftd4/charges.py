@@ -273,6 +273,7 @@ def solve(
     >>> print(total_charge.grad)
     tensor(0.6312)
     """
+    dd = {"device": positions.device, "dtype": positions.dtype}
 
     if model.device != positions.device:
         raise RuntimeError(
@@ -288,7 +289,7 @@ def solve(
             "to correctly set the dtype."
         )
 
-    eps = positions.new_tensor(torch.finfo(positions.dtype).eps)
+    eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
 
     real = real_atoms(numbers)
     mask = real_pairs(numbers, diagonal=True)
@@ -314,7 +315,7 @@ def solve(
     eta = torch.where(
         real,
         model.eta[numbers] + torch.sqrt(torch.tensor(2.0 / math.pi)) / rad,
-        distances.new_tensor(1.0),
+        torch.tensor(1.0, **dd),
     )
     coulomb = torch.where(
         diagonal,
@@ -322,7 +323,7 @@ def solve(
         torch.where(
             mask,
             torch.erf(distances * gamma) / distances,
-            distances.new_tensor(0.0),
+            torch.tensor(0.0, **dd),
         ),
     )
     constraint = torch.where(
