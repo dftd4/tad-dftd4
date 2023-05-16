@@ -74,9 +74,10 @@ def get_coordination_number_eeq(
     ValueError
         If shape mismatch between `numbers`, `positions` and `rcov` is detected.
     """
+    dd = {"device": positions.device, "dtype": positions.dtype}
 
     if cutoff is None:
-        cutoff = positions.new_tensor(defaults.D4_CN_EEQ_CUTOFF)
+        cutoff = torch.tensor(defaults.D4_CN_EEQ_CUTOFF, **dd)
 
     if rcov is None:
         rcov = cov_rad_d3[numbers]
@@ -102,14 +103,14 @@ def get_coordination_number_eeq(
             p=2,
             compute_mode="use_mm_for_euclid_dist",
         ),
-        positions.new_tensor(torch.finfo(positions.dtype).eps),
+        torch.tensor(torch.finfo(positions.dtype).eps, **dd),
     )
 
     rc = rcov.unsqueeze(-2) + rcov.unsqueeze(-1)
     cf = torch.where(
         mask * (distances <= cutoff),
         counting_function(distances, rc, **kwargs),
-        positions.new_tensor(0.0),
+        torch.tensor(0.0, **dd),
     )
     cn = torch.sum(cf, dim=-1)
 
@@ -123,7 +124,7 @@ def cut_coordination_number(
     cn: Tensor, cn_max: Tensor | float | int = defaults.D4_CN_EEQ_MAX
 ):
     if isinstance(cn_max, (float, int)):
-        cn_max = cn.new_tensor(cn_max)
+        cn_max = torch.tensor(cn_max, device=cn.device, dtype=cn.dtype)
 
     if cn_max > 50:
         return cn

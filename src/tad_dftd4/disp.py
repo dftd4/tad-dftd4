@@ -195,14 +195,17 @@ def dispersion2(
     Tensor
         Atom-resolved two-body dispersion energy.
     """
+    dd = {"device": positions.device, "dtype": positions.dtype}
+    zero = torch.tensor(0.0, **dd)
+
     if cutoff is None:
-        cutoff = positions.new_tensor(defaults.D4_DISP2_CUTOFF)
+        cutoff = torch.tensor(defaults.D4_DISP2_CUTOFF, **dd)
 
     mask = real_pairs(numbers, diagonal=False)
     distances = torch.where(
         mask,
         torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        positions.new_tensor(torch.finfo(positions.dtype).eps),
+        torch.tensor(torch.finfo(positions.dtype).eps, **dd),
     )
 
     qq = 3 * r4r2.unsqueeze(-1) * r4r2.unsqueeze(-2)
@@ -211,19 +214,19 @@ def dispersion2(
     t6 = torch.where(
         mask * (distances <= cutoff),
         damping_function(6, distances, qq, param, **kwargs),
-        positions.new_tensor(0.0),
+        zero,
     )
     t8 = torch.where(
         mask * (distances <= cutoff),
         damping_function(8, distances, qq, param, **kwargs),
-        positions.new_tensor(0.0),
+        zero,
     )
 
     e6 = torch.sum(c6 * t6, dim=-1)
     e8 = torch.sum(c8 * t8, dim=-1)
 
-    s6 = param.get("s6", positions.new_tensor(defaults.S6))
-    s8 = param.get("s8", positions.new_tensor(defaults.S8))
+    s6 = param.get("s6", torch.tensor(defaults.S6, **dd))
+    s8 = param.get("s8", torch.tensor(defaults.S8, **dd))
 
     edisp = s6 * e6 + s8 * e8
 
@@ -232,7 +235,7 @@ def dispersion2(
         t10 = torch.where(
             mask * (distances <= cutoff),
             damping_function(10, distances, qq, param, **kwargs),
-            positions.new_tensor(0.0),
+            zero,
         )
         e10 = torch.sum(c10 * t10, dim=-1)
         edisp += param["s10"] * e10
@@ -270,12 +273,14 @@ def dispersion3(
     Tensor
         Atom-resolved three-body dispersion energy.
     """
-    if cutoff is None:
-        cutoff = positions.new_tensor(defaults.D4_DISP3_CUTOFF)
+    dd = {"device": positions.device, "dtype": positions.dtype}
 
-    s9 = param.get("s9", positions.new_tensor(defaults.S9))
-    a1 = param.get("a1", positions.new_tensor(defaults.A1))
-    a2 = param.get("a2", positions.new_tensor(defaults.A2))
-    alp = param.get("alp", positions.new_tensor(defaults.ALP))
+    if cutoff is None:
+        cutoff = torch.tensor(defaults.D4_DISP3_CUTOFF, **dd)
+
+    s9 = param.get("s9", torch.tensor(defaults.S9, **dd))
+    a1 = param.get("a1", torch.tensor(defaults.A1, **dd))
+    a2 = param.get("a2", torch.tensor(defaults.A2, **dd))
+    alp = param.get("alp", torch.tensor(defaults.ALP, **dd))
 
     return get_atm_dispersion(numbers, positions, cutoff, c6, s9, a1, a2, alp)
