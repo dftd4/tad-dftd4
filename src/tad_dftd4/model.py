@@ -160,7 +160,6 @@ class D4Model(TensorLike):
             Weights for the atomic reference systems.
         """
         dd = {"device": self.device, "dtype": self.dtype}
-        zero = torch.tensor(0.0, **dd)
 
         if cn is None:
             cn = torch.zeros_like(self.numbers, dtype=self.dtype)
@@ -205,7 +204,7 @@ class D4Model(TensorLike):
                     tmp,
                 ),
             ),
-            zero,
+            torch.tensor(0.0, device=self.device, dtype=refcn.dtype),  # double!
         )
 
         # normalize weights
@@ -223,7 +222,7 @@ class D4Model(TensorLike):
             torch.where(
                 refcn == maxcn,
                 torch.tensor(1.0, **dd),
-                zero,
+                torch.tensor(0.0, **dd),
             ),
             gw_temp,
         )
@@ -237,7 +236,7 @@ class D4Model(TensorLike):
         zeta = torch.where(
             mask,
             self._zeta(gam, refq + zeff, q + zeff),
-            zero,
+            torch.tensor(0.0, **dd),
         )
 
         return zeta * gw
