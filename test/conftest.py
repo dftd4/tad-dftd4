@@ -18,6 +18,7 @@
 """
 Setup for pytest.
 """
+from __future__ import annotations
 
 import pytest
 import torch

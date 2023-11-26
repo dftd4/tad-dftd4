@@ -93,8 +93,6 @@ class ChargeModel(TensorLike):
         self.eta = eta
         self.rad = rad
 
-        print(self.device)
-        print(self.chi.device)
         if any(
             tensor.device != self.device
             for tensor in (self.chi, self.kcn, self.eta, self.rad)
