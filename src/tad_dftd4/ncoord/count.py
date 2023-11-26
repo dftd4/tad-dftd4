@@ -27,13 +27,14 @@ the D4 model. Nevertheless, it is included here.
 Additionally, the analytical derivatives for both counting functions are also
 provided and can be used for checking the autograd results.
 """
-
 from math import pi, sqrt
 
 import torch
 
 from .. import defaults
 from .._typing import Tensor
+
+__all__ = ["exp_count", "dexp_count", "erf_count", "derf_count"]
 
 
 def exp_count(r: Tensor, r0: Tensor, kcn: float = defaults.D4_KCN) -> Tensor:

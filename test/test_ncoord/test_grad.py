@@ -21,13 +21,13 @@ functions used for the coordination number within the EEQ model and D4.
 """
 from __future__ import annotations
 
-from math import sqrt
-
 import pytest
 import torch
 
-from tad_dftd4._typing import CountingFunction
+from tad_dftd4._typing import DD, CountingFunction
 from tad_dftd4.ncoord import derf_count, dexp_count, erf_count, exp_count
+
+from ..conftest import DEVICE
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
@@ -41,11 +41,13 @@ from tad_dftd4.ncoord import derf_count, dexp_count, erf_count, exp_count
 def test_count_grad(
     dtype: torch.dtype, function: tuple[CountingFunction, CountingFunction]
 ) -> None:
-    tol = sqrt(torch.finfo(dtype).eps) * 10
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+
+    tol = torch.finfo(dtype).eps ** 0.5 * 10
     cf, dcf = function
 
-    a = torch.rand(4, dtype=dtype)
-    b = torch.rand(4, dtype=dtype)
+    a = torch.rand(4, **dd)
+    b = torch.rand(4, **dd)
 
     a_grad = a.detach().clone().requires_grad_(True)
     count = cf(a_grad, b)
@@ -53,4 +55,4 @@ def test_count_grad(
     grad_auto = torch.autograd.grad(count.sum(-1), a_grad)[0]
     grad_expl = dcf(a, b)
 
-    assert pytest.approx(grad_auto, abs=tol) == grad_expl
+    assert pytest.approx(grad_auto.cpu(), abs=tol) == grad_expl.cpu()

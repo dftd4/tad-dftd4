@@ -24,9 +24,10 @@ import pytest
 import torch
 from torch.autograd.gradcheck import gradcheck
 
-from tad_dftd4._typing import Tensor
+from tad_dftd4._typing import DD, Tensor
 from tad_dftd4.disp import dftd4
 
+from ..conftest import DEVICE
 from .samples import samples
 
 sample_list = ["LiH", "SiH4", "MB16_43_01"]
@@ -35,18 +36,19 @@ sample_list = ["LiH", "SiH4", "MB16_43_01"]
 @pytest.mark.grad
 @pytest.mark.parametrize("name", sample_list)
 def test_grad_param(name) -> None:
-    dtype = torch.float64
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
     sample = samples[name]
-    numbers = sample["numbers"]
-    positions = sample["positions"].type(dtype)
-    charge = positions.new_tensor(0.0)
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+    charge = torch.tensor(0.0, **dd)
 
     param = (
-        positions.new_tensor(1.00000000).requires_grad_(True),
-        positions.new_tensor(0.78981345).requires_grad_(True),
-        positions.new_tensor(1.00000000).requires_grad_(True),
-        positions.new_tensor(0.49484001).requires_grad_(True),
-        positions.new_tensor(5.73083694).requires_grad_(True),
+        torch.tensor(1.00000000, **dd, requires_grad=True),
+        torch.tensor(0.78981345, **dd, requires_grad=True),
+        torch.tensor(1.00000000, **dd, requires_grad=True),
+        torch.tensor(0.49484001, **dd, requires_grad=True),
+        torch.tensor(5.73083694, **dd, requires_grad=True),
     )
     label = ("s6", "s8", "s9", "a1", "a2")
 
@@ -60,21 +62,22 @@ def test_grad_param(name) -> None:
 @pytest.mark.grad
 @pytest.mark.parametrize("name", sample_list)
 def test_grad_positions(name: str) -> None:
-    dtype = torch.float64
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
     sample = samples[name]
-    numbers = sample["numbers"]
-    positions = sample["positions"].type(dtype)
-    charge = positions.new_tensor(0.0)
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+    charge = torch.tensor(0.0, **dd)
 
     # TPSS0-D4-ATM parameters
     param = {
-        "s6": positions.new_tensor(1.0),
-        "s8": positions.new_tensor(1.85897750),
-        "s9": positions.new_tensor(1.0),
-        "s10": positions.new_tensor(0.0),
-        "alp": positions.new_tensor(16.0),
-        "a1": positions.new_tensor(0.44286966),
-        "a2": positions.new_tensor(4.60230534),
+        "s6": torch.tensor(1.00000000, **dd),
+        "s8": torch.tensor(1.85897750, **dd),
+        "s9": torch.tensor(1.00000000, **dd),
+        "s10": torch.tensor(0.0000000, **dd),
+        "alp": torch.tensor(16.000000, **dd),
+        "a1": torch.tensor(0.44286966, **dd),
+        "a2": torch.tensor(4.60230534, **dd),
     }
 
     pos = positions.detach().clone().requires_grad_(True)

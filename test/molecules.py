@@ -25,30 +25,6 @@ import torch
 from tad_dftd4._typing import Molecule
 from tad_dftd4.utils import to_number
 
-
-def merge_nested_dicts(a: dict, b: dict) -> dict:
-    """
-    Merge nested dictionaries. Dictionary `a` remains unaltered, while
-    the corresponding keys of it are added to `b`.
-
-    Parameters
-    ----------
-    a : dict
-        First dictionary (not changed).
-    b : dict
-        Second dictionary (changed).
-
-    Returns
-    -------
-    dict
-        Merged dictionary `b`.
-    """
-    for key in b:
-        if key in a:
-            b[key].update(a[key])
-    return b
-
-
 mols: dict[str, Molecule] = {
     "H": {
         "numbers": to_number(["H"]),

@@ -84,10 +84,14 @@ def test_init_dtype_fail() -> None:
 @pytest.mark.cuda
 def test_init_device_fail() -> None:
     t = torch.rand(5)
+    if "cuda" in str(t.device):
+        t = t.cpu()
+    elif "cpu" in str(t.device):
+        t = t.cuda()
 
     # all tensor must be on the same device
     with pytest.raises(RuntimeError):
-        charges.ChargeModel(t.to("cuda"), t, t, t)
+        charges.ChargeModel(t, t, t, t)
 
 
 @pytest.mark.cuda

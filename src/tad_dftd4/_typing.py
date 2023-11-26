@@ -84,11 +84,11 @@ elif sys.version_info >= (3, 9):
 elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases
-    from typing import Dict, List, Tuple, Union
+    from typing import Dict, List, Union, tuple
 
-    Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
-    Size = Union[List[int], Tuple[int], torch.Size]
-    TensorOrTensors = Union[List[Tensor], Tuple[Tensor, ...], Tensor]
+    Sliceable = Union[List[Tensor], tuple[Tensor, ...]]
+    Size = Union[List[int], tuple[int], torch.Size]
+    TensorOrTensors = Union[List[Tensor], tuple[Tensor, ...], Tensor]
     DampingFunction = Callable[[int, Tensor, Tensor, Dict[str, Tensor]], Tensor]
 else:
     raise RuntimeError(
@@ -107,6 +107,26 @@ class Molecule(TypedDict):
     """Tensor of 3D coordinates of shape (n, 3)"""
 
 
+class DD(TypedDict):
+    """Collection of torch.device and torch.dtype."""
+
+    device: torch.device | None
+    """Device on which a tensor lives."""
+
+    dtype: torch.dtype
+    """Floating point precision of a tensor."""
+
+
+def get_default_device() -> torch.device:
+    """Default device for tensors."""
+    return torch.tensor(1.0).device
+
+
+def get_default_dtype() -> torch.dtype:
+    """Default data type for floating point tensors."""
+    return torch.tensor(1.0).dtype
+
+
 class TensorLike:
     """
     Provide `device` and `dtype` as well as `to()` and `type()` for other
@@ -118,10 +138,8 @@ class TensorLike:
     def __init__(
         self, device: torch.device | None = None, dtype: torch.dtype | None = None
     ):
-        self.__device = (
-            device if device is not None else torch.device(defaults.TORCH_DEVICE)
-        )
-        self.__dtype = dtype if dtype is not None else defaults.TORCH_DTYPE
+        self.__device = device if device is not None else get_default_device()
+        self.__dtype = dtype if dtype is not None else get_default_dtype()
 
     @property
     def device(self) -> torch.device:

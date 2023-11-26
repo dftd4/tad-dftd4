@@ -30,10 +30,10 @@ from tad_dftd4.cutoff import Cutoff
 
 def test_defaults():
     cutoff = Cutoff()
-    assert pytest.approx(defaults.D4_DISP2_CUTOFF) == cutoff.disp2
-    assert pytest.approx(defaults.D4_DISP3_CUTOFF) == cutoff.disp3
-    assert pytest.approx(defaults.D4_CN_CUTOFF) == cutoff.cn
-    assert pytest.approx(defaults.D4_CN_EEQ_CUTOFF) == cutoff.cn_eeq
+    assert pytest.approx(defaults.D4_DISP2_CUTOFF) == cutoff.disp2.cpu()
+    assert pytest.approx(defaults.D4_DISP3_CUTOFF) == cutoff.disp3.cpu()
+    assert pytest.approx(defaults.D4_CN_CUTOFF) == cutoff.cn.cpu()
+    assert pytest.approx(defaults.D4_CN_EEQ_CUTOFF) == cutoff.cn_eeq.cpu()
 
 
 def test_tensor():
@@ -45,7 +45,7 @@ def test_tensor():
     assert isinstance(cutoff.cn, Tensor)
     assert isinstance(cutoff.cn_eeq, Tensor)
 
-    assert pytest.approx(tmp) == cutoff.disp2
+    assert pytest.approx(tmp.cpu()) == cutoff.disp2.cpu()
 
 
 @pytest.mark.parametrize("vals", [(1, 2, -3, 4), (1.0, 2.0, 3.0, -4.0)])
@@ -58,7 +58,7 @@ def test_int_float(vals: tuple[int | float, ...]):
     assert isinstance(cutoff.cn, Tensor)
     assert isinstance(cutoff.cn_eeq, Tensor)
 
-    assert pytest.approx(vals[0]) == cutoff.disp2
-    assert pytest.approx(vals[1]) == cutoff.disp3
-    assert pytest.approx(vals[2]) == cutoff.cn
-    assert pytest.approx(vals[3]) == cutoff.cn_eeq
+    assert pytest.approx(vals[0]) == cutoff.disp2.cpu()
+    assert pytest.approx(vals[1]) == cutoff.disp3.cpu()
+    assert pytest.approx(vals[2]) == cutoff.cn.cpu()
+    assert pytest.approx(vals[3]) == cutoff.cn_eeq.cpu()

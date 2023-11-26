@@ -52,8 +52,8 @@ import math
 
 import torch
 
-from ._typing import Tensor, TensorLike
-from .ncoord import get_coordination_number_eeq
+from ._typing import DD, Tensor, TensorLike
+from .ncoord import coordination_number_eeq
 from .utils import real_atoms, real_pairs
 
 __all__ = ["ChargeModel", "solve", "get_charges"]
@@ -93,6 +93,8 @@ class ChargeModel(TensorLike):
         self.eta = eta
         self.rad = rad
 
+        print(self.device)
+        print(self.chi.device)
         if any(
             tensor.device != self.device
             for tensor in (self.chi, self.kcn, self.eta, self.rad)
@@ -106,20 +108,28 @@ class ChargeModel(TensorLike):
             raise RuntimeError("All tensors must have the same dtype!")
 
     @classmethod
-    def param2019(cls) -> ChargeModel:
+    def param2019(
+        cls,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> ChargeModel:
         """
         Electronegativity equilibration charge model published in
 
-        - E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher, C. Bannwarth
-          and S. Grimme, *J. Chem. Phys.*, **2019**, 150, 154122.
+        - E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher,
+          C. Bannwarth and S. Grimme, *J. Chem. Phys.*, **2019**, 150, 154122.
           DOI: `10.1063/1.5090222 <https://dx.doi.org/10.1063/1.5090222>`__
         """
+        dd: dict = {"device": device}
+        if dtype is not None:
+            dd["dtype"] = dtype
 
         return cls(
-            _chi2019,
-            _kcn2019,
-            _eta2019,
-            _rad2019,
+            _chi2019.to(**dd),
+            _kcn2019.to(**dd),
+            _eta2019.to(**dd),
+            _rad2019.to(**dd),
+            **dd,
         )
 
 
@@ -259,7 +269,7 @@ def solve(
     Returns
     -------
     (Tensor, Tensor)
-        Tuple of electrostatic energies and partial charges.
+        tuple of electrostatic energies and partial charges.
 
     Example
     -------
@@ -383,8 +393,8 @@ def get_charges(
     Tensor
         Atomic charges.
     """
-    eeq = ChargeModel.param2019().to(positions.device).type(positions.dtype)
-    cn = get_coordination_number_eeq(numbers, positions, cutoff=cutoff)
+    eeq = ChargeModel.param2019(device=positions.device, dtype=positions.dtype)
+    cn = coordination_number_eeq(numbers, positions, cutoff=cutoff)
     _, qat = solve(numbers, positions, chrg, eeq, cn)
 
     return qat

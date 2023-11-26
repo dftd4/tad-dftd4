@@ -25,10 +25,10 @@ import torch
 
 from tad_dftd4._typing import Any, CountingFunction, Protocol, Tensor
 from tad_dftd4.ncoord import (
+    coordination_number_d4,
+    coordination_number_eeq,
     erf_count,
     exp_count,
-    get_coordination_number_d4,
-    get_coordination_number_eeq,
 )
 
 
@@ -52,7 +52,7 @@ class CNFunction(Protocol):
 
 @pytest.mark.parametrize(
     "function",
-    [get_coordination_number_d4, get_coordination_number_eeq],
+    [coordination_number_d4, coordination_number_eeq],
 )
 @pytest.mark.parametrize(
     "counting_function",

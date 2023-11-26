@@ -20,7 +20,7 @@ Test the utility functions.
 """
 import torch
 
-from tad_dftd4.utils import real_atoms, real_pairs, real_triples
+from tad_dftd4 import utils
 
 
 def test_real_atoms() -> None:
@@ -36,7 +36,7 @@ def test_real_atoms() -> None:
             [True, True, True, True, True],  # CH4
         ],
     )
-    mask = real_atoms(numbers)
+    mask = utils.real_atoms(numbers)
     assert (mask == ref).all()
 
 
@@ -45,11 +45,11 @@ def test_real_pairs_single() -> None:
     size = numbers.shape[0]
 
     ref = torch.full((size, size), True)
-    mask = real_pairs(numbers, diagonal=True)
+    mask = utils.real_pairs(numbers, diagonal=True)
     assert (mask == ref).all()
 
     ref *= ~torch.diag_embed(torch.ones(size, dtype=torch.bool))
-    mask = real_pairs(numbers, diagonal=False)
+    mask = utils.real_pairs(numbers, diagonal=False)
     assert (mask == ref).all()
 
 
@@ -75,7 +75,7 @@ def test_real_pairs_batch() -> None:
             ],
         ]
     )
-    mask = real_pairs(numbers, diagonal=True)
+    mask = utils.real_pairs(numbers, diagonal=True)
     assert (mask == ref).all()
 
     ref = torch.tensor(
@@ -92,7 +92,7 @@ def test_real_pairs_batch() -> None:
             ],
         ]
     )
-    mask = real_pairs(numbers, diagonal=False)
+    mask = utils.real_pairs(numbers, diagonal=False)
     assert (mask == ref).all()
 
 
@@ -101,11 +101,11 @@ def test_real_triples_single() -> None:
     size = numbers.shape[0]
 
     ref = torch.full((size, size, size), True)
-    mask = real_triples(numbers, diagonal=True)
+    mask = utils.real_triples(numbers, diagonal=True)
     assert (mask == ref).all()
 
     ref *= ~torch.diag_embed(torch.ones(size, dtype=torch.bool))
-    mask = real_pairs(numbers, diagonal=False)
+    mask = utils.real_pairs(numbers, diagonal=False)
     assert (mask == ref).all()
 
 
@@ -155,7 +155,7 @@ def test_real_triples_batch() -> None:
             ],
         ]
     )
-    mask = real_triples(numbers, diagonal=True)
+    mask = utils.real_triples(numbers, diagonal=True)
     assert (mask == ref).all()
 
     ref = torch.tensor(
@@ -196,5 +196,84 @@ def test_real_triples_batch() -> None:
             ],
         ]
     )
-    mask = real_triples(numbers, diagonal=False)
+    mask = utils.real_triples(numbers, diagonal=False)
+    assert (mask == ref).all()
+
+
+def test_real_triples_self_single() -> None:
+    numbers = torch.tensor([8, 1, 1])  # H2O
+
+    ref = torch.tensor(
+        [
+            [
+                [False, False, False],
+                [False, False, True],
+                [False, True, False],
+            ],
+            [
+                [False, False, True],
+                [False, False, False],
+                [True, False, False],
+            ],
+            [
+                [False, True, False],
+                [True, False, False],
+                [False, False, False],
+            ],
+        ],
+        dtype=torch.bool,
+    )
+
+    mask = utils.real_triples(numbers, self=False)
+    assert (mask == ref).all()
+
+
+def test_real_triples_self_batch() -> None:
+    numbers = torch.tensor(
+        [
+            [1, 1, 0],  # H2
+            [8, 1, 1],  # H2O
+        ],
+    )
+
+    ref = torch.tensor(
+        [
+            [
+                [
+                    [False, False, False],
+                    [False, False, False],
+                    [False, False, False],
+                ],
+                [
+                    [False, False, False],
+                    [False, False, False],
+                    [False, False, False],
+                ],
+                [
+                    [False, False, False],
+                    [False, False, False],
+                    [False, False, False],
+                ],
+            ],
+            [
+                [
+                    [False, False, False],
+                    [False, False, True],
+                    [False, True, False],
+                ],
+                [
+                    [False, False, True],
+                    [False, False, False],
+                    [True, False, False],
+                ],
+                [
+                    [False, True, False],
+                    [True, False, False],
+                    [False, False, False],
+                ],
+            ],
+        ]
+    )
+
+    mask = utils.real_triples(numbers, self=False)
     assert (mask == ref).all()

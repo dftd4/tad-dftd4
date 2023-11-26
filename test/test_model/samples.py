@@ -24,8 +24,8 @@ import torch
 
 from tad_dftd4._typing import Molecule, Tensor, TypedDict
 
-from ..molecules import merge_nested_dicts, mols
-from ..utils import reshape_fortran
+from ..molecules import mols
+from ..utils import merge_nested_dicts, reshape_fortran
 
 
 class Refs(TypedDict):

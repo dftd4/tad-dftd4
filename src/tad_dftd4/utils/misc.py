@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
-Miscellaneous functions
-=======================
+Utility functions: Miscellaneous
+================================
 
 Utilities for working with tensors as well as translating between element
 symbols and atomic numbers.
@@ -26,43 +26,48 @@ from __future__ import annotations
 
 import torch
 
-from ._typing import Size, Tensor, TensorOrTensors
-from .constants import ATOMIC_NUMBER
+from .._typing import Size, Tensor, TensorOrTensors
+from ..constants import ATOMIC_NUMBER
+
+__all__ = ["real_atoms", "real_pairs", "real_triples", "pack", "to_number"]
 
 
 def real_atoms(numbers: Tensor) -> Tensor:
     """
-    Generates mask that differentiates real atom and padding.
+    Create a mask for atoms, discerning padding and actual atoms.
+    Padding value is zero.
 
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms.
 
     Returns
     -------
     Tensor
-        Mask for real atoms.
+        Mask for atoms that discerns padding and real atoms.
     """
     return numbers != 0
 
 
 def real_pairs(numbers: Tensor, diagonal: bool = False) -> Tensor:
     """
-    Generates mask that differentiates real atom pairs and padding.
+    Create a mask for pairs of atoms from atomic numbers, discerning padding
+    and actual atoms. Padding value is zero.
 
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms.
     diagonal : bool, optional
-        Whether the diagonal should be masked, i.e. filled with `False`.
-        Defaults to `False`, i.e., `True` remains on the diagonal for real atoms.
+        Flag for also writing `False` to the diagonal, i.e., to all pairs
+        with the same indices. Defaults to `False`, i.e., writing False
+        to the diagonal.
 
     Returns
     -------
     Tensor
-        Mask for real atom pairs.
+        Mask for atom pairs that discerns padding and real atoms.
     """
     real = real_atoms(numbers)
     mask = real.unsqueeze(-2) * real.unsqueeze(-1)
@@ -71,27 +76,40 @@ def real_pairs(numbers: Tensor, diagonal: bool = False) -> Tensor:
     return mask
 
 
-def real_triples(numbers: Tensor, diagonal: bool = False) -> Tensor:
+def real_triples(
+    numbers: torch.Tensor, diagonal: bool = False, self: bool = True
+) -> Tensor:
     """
-    Generates mask that differentiates real atom triples and padding.
+    Create a mask for triples from atomic numbers. Padding value is zero.
 
     Parameters
     ----------
-    numbers : Tensor
-        Atomic numbers of the atoms in the system.
+    numbers : torch.Tensor
+        Atomic numbers for all atoms.
     diagonal : bool, optional
-        Whether the diagonal should be masked, i.e. filled with `False`.
-        Defaults to `False`, i.e., `True` remains on the diagonal for real atoms.
+        Flag for also writing `False` to the space diagonal, i.e., to all
+        triples with the same indices. Defaults to `False`, i.e., writing False
+        to the diagonal.
+    self : bool, optional
+        Flag for also writing `False` to all triples where at least two indices
+        are identical. Defaults to `True`, i.e., not writing `False`.
 
     Returns
     -------
     Tensor
-        Mask for real atom triples.
+        Mask for triples.
     """
     real = real_pairs(numbers, diagonal=True)
     mask = real.unsqueeze(-3) * real.unsqueeze(-2) * real.unsqueeze(-1)
+
     if diagonal is False:
         mask *= ~torch.diag_embed(torch.ones_like(real))
+
+    if self is False:
+        mask *= ~torch.diag_embed(torch.ones_like(real), offset=0, dim1=-3, dim2=-2)
+        mask *= ~torch.diag_embed(torch.ones_like(real), offset=0, dim1=-3, dim2=-1)
+        mask *= ~torch.diag_embed(torch.ones_like(real), offset=0, dim1=-2, dim2=-1)
+
     return mask
 
 

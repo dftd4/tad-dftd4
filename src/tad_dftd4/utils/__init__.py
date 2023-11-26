@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
-Module containing the version string.
+Utility
+=======
+
+Collection of utility functions.
 """
-__version__ = "0.0.4"
+from .distance import *
+from .grad import *
+from .misc import *

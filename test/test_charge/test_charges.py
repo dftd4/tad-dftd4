@@ -31,54 +31,53 @@ precision. For double precision, however the results are identical.
 """
 from __future__ import annotations
 
-from math import sqrt
-
 import pytest
 import torch
 
 from tad_dftd4 import charges
+from tad_dftd4._typing import DD
 from tad_dftd4.utils import pack
 
+from ..conftest import DEVICE
 from .samples import samples
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_single(dtype: torch.dtype):
-    tol = sqrt(torch.finfo(dtype).eps) * 10
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5 * 10
 
     sample = samples["NH3-dimer"]
-    numbers = sample["numbers"]
-    positions = sample["positions"].type(dtype)
-    total_charge = sample["total_charge"].type(dtype)
-    qref = sample["q"].type(dtype)
-    eref = sample["energy"].type(dtype)
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+    total_charge = sample["total_charge"].to(**dd)
 
-    cn = torch.tensor(
-        [3.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        dtype=dtype,
-    )
-    eeq = charges.ChargeModel.param2019().type(dtype)
+    qref = sample["q"].to(**dd)
+    eref = sample["energy"].to(**dd)
+
+    cn = torch.tensor([3.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], **dd)
+    eeq = charges.ChargeModel.param2019(**dd)
     energy, qat = charges.solve(numbers, positions, total_charge, eeq, cn)
+    tot = torch.sum(qat, -1)
 
     assert qat.dtype == energy.dtype == dtype
-    assert pytest.approx(torch.sum(qat, -1), abs=1e-6) == total_charge
-    assert pytest.approx(qat, abs=tol) == qref
-    assert pytest.approx(energy, abs=tol) == eref
+    assert pytest.approx(total_charge.cpu(), abs=1e-6) == tot.cpu()
+    assert pytest.approx(qref.cpu(), abs=tol) == qat.cpu()
+    assert pytest.approx(eref.cpu(), abs=tol) == energy.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_ghost(dtype: torch.dtype):
-    tol = sqrt(torch.finfo(dtype).eps)
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5
 
     sample = samples["NH3-dimer"]
-    numbers = sample["numbers"].detach()
+    numbers = sample["numbers"].to(DEVICE).detach()
     numbers[[1, 5, 6, 7]] = 0
-    positions = sample["positions"].type(dtype)
-    total_charge = sample["total_charge"].type(dtype)
-    cn = torch.tensor(
-        [3.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        dtype=dtype,
-    )
+    positions = sample["positions"].to(**dd)
+    total_charge = sample["total_charge"].to(**dd)
+    cn = torch.tensor([3.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], **dd)
+
     qref = torch.tensor(
         [
             -0.8189238943,
@@ -90,7 +89,7 @@ def test_ghost(dtype: torch.dtype):
             +0.0000000000,
             +0.0000000000,
         ],
-        dtype=dtype,
+        **dd,
     )
     eref = torch.tensor(
         [
@@ -103,20 +102,23 @@ def test_ghost(dtype: torch.dtype):
             +0.0000000000,
             +0.0000000000,
         ],
-        dtype=dtype,
+        **dd,
     )
-    eeq = charges.ChargeModel.param2019().type(dtype)
+
+    eeq = charges.ChargeModel.param2019(**dd)
     energy, qat = charges.solve(numbers, positions, total_charge, eeq, cn)
+    tot = torch.sum(qat, -1)
 
     assert qat.dtype == energy.dtype == dtype
-    assert pytest.approx(torch.sum(qat, -1), abs=1e-6) == total_charge
-    assert pytest.approx(qat, abs=tol) == qref
-    assert pytest.approx(energy, abs=tol) == eref
+    assert pytest.approx(total_charge.cpu(), abs=1e-6) == tot.cpu()
+    assert pytest.approx(qref.cpu(), abs=tol) == qat.cpu()
+    assert pytest.approx(eref.cpu(), abs=tol) == energy.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_batch(dtype: torch.dtype):
-    tol = sqrt(torch.finfo(dtype).eps)
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5
 
     sample1, sample2 = (
         samples["PbH4-BiH3"],
@@ -124,27 +126,27 @@ def test_batch(dtype: torch.dtype):
     )
     numbers = pack(
         (
-            sample1["numbers"],
-            sample2["numbers"],
+            sample1["numbers"].to(DEVICE),
+            sample2["numbers"].to(DEVICE),
         )
     )
     positions = pack(
         (
-            sample1["positions"].type(dtype),
-            sample2["positions"].type(dtype),
+            sample1["positions"].to(**dd),
+            sample2["positions"].to(**dd),
         )
     )
-    total_charge = torch.tensor([0.0, 0.0], dtype=dtype)
+    total_charge = torch.tensor([0.0, 0.0], **dd)
     eref = pack(
         (
-            sample1["energy"].type(dtype),
-            sample2["energy"].type(dtype),
+            sample1["energy"].to(**dd),
+            sample2["energy"].to(**dd),
         )
     )
     qref = pack(
         (
-            sample1["q"].type(dtype),
-            sample2["q"].type(dtype),
+            sample1["q"].to(**dd),
+            sample2["q"].to(**dd),
         )
     )
 
@@ -191,12 +193,13 @@ def test_batch(dtype: torch.dtype):
                 0.9939362885,
             ],
         ],
-        dtype=dtype,
+        **dd,
     )
-    eeq = charges.ChargeModel.param2019().type(dtype)
+    eeq = charges.ChargeModel.param2019(**dd)
     energy, qat = charges.solve(numbers, positions, total_charge, eeq, cn)
+    tot = torch.sum(qat, -1)
 
     assert qat.dtype == energy.dtype == dtype
-    assert pytest.approx(torch.sum(qat, -1), abs=1e-6) == total_charge
-    assert pytest.approx(qat, abs=tol) == qref
-    assert pytest.approx(energy, abs=tol) == eref
+    assert pytest.approx(total_charge.cpu(), abs=1e-6) == tot.cpu()
+    assert pytest.approx(qref.cpu(), abs=tol) == qat.cpu()
+    assert pytest.approx(eref.cpu(), abs=tol) == energy.cpu()

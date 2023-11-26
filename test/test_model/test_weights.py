@@ -18,18 +18,17 @@
 """
 Test calculation of DFT-D4 model.
 """
-
-from math import sqrt
-
 import pytest
 import torch
 import torch.nn.functional as F
 
+from tad_dftd4._typing import DD
 from tad_dftd4.charges import get_charges
 from tad_dftd4.model import D4Model
-from tad_dftd4.ncoord import get_coordination_number_d4
+from tad_dftd4.ncoord import coordination_number_d4
 from tad_dftd4.utils import pack
 
+from ..conftest import DEVICE
 from .samples import samples
 
 
@@ -39,15 +38,17 @@ def single(
     with_cn: bool,
     with_q: bool,
 ) -> None:
-    tol = sqrt(torch.finfo(dtype).eps) * 20
-    sample = samples[name]
-    numbers = sample["numbers"]
-    positions = sample["positions"].type(dtype)
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5 * 20
 
-    d4 = D4Model(numbers, dtype=dtype)
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+
+    d4 = D4Model(numbers, **dd)
 
     if with_cn is True:
-        cn = get_coordination_number_d4(numbers, positions)
+        cn = coordination_number_d4(numbers, positions)
     else:
         cn = None  # positions.new_zeros(numbers.shape)
 
@@ -59,7 +60,7 @@ def single(
     gwvec = d4.weight_references(cn, q)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
-    src = sample["gw"].type(dtype)
+    src = sample["gw"].to(**dd)
     ref = F.pad(
         input=src,
         pad=(0, 0, 0, 7 - src.size(0)),
@@ -67,8 +68,9 @@ def single(
         value=0,
     ).mT
 
+    assert gwvec.dtype == ref.dtype
     assert gwvec.shape == ref.shape
-    assert pytest.approx(gwvec, abs=tol) == ref
+    assert pytest.approx(gwvec.cpu(), abs=tol) == ref.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
@@ -100,32 +102,34 @@ def test_lih(dtype: torch.dtype) -> None:
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", ["LiH", "SiH4", "MB16_43_03"])
 def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
-    tol = sqrt(torch.finfo(dtype).eps) * 20
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5 * 20
+
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
-            sample1["numbers"],
-            sample2["numbers"],
+            sample1["numbers"].to(DEVICE),
+            sample2["numbers"].to(DEVICE),
         ]
     )
     positions = pack(
         [
-            sample1["positions"].type(dtype),
-            sample2["positions"].type(dtype),
+            sample1["positions"].to(**dd),
+            sample2["positions"].to(**dd),
         ]
     )
 
-    d4 = D4Model(numbers, dtype=dtype)
+    d4 = D4Model(numbers, **dd)
 
-    cn = get_coordination_number_d4(numbers, positions)
+    cn = coordination_number_d4(numbers, positions)
     total_charge = positions.new_zeros(numbers.shape[0])
     q = get_charges(numbers, positions, total_charge)
 
     gwvec = d4.weight_references(cn, q)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
-    src1 = sample1["gw"].type(dtype)
-    src2 = sample2["gw"].type(dtype)
+    src1 = sample1["gw"].to(**dd)
+    src2 = sample2["gw"].to(**dd)
 
     ref = pack(
         [
@@ -139,5 +143,6 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
+    assert gwvec.dtype == ref.dtype
     assert gwvec.shape == ref.shape
-    assert pytest.approx(gwvec, abs=tol) == ref
+    assert pytest.approx(gwvec.cpu(), abs=tol) == ref.cpu()

@@ -23,9 +23,11 @@ import pytest
 import torch
 import torch.nn.functional as F
 
+from tad_dftd4._typing import DD
 from tad_dftd4.model import D4Model
 from tad_dftd4.utils import pack
 
+from ..conftest import DEVICE
 from .samples import samples
 
 # only these references use `cn=True` and `q=True` for `gw`
@@ -35,15 +37,17 @@ sample_list = ["LiH", "SiH4", "MB16_43_03"]
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
 def test_single(name: str, dtype: torch.dtype) -> None:
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+
     tol = 1e-4 if dtype == torch.float else 1e-5
     sample = samples[name]
-    numbers = sample["numbers"]
-    ref = sample["c6"]
+    numbers = sample["numbers"].to(DEVICE)
+    ref = sample["c6"].to(**dd)
 
-    d4 = D4Model(numbers, dtype=dtype)
+    d4 = D4Model(numbers, **dd)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
-    src = sample["gw"].type(dtype)
+    src = sample["gw"].to(**dd)
     gw = F.pad(
         input=src,
         pad=(0, 0, 0, 7 - src.size(0)),
@@ -52,33 +56,35 @@ def test_single(name: str, dtype: torch.dtype) -> None:
     ).mT
 
     c6 = d4.get_atomic_c6(gw)
-    assert pytest.approx(ref, rel=tol) == c6
+    assert pytest.approx(ref.cpu(), rel=tol) == c6.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", sample_list)
 def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+
     tol = 1e-4 if dtype == torch.float else 1e-5
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
-            sample1["numbers"],
-            sample2["numbers"],
+            sample1["numbers"].to(DEVICE),
+            sample2["numbers"].to(DEVICE),
         ]
     )
     refs = pack(
         [
-            sample1["c6"],
-            sample2["c6"],
+            sample1["c6"].to(**dd),
+            sample2["c6"].to(**dd),
         ]
     )
 
-    d4 = D4Model(numbers, dtype=dtype)
+    d4 = D4Model(numbers, **dd)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
-    src1 = sample1["gw"].type(dtype)
-    src2 = sample2["gw"].type(dtype)
+    src1 = sample1["gw"].to(**dd)
+    src2 = sample2["gw"].to(**dd)
 
     gw = pack(
         [
@@ -93,4 +99,4 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     )
 
     c6 = d4.get_atomic_c6(gw)
-    assert pytest.approx(refs, rel=tol) == c6
+    assert pytest.approx(refs.cpu(), rel=tol) == c6.cpu()
