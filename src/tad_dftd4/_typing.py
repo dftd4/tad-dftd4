@@ -83,7 +83,7 @@ elif sys.version_info >= (3, 9):
 elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases
-    from typing import Dict, List, Union, Tuple
+    from typing import Dict, List, Tuple, Union
 
     Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
     Size = Union[List[int], Tuple[int], torch.Size]
