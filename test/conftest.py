@@ -106,6 +106,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 def pytest_configure(config: pytest.Config) -> None:
     """Pytest configuration hook."""
+    global DEVICE, FAST_MODE
 
     if config.getoption("--detect-anomaly"):
         torch.autograd.anomaly_mode.set_detect_anomaly(True)
@@ -115,13 +116,11 @@ def pytest_configure(config: pytest.Config) -> None:
     else:
         torch.jit._state.disable()  # type: ignore # pylint: disable=protected-access
 
-    global FAST_MODE
     if config.getoption("--fast"):
         FAST_MODE = True
     if config.getoption("--slow"):
         FAST_MODE = False
 
-    global DEVICE
     if config.getoption("--cuda"):
         if not torch.cuda.is_available():
             raise RuntimeError("No cuda devices available.")
@@ -134,7 +133,8 @@ def pytest_configure(config: pytest.Config) -> None:
             warn(
                 "Fast mode for gradient checks not compatible with GPU "
                 "execution. Switching to slow mode. Use the '--slow' flag "
-                "for GPU tests ('--cuda') to avoid this warning."
+                "for GPU tests ('--cuda') to avoid this warning.\n"
+                "(Issue: https://github.com/pytorch/pytorch/issues/114536)"
             )
 
         DEVICE = torch.device("cuda:0")
