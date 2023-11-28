@@ -17,6 +17,8 @@
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
 Test calculation of DFT-D4 model.
+
+For an explanation of the unusual loose tolerances, see `test_charges.py`.
 """
 import pytest
 import torch
@@ -39,7 +41,7 @@ def single(
     with_q: bool,
 ) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 20
+    tol = 1e-4 if dtype == torch.float32 else 1e-6
 
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
@@ -103,7 +105,7 @@ def test_lih(dtype: torch.dtype) -> None:
 @pytest.mark.parametrize("name2", ["LiH", "SiH4", "MB16_43_03"])
 def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 20
+    tol = 1e-4 if dtype == torch.float32 else 1e-6
 
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(

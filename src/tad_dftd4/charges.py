@@ -344,10 +344,10 @@ def solve(
     )
     constraint = torch.where(
         real,
-        distances.new_ones(numbers.shape),
-        distances.new_zeros(numbers.shape),
+        torch.ones(numbers.shape, **dd),
+        torch.zeros(numbers.shape, **dd),
     )
-    zero = distances.new_zeros(numbers.shape[:-1])
+    zero = torch.zeros(numbers.shape[:-1], **dd)
 
     matrix = torch.concat(
         (
@@ -356,12 +356,8 @@ def solve(
         ),
         dim=-2,
     )
-    inv = matrix.inverse()
-    print(inv.shape)
-    print(matrix.shape)
-    print(rhs.shape)
-    x = torch.einsum("...ij,...j->...i", inv, rhs)
-    # torch.linalg.solve(matrix, rhs)
+
+    x = torch.linalg.solve(matrix, rhs)
     e = x * (0.5 * torch.einsum("...ij,...j->...i", matrix, x) - rhs)
     return e[..., :-1], x[..., :-1]
 

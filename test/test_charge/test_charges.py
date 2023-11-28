@@ -28,6 +28,12 @@ The tests surrounding the EEQ charge model include:
 Note that `torch.linalg.solve` gives slightly different results (around 1e-5
 to 1e-6) across different PyTorch versions (1.11.0 vs 1.13.0) for single
 precision. For double precision, however the results are identical.
+
+In PR #22, problems with double precision also appeared and tests failed for
+a few matrix elements on Linux and Windows (notably not on macOS). Locally,
+all tests were passing.
+
+Due to the above inconsistencies, loose tolerances are adapted in the EEQ tests.
 """
 from __future__ import annotations
 
@@ -45,7 +51,7 @@ from .samples import samples
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_single(dtype: torch.dtype):
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 10
+    tol = 1e-4 if dtype == torch.float32 else 1e-6
 
     sample = samples["NH3-dimer"]
     numbers = sample["numbers"].to(DEVICE)
@@ -60,12 +66,6 @@ def test_single(dtype: torch.dtype):
     energy, qat = charges.solve(numbers, positions, total_charge, eeq, cn)
     tot = torch.sum(qat, -1)
 
-    torch.set_printoptions(precision=16)
-    print()
-    print(qref)
-    print(qat)
-    print(qat - qref)
-
     assert qat.dtype == energy.dtype == dtype
     assert pytest.approx(total_charge.cpu(), abs=1e-6) == tot.cpu()
     assert pytest.approx(qref.cpu(), abs=tol) == qat.cpu()
@@ -75,10 +75,10 @@ def test_single(dtype: torch.dtype):
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_ghost(dtype: torch.dtype):
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5
+    tol = 1e-4 if dtype == torch.float32 else 1e-6
 
     sample = samples["NH3-dimer"]
-    numbers = sample["numbers"].clone().detach().to(DEVICE)
+    numbers = sample["numbers"].clone().to(DEVICE)
     numbers[[1, 5, 6, 7]] = 0
     positions = sample["positions"].to(**dd)
     total_charge = sample["total_charge"].to(**dd)
@@ -124,7 +124,7 @@ def test_ghost(dtype: torch.dtype):
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_batch(dtype: torch.dtype):
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5
+    tol = 1e-4 if dtype == torch.float32 else 1e-6
 
     sample1, sample2 = (
         samples["PbH4-BiH3"],
