@@ -94,21 +94,26 @@ def test_init_device_fail() -> None:
         charges.ChargeModel(t, t, t, t)
 
 
-@pytest.mark.cuda
 def test_solve_dtype_fail() -> None:
-    t = torch.rand(5)
+    t = torch.rand(5, dtype=torch.float64)
     model = charges.ChargeModel.param2019()
 
     # all tensor must have the same type
     with pytest.raises(RuntimeError):
-        charges.solve(t, t.type(torch.double), t, model, t)
+        charges.solve(t, t.type(torch.float16), t, model, t)
 
 
 @pytest.mark.cuda
 def test_solve_device_fail() -> None:
     t = torch.rand(5)
+    t2 = t.clone()
     model = charges.ChargeModel.param2019()
+
+    if "cuda" in str(t.device):
+        t2 = t2.cpu()
+    elif "cpu" in str(t.device):
+        t2 = t2.cuda()
 
     # all tensor must be on the same device
     with pytest.raises(RuntimeError):
-        charges.solve(t, t.to("cuda"), t, model, t)
+        charges.solve(t, t2, t, model, t)

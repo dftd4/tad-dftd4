@@ -18,6 +18,8 @@ Utility functions: Gradient
 
 Utilities for calculating gradients and Hessians.
 """
+from __future__ import annotations
+
 import torch
 
 from .._typing import Any, Callable, Tensor

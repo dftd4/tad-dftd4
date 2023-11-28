@@ -21,6 +21,8 @@ Utility functions: Distance
 
 Functions for calculating the cartesian distance of two vectors.
 """
+from __future__ import annotations
+
 import torch
 
 from .._typing import Tensor

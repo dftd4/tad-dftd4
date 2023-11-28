@@ -18,6 +18,8 @@
 """
 Test the utility functions.
 """
+from __future__ import annotations
+
 import torch
 
 from tad_dftd4 import utils

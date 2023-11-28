@@ -52,9 +52,9 @@ import math
 
 import torch
 
-from ._typing import DD, Tensor, TensorLike
+from ._typing import Tensor, TensorLike
 from .ncoord import coordination_number_eeq
-from .utils import real_atoms, real_pairs
+from .utils import cdist, real_atoms, real_pairs
 
 __all__ = ["ChargeModel", "solve", "get_charges"]
 
@@ -296,17 +296,17 @@ def solve(
     dd = {"device": positions.device, "dtype": positions.dtype}
 
     if model.device != positions.device:
+        name = model.__class__.__name__
         raise RuntimeError(
-            f"All tensors of '{model.__class__.__name__}' must be on the same "
-            f"device!\nUse `{model.__class__.__name__}.param2019().to(device)` "
-            "to correctly set the device."
+            f"All tensors of '{name}' must be on the same device!\n"
+            f"Use `{name}.param2019(device=device)` to correctly set the it."
         )
 
     if model.dtype != positions.dtype:
+        name = model.__class__.__name__
         raise RuntimeError(
-            f"All tensors of '{model.__class__.__name__}' must have the same "
-            f"dtype!\nUse `{model.__class__.__name__}.param2019().type(dtype)` "
-            "to correctly set the dtype."
+            f"All tensors of '{name}' must have the same dtype!\n"
+            f"Use `{name}.param2019(dtype=dtype)` to correctly set it."
         )
 
     eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
@@ -314,11 +314,7 @@ def solve(
     real = real_atoms(numbers)
     mask = real_pairs(numbers, diagonal=True)
 
-    distances = torch.where(
-        mask,
-        torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        eps,
-    )
+    distances = torch.where(mask, cdist(positions, positions, p=2), eps)
     diagonal = mask.new_zeros(mask.shape)
     diagonal.diagonal(dim1=-2, dim2=-1).fill_(True)
 

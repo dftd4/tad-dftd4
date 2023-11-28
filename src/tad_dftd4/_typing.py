@@ -24,7 +24,6 @@ This module contains all type annotations for this project.
 Since typing still significantly changes across different Python versions,
 all the special cases are handled here as well.
 """
-
 from __future__ import annotations
 
 import sys
@@ -84,16 +83,17 @@ elif sys.version_info >= (3, 9):
 elif sys.version_info >= (3, 8):
     # in Python 3.8, "from __future__ import annotations" only affects
     # type annotations not type aliases
-    from typing import Dict, List, Union, tuple
+    from typing import Dict, List, Union, Tuple
 
-    Sliceable = Union[List[Tensor], tuple[Tensor, ...]]
-    Size = Union[List[int], tuple[int], torch.Size]
-    TensorOrTensors = Union[List[Tensor], tuple[Tensor, ...], Tensor]
+    Sliceable = Union[List[Tensor], Tuple[Tensor, ...]]
+    Size = Union[List[int], Tuple[int], torch.Size]
+    TensorOrTensors = Union[List[Tensor], Tuple[Tensor, ...], Tensor]
     DampingFunction = Callable[[int, Tensor, Tensor, Dict[str, Tensor]], Tensor]
 else:
+    vinfo = sys.version_info
     raise RuntimeError(
-        f"'tad_dftd4' requires at least Python 3.8 (Python {sys.version_info.major}."
-        f"{sys.version_info.minor}.{sys.version_info.micro} found)."
+        f"'tad_dftd4' requires at least Python 3.8 (Python {vinfo.major}."
+        f"{vinfo.minor}.{vinfo.micro} found)."
     )
 
 
