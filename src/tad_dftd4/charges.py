@@ -52,7 +52,7 @@ import math
 
 import torch
 
-from ._typing import Tensor, TensorLike
+from ._typing import DD, Tensor, TensorLike
 from .ncoord import coordination_number_eeq
 from .utils import cdist, real_atoms, real_pairs
 
@@ -293,7 +293,7 @@ def solve(
     >>> print(total_charge.grad)
     tensor(0.6312)
     """
-    dd = {"device": positions.device, "dtype": positions.dtype}
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
     if model.device != positions.device:
         name = model.__class__.__name__
@@ -356,8 +356,12 @@ def solve(
         ),
         dim=-2,
     )
-
-    x = torch.linalg.solve(matrix, rhs)
+    inv = matrix.inverse()
+    print(inv.shape)
+    print(matrix.shape)
+    print(rhs.shape)
+    x = torch.einsum("...ij,...j->...i", inv, rhs)
+    # torch.linalg.solve(matrix, rhs)
     e = x * (0.5 * torch.einsum("...ij,...j->...i", matrix, x) - rhs)
     return e[..., :-1], x[..., :-1]
 
