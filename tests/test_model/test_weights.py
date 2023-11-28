@@ -55,7 +55,7 @@ def single(
         cn = None  # positions.new_zeros(numbers.shape)
 
     if with_q is True:
-        q = get_charges(numbers, positions, positions.new_tensor(0.0))
+        q = get_charges(numbers, positions, torch.tensor(0.0, **dd))
     else:
         q = None  # positions.new_zeros(numbers.shape)
 
