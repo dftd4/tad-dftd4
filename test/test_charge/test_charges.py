@@ -60,6 +60,12 @@ def test_single(dtype: torch.dtype):
     energy, qat = charges.solve(numbers, positions, total_charge, eeq, cn)
     tot = torch.sum(qat, -1)
 
+    torch.set_printoptions(precision=16)
+    print()
+    print(qref)
+    print(qat)
+    print(qat - qref)
+
     assert qat.dtype == energy.dtype == dtype
     assert pytest.approx(total_charge.cpu(), abs=1e-6) == tot.cpu()
     assert pytest.approx(qref.cpu(), abs=tol) == qat.cpu()
