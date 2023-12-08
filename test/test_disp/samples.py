@@ -775,15 +775,15 @@ refs: dict[str, Refs] = {
             dtype=torch.double,
         ),
     },
-        "AmF3": {
+    "AmF3": {
         "disp": torch.tensor(
             [
                 -9.3997982572687833e-04,
                 -4.6301060176365819e-04,
                 -4.6297661214645238e-04,
-                -4.6301394620652092e-04
+                -4.6301394620652092e-04,
             ],
-            dtype=torch.double
+            dtype=torch.double,
         ),
         "disp2": torch.tensor(
             [
@@ -791,8 +791,8 @@ refs: dict[str, Refs] = {
                 -4.6310814259385415e-04,
                 -4.6307415013743168e-04,
                 -4.6311148760056387e-04,
-            ], 
-            dtype=torch.double
+            ],
+            dtype=torch.double,
         ),
         "disp3": torch.tensor(
             [
