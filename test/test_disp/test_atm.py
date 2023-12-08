@@ -30,7 +30,7 @@ from tad_dftd4.utils import pack
 
 from .samples import samples
 
-sample_list = ["LiH", "SiH4", "MB16_43_01", "MB16_43_02"]
+sample_list = ["LiH", "SiH4", "MB16_43_01", "MB16_43_02", "AmF3"]
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
