@@ -29,13 +29,13 @@ from __future__ import annotations
 import torch
 
 from . import data, defaults
-from ._typing import Any, CountingFunction, DampingFunction, Tensor
+from ._typing import DD, Any, CountingFunction, DampingFunction, Tensor
 from .charges import get_charges
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
-from .ncoord import erf_count, get_coordination_number_d4
-from .utils import real_pairs
+from .ncoord import coordination_number_d4, erf_count
+from .utils import cdist, real_pairs
 
 
 def dftd4(
@@ -98,15 +98,17 @@ def dftd4(
         Shape inconsistencies between `numbers`, `positions`, `r4r2`, or,
         `rcov`.
     """
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
+
     if model is None:
-        model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
+        model = D4Model(numbers, **dd)
     if cutoff is None:
-        cutoff = Cutoff(device=positions.device, dtype=positions.dtype)
+        cutoff = Cutoff(**dd)
 
     if rcov is None:
-        rcov = data.cov_rad_d3[numbers].type(positions.dtype).to(positions.device)
+        rcov = data.cov_rad_d3.to(**dd)[numbers]
     if r4r2 is None:
-        r4r2 = data.r4r2[numbers].type(positions.dtype).to(positions.device)
+        r4r2 = data.r4r2.to(**dd)[numbers]
     if q is None:
         q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 
@@ -131,7 +133,7 @@ def dftd4(
             f"atomic numbers ({numbers.shape}).",
         )
 
-    cn = get_coordination_number_d4(
+    cn = coordination_number_d4(
         numbers, positions, counting_function, rcov, cutoff=cutoff.cn
     )
     weights = model.weight_references(cn, q)
@@ -204,7 +206,7 @@ def dispersion2(
     mask = real_pairs(numbers, diagonal=False)
     distances = torch.where(
         mask,
-        torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
+        cdist(positions, positions, p=2),
         torch.tensor(torch.finfo(positions.dtype).eps, **dd),
     )
 

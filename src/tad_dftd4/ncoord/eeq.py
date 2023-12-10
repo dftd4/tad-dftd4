@@ -31,10 +31,10 @@ from ..data import cov_rad_d3
 from ..utils import real_pairs
 from .count import erf_count
 
-__all__ = ["get_coordination_number_eeq"]
+__all__ = ["coordination_number_eeq"]
 
 
-def get_coordination_number_eeq(
+def coordination_number_eeq(
     numbers: Tensor,
     positions: Tensor,
     counting_function: CountingFunction = erf_count,

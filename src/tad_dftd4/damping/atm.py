@@ -40,7 +40,7 @@ import torch
 from .. import defaults
 from .._typing import Tensor
 from ..data import r4r2
-from ..utils import real_pairs, real_triples
+from ..utils import cdist, real_pairs, real_triples
 
 
 def get_atm_dispersion(
@@ -89,15 +89,24 @@ def get_atm_dispersion(
 
     cutoff2 = cutoff * cutoff
 
+    mask_pairs = real_pairs(numbers, diagonal=False)
+    mask_triples = real_triples(numbers, diagonal=False, self=False)
+
+    # filler values for masks
+    eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
+    zero = torch.tensor(0.0, **dd)
+    one = torch.tensor(1.0, **dd)
+
     # C9_ABC = s9 * sqrt(|C6_AB * C6_AC * C6_BC|)
     c9 = s9 * torch.sqrt(
-        torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3))
+        torch.clamp(
+            torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)), min=eps
+        )
     )
 
-    temp = (
-        a1 * torch.sqrt(3.0 * r4r2[numbers].unsqueeze(-1) * r4r2[numbers].unsqueeze(-2))
-        + a2
-    )
+    radii = r4r2[numbers].unsqueeze(-1) * r4r2[numbers].unsqueeze(-2)
+    temp = a1 * torch.sqrt(3.0 * radii) + a2
+
     r0ij = temp.unsqueeze(-1)
     r0ik = temp.unsqueeze(-2)
     r0jk = temp.unsqueeze(-3)
@@ -107,11 +116,9 @@ def get_atm_dispersion(
     # very slow: (pos.unsqueeze(-2) - pos.unsqueeze(-3)).pow(2).sum(-1)
     distances = torch.pow(
         torch.where(
-            real_pairs(numbers, diagonal=False),
-            torch.cdist(
-                positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"
-            ),
-            torch.tensor(torch.finfo(positions.dtype).eps, **dd),
+            mask_pairs,
+            cdist(positions, positions, p=2),
+            eps,
         ),
         2.0,
     )
@@ -121,17 +128,30 @@ def get_atm_dispersion(
     r2jk = distances.unsqueeze(-3)
     r2 = r2ij * r2ik * r2jk
     r1 = torch.sqrt(r2)
-    r3 = r1 * r2
-    r5 = r2 * r3
+    # add epsilon to avoid zero division later
+    r3 = torch.where(mask_triples, r1 * r2, eps)
+    r5 = torch.where(mask_triples, r2 * r3, eps)
 
-    fdamp = 1.0 / (1.0 + 6.0 * (r0 / r1) ** (alp / 3.0))
+    # dividing by tiny numbers leads to huge numbers, which result in NaN's
+    # upon exponentiation in the subsequent step
+    base = r0 / torch.where(mask_triples, r1, one)
 
-    s = (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) * (-r2ij + r2jk + r2ik)
+    # to fix the previous mask, we mask again (not strictly necessary because
+    # `ang` is also masked and we later multiply with `ang`)
+    fdamp = torch.where(
+        mask_triples,
+        1.0 / (1.0 + 6.0 * base ** (alp / 3.0)),
+        zero,
+    )
+
+    s = torch.where(
+        mask_triples,
+        (r2ij + r2jk - r2ik) * (r2ij - r2jk + r2ik) * (-r2ij + r2jk + r2ik),
+        zero,
+    )
+
     ang = torch.where(
-        real_triples(numbers, diagonal=False)
-        * (r2ij <= cutoff2)
-        * (r2jk <= cutoff2)
-        * (r2jk <= cutoff2),
+        mask_triples * (r2ij <= cutoff2) * (r2jk <= cutoff2) * (r2jk <= cutoff2),
         0.375 * s / r5 + 1.0 / r3,
         torch.tensor(0.0, **dd),
     )

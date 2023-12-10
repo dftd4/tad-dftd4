@@ -46,4 +46,4 @@ source = ["./src"]
 omit = ["./src/tad_dftd4/_typing.py"]
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 90

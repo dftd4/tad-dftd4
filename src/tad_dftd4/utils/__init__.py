@@ -15,18 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
-[tox]
-min_version = 4.0
-isolated_build = True
-envlist = py{38,39,310,311}
+"""
+Utility
+=======
 
-[testenv]
-deps = .[tox]
-commands =
-    pytest -vv {posargs: \
-      -n logical \
-      --random-order-bucket=global \
-      --cov=tad_dftd4 \
-      --cov-report=term-missing \
-      --cov-report=xml:coverage.xml \
-      tests}
+Collection of utility functions.
+"""
+from .distance import *
+from .grad import *
+from .misc import *

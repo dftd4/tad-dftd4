@@ -59,13 +59,12 @@ Example
 ... ))
 >>>
 >>> torch.set_printoptions(precision=7)
->>> print(d4.get_coordination_number_d4(numbers, positions))
+>>> print(d4.coordination_number_d4(numbers, positions))
 tensor([[2.6886456, 2.6886456, 2.6314170, 2.6314168, 0.8594539, 0.9231414,
          0.8605307, 0.8605307, 0.8594539, 0.9231414, 0.8568342, 0.8568342],
         [2.6886456, 0.8568335, 2.6314168, 0.8605307, 0.8594532, 0.9231415,
          0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000]])
 """
-
 from .count import derf_count, dexp_count, erf_count, exp_count
-from .d4 import get_coordination_number_d4
-from .eeq import get_coordination_number_eeq
+from .d4 import coordination_number_d4
+from .eeq import coordination_number_eeq

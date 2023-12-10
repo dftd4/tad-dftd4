@@ -43,7 +43,7 @@ from __future__ import annotations
 import torch
 
 from . import data, params
-from ._typing import Tensor, TensorLike
+from ._typing import DD, Tensor, TensorLike
 
 ga_default = 3.0
 gc_default = 2.0
@@ -159,15 +159,15 @@ class D4Model(TensorLike):
         Tensor
             Weights for the atomic reference systems.
         """
-        dd = {"device": self.device, "dtype": self.dtype}
+        dd: DD = {"device": self.device, "dtype": self.dtype}
 
         if cn is None:
-            cn = torch.zeros_like(self.numbers, dtype=self.dtype)
+            cn = torch.zeros(self.numbers.shape, **dd)
         if q is None:
-            q = torch.zeros_like(self.numbers, dtype=self.dtype)
+            q = torch.zeros(self.numbers.shape, **dd)
 
-        refc = params.refc[self.numbers].to(self.device)
-        refq = params.refq[self.numbers].type(self.dtype).to(self.device)
+        refc = params.refc.to(self.device)[self.numbers]
+        refq = params.refq.to(**dd)[self.numbers]
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -177,8 +177,8 @@ class D4Model(TensorLike):
         # should be close to one. The problem does not arise when using `torch.
         # double`. In order to avoid this error, which is also difficult to
         # detect, this part always uses `torch.double`. `params.refcn` is saved
-        # with `torch.double`.
-        refcn = params.refcn[self.numbers].to(self.device)
+        # with `torch.double`, but I still made sure...
+        refcn = params.refcn.to(device=self.device, dtype=torch.double)[self.numbers]
 
         # For vectorization, we reformulate the Gaussian weighting function:
         # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
@@ -204,12 +204,12 @@ class D4Model(TensorLike):
                     tmp,
                 ),
             ),
-            torch.tensor(0.0, device=self.device, dtype=refcn.dtype),  # double!
+            torch.tensor(0.0, device=self.device, dtype=torch.double),  # double!
         )
 
         # normalize weights
         norm = torch.sum(expw, dim=-1, keepdim=True)
-        gw_temp = (expw / norm).type(self.dtype)
+        gw_temp = (expw / norm).type(self.dtype)  # back to real dtype
 
         # maximum reference CN for each atom
         maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
@@ -228,8 +228,8 @@ class D4Model(TensorLike):
         )
 
         # unsqueeze for reference dimension
-        zeff = data.zeff[self.numbers].unsqueeze(-1)
-        gam = data.gam[self.numbers].unsqueeze(-1) * self.gc
+        zeff = data.zeff.to(self.device)[self.numbers].unsqueeze(-1)
+        gam = data.gam.to(**dd)[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
         # charge scaling

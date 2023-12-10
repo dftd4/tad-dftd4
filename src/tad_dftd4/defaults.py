@@ -7,18 +7,6 @@ This module defines the default values for all parameters within `tad_dftd4`.
 
 import torch
 
-# PyTorch
-
-TORCH_DTYPE = torch.float32
-"""Default data type for floating point tensors."""
-
-TORCH_DTYPE_CHOICES = ["float32", "float64", "double", "sp", "dp"]
-"""List of possible choices for `TORCH_DTYPE`."""
-
-TORCH_DEVICE = "cpu"
-"""Default device for tensors."""
-
-
 # DFT-D4
 
 D4_CN_CUTOFF = 30.0
@@ -48,7 +36,7 @@ D4_K5 = 19.08857
 D4_K6 = 2 * 11.28174**2  # 254.56
 """Parameter for electronegativity scaling."""
 
-# DFT-D4 damping
+# DFT-D4 damping parameters
 
 A1 = 0.4
 """Scaling for the C8 / C6 ratio in the critical radius (0.4)."""

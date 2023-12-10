@@ -32,10 +32,10 @@ from ..data import cov_rad_d3, pauling_en
 from ..utils import real_pairs
 from .count import erf_count
 
-__all__ = ["get_coordination_number_d4"]
+__all__ = ["coordination_number_d4"]
 
 
-def get_coordination_number_d4(
+def coordination_number_d4(
     numbers: Tensor,
     positions: Tensor,
     counting_function: CountingFunction = erf_count,

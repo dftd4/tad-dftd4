@@ -52,9 +52,9 @@ import math
 
 import torch
 
-from ._typing import Tensor, TensorLike
-from .ncoord import get_coordination_number_eeq
-from .utils import real_atoms, real_pairs
+from ._typing import DD, Tensor, TensorLike
+from .ncoord import coordination_number_eeq
+from .utils import cdist, real_atoms, real_pairs
 
 __all__ = ["ChargeModel", "solve", "get_charges"]
 
@@ -106,20 +106,28 @@ class ChargeModel(TensorLike):
             raise RuntimeError("All tensors must have the same dtype!")
 
     @classmethod
-    def param2019(cls) -> ChargeModel:
+    def param2019(
+        cls,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> ChargeModel:
         """
         Electronegativity equilibration charge model published in
 
-        - E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher, C. Bannwarth
-          and S. Grimme, *J. Chem. Phys.*, **2019**, 150, 154122.
+        - E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher,
+          C. Bannwarth and S. Grimme, *J. Chem. Phys.*, **2019**, 150, 154122.
           DOI: `10.1063/1.5090222 <https://dx.doi.org/10.1063/1.5090222>`__
         """
+        dd: dict = {"device": device}
+        if dtype is not None:
+            dd["dtype"] = dtype
 
         return cls(
-            _chi2019,
-            _kcn2019,
-            _eta2019,
-            _rad2019,
+            _chi2019.to(**dd),
+            _kcn2019.to(**dd),
+            _eta2019.to(**dd),
+            _rad2019.to(**dd),
+            **dd,
         )
 
 
@@ -259,7 +267,7 @@ def solve(
     Returns
     -------
     (Tensor, Tensor)
-        Tuple of electrostatic energies and partial charges.
+        tuple of electrostatic energies and partial charges.
 
     Example
     -------
@@ -285,20 +293,20 @@ def solve(
     >>> print(total_charge.grad)
     tensor(0.6312)
     """
-    dd = {"device": positions.device, "dtype": positions.dtype}
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
     if model.device != positions.device:
+        name = model.__class__.__name__
         raise RuntimeError(
-            f"All tensors of '{model.__class__.__name__}' must be on the same "
-            f"device!\nUse `{model.__class__.__name__}.param2019().to(device)` "
-            "to correctly set the device."
+            f"All tensors of '{name}' must be on the same device!\n"
+            f"Use `{name}.param2019(device=device)` to correctly set the it."
         )
 
     if model.dtype != positions.dtype:
+        name = model.__class__.__name__
         raise RuntimeError(
-            f"All tensors of '{model.__class__.__name__}' must have the same "
-            f"dtype!\nUse `{model.__class__.__name__}.param2019().type(dtype)` "
-            "to correctly set the dtype."
+            f"All tensors of '{name}' must have the same dtype!\n"
+            f"Use `{name}.param2019(dtype=dtype)` to correctly set it."
         )
 
     eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
@@ -306,11 +314,7 @@ def solve(
     real = real_atoms(numbers)
     mask = real_pairs(numbers, diagonal=True)
 
-    distances = torch.where(
-        mask,
-        torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        eps,
-    )
+    distances = torch.where(mask, cdist(positions, positions, p=2), eps)
     diagonal = mask.new_zeros(mask.shape)
     diagonal.diagonal(dim1=-2, dim2=-1).fill_(True)
 
@@ -340,10 +344,10 @@ def solve(
     )
     constraint = torch.where(
         real,
-        distances.new_ones(numbers.shape),
-        distances.new_zeros(numbers.shape),
+        torch.ones(numbers.shape, **dd),
+        torch.zeros(numbers.shape, **dd),
     )
-    zero = distances.new_zeros(numbers.shape[:-1])
+    zero = torch.zeros(numbers.shape[:-1], **dd)
 
     matrix = torch.concat(
         (
@@ -383,8 +387,8 @@ def get_charges(
     Tensor
         Atomic charges.
     """
-    eeq = ChargeModel.param2019().to(positions.device).type(positions.dtype)
-    cn = get_coordination_number_eeq(numbers, positions, cutoff=cutoff)
+    eeq = ChargeModel.param2019(device=positions.device, dtype=positions.dtype)
+    cn = coordination_number_eeq(numbers, positions, cutoff=cutoff)
     _, qat = solve(numbers, positions, chrg, eeq, cn)
 
     return qat
