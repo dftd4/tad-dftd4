@@ -310,49 +310,57 @@ def solve(
         )
 
     eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
+    zero = torch.tensor(0.0, **dd)
+    stop = torch.sqrt(torch.tensor(2.0 / math.pi, **dd))  # sqrt(2/pi)
 
     real = real_atoms(numbers)
-    mask = real_pairs(numbers, diagonal=True)
+    mask = real_pairs(numbers, diagonal=False)
 
     distances = torch.where(mask, cdist(positions, positions, p=2), eps)
     diagonal = mask.new_zeros(mask.shape)
     diagonal.diagonal(dim1=-2, dim2=-1).fill_(True)
 
-    rhs = torch.concat(
-        (
-            -model.chi[numbers] + torch.sqrt(cn) * model.kcn[numbers],
-            total_charge.unsqueeze(-1),
-        ),
-        dim=-1,
+    cn_sqrt = torch.sqrt(torch.clamp(cn, min=eps))
+    cc = torch.where(
+        real,
+        -model.chi[numbers] + cn_sqrt * model.kcn[numbers],
+        zero,
     )
+    rhs = torch.concat((cc, total_charge.unsqueeze(-1)), dim=-1)
 
+    # radii
     rad = model.rad[numbers]
-    gamma = 1.0 / torch.sqrt(rad.unsqueeze(-1) ** 2 + rad.unsqueeze(-2) ** 2)
+    rads = torch.clamp(rad.unsqueeze(-1) ** 2 + rad.unsqueeze(-2) ** 2, min=eps)
+    gamma = torch.where(mask, 1.0 / torch.sqrt(rads), zero)
+
+    # hardness
     eta = torch.where(
         real,
-        model.eta[numbers] + torch.sqrt(torch.tensor(2.0 / math.pi)) / rad,
+        model.eta[numbers] + stop / rad,
         torch.tensor(1.0, **dd),
     )
+
     coulomb = torch.where(
         diagonal,
         eta.unsqueeze(-1),
         torch.where(
             mask,
             torch.erf(distances * gamma) / distances,
-            torch.tensor(0.0, **dd),
+            zero,
         ),
     )
+
     constraint = torch.where(
         real,
         torch.ones(numbers.shape, **dd),
         torch.zeros(numbers.shape, **dd),
     )
-    zero = torch.zeros(numbers.shape[:-1], **dd)
+    zeros = torch.zeros(numbers.shape[:-1], **dd)
 
     matrix = torch.concat(
         (
             torch.concat((coulomb, constraint.unsqueeze(-1)), dim=-1),
-            torch.concat((constraint, zero.unsqueeze(-1)), dim=-1).unsqueeze(-2),
+            torch.concat((constraint, zeros.unsqueeze(-1)), dim=-1).unsqueeze(-2),
         ),
         dim=-2,
     )

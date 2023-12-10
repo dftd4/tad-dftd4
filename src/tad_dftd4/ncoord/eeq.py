@@ -28,7 +28,7 @@ import torch
 from .. import defaults
 from .._typing import Any, CountingFunction, Tensor
 from ..data import cov_rad_d3
-from ..utils import real_pairs
+from ..utils import cdist, real_pairs
 from .count import erf_count
 
 __all__ = ["coordination_number_eeq"]
@@ -80,8 +80,9 @@ def coordination_number_eeq(
         cutoff = torch.tensor(defaults.D4_CN_EEQ_CUTOFF, **dd)
 
     if rcov is None:
-        rcov = cov_rad_d3[numbers]
-    rcov = rcov.type(positions.dtype).to(positions.device)
+        rcov = cov_rad_d3.to(**dd)[numbers]
+    else:
+        rcov = rcov.to(**dd)
 
     if numbers.shape != rcov.shape:
         raise ValueError(
@@ -94,19 +95,12 @@ def coordination_number_eeq(
             f"with atomic numbers ({numbers.shape})."
         )
 
-    mask = real_pairs(numbers)
-    distances = torch.where(
-        mask,
-        torch.cdist(
-            positions,
-            positions,
-            p=2,
-            compute_mode="use_mm_for_euclid_dist",
-        ),
-        torch.tensor(torch.finfo(positions.dtype).eps, **dd),
-    )
+    eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
 
-    rc = rcov.unsqueeze(-2) + rcov.unsqueeze(-1)
+    mask = real_pairs(numbers)
+    distances = torch.where(mask, cdist(positions, positions, p=2), eps)
+
+    rc = rcov.unsqueeze(-2) + rcov.unsqueeze(-1) + eps
     cf = torch.where(
         mask * (distances <= cutoff),
         counting_function(distances, rc, **kwargs),

@@ -55,7 +55,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     positions = sample["positions"].to(**dd)
     ref = sample["disp3"].to(**dd)
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": torch.tensor(1.00000000, **dd),
         "s8": torch.tensor(1.85897750, **dd),
@@ -117,7 +117,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": torch.tensor(1.00000000, **dd),
         "s8": torch.tensor(1.85897750, **dd),

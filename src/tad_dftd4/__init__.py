@@ -69,7 +69,7 @@ Example
 >>> # total charge of both systems
 >>> charge = torch.tensor([0.0, 0.0])
 >>>
->>> # TPSS0-D4-ATM parameters
+>>> # TPSSh-D4-ATM parameters
 >>> param = {
 ...     "s6": positions.new_tensor(1.0),
 ...     "s8": positions.new_tensor(1.85897750),

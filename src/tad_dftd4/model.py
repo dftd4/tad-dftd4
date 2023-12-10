@@ -159,15 +159,13 @@ class D4Model(TensorLike):
         Tensor
             Weights for the atomic reference systems.
         """
-        dd: DD = {"device": self.device, "dtype": self.dtype}
-
         if cn is None:
-            cn = torch.zeros(self.numbers.shape, **dd)
+            cn = torch.zeros(self.numbers.shape, **self.dd)
         if q is None:
-            q = torch.zeros(self.numbers.shape, **dd)
+            q = torch.zeros(self.numbers.shape, **self.dd)
 
         refc = params.refc.to(self.device)[self.numbers]
-        refq = params.refq.to(**dd)[self.numbers]
+        refq = params.refq.to(**self.dd)[self.numbers]
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -191,24 +189,27 @@ class D4Model(TensorLike):
         # weights `igw`, we have to use masks and explicitly implement the
         # formulas for exponentiation. Luckily, `igw` only takes on the values
         # 1 and 3.)
+        def refc_pow(n: int) -> Tensor:
+            return sum(
+                (torch.pow(tmp, i * self.wf) for i in range(1, n + 1)),
+                torch.tensor(0.0, device=tmp.device),
+            )
+
+        refc_pow_1 = torch.where(refc == 1, refc_pow(1), tmp)
+        refc_pow_final = torch.where(refc == 3, refc_pow(3), refc_pow_1)
+
         expw = torch.where(
             mask,
-            torch.where(
-                refc == 3,
-                torch.pow(tmp, self.wf)
-                + torch.pow(tmp, 2 * self.wf)
-                + torch.pow(tmp, 3 * self.wf),
-                torch.where(
-                    refc == 1,
-                    torch.pow(tmp, self.wf),
-                    tmp,
-                ),
-            ),
+            refc_pow_final,
             torch.tensor(0.0, device=self.device, dtype=torch.double),  # double!
         )
 
         # normalize weights
-        norm = torch.sum(expw, dim=-1, keepdim=True)
+        norm = torch.where(
+            mask,
+            torch.sum(expw, dim=-1, keepdim=True),
+            torch.tensor(1e-300, device=self.device, dtype=torch.double),  # double!)
+        )
         gw_temp = (expw / norm).type(self.dtype)  # back to real dtype
 
         # maximum reference CN for each atom
@@ -221,22 +222,22 @@ class D4Model(TensorLike):
             exceptional,
             torch.where(
                 refcn == maxcn,
-                torch.tensor(1.0, **dd),
-                torch.tensor(0.0, **dd),
+                torch.tensor(1.0, **self.dd),
+                torch.tensor(0.0, **self.dd),
             ),
             gw_temp,
         )
 
         # unsqueeze for reference dimension
         zeff = data.zeff.to(self.device)[self.numbers].unsqueeze(-1)
-        gam = data.gam.to(**dd)[self.numbers].unsqueeze(-1) * self.gc
+        gam = data.gam.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
         # charge scaling
         zeta = torch.where(
             mask,
             self._zeta(gam, refq + zeff, q + zeff),
-            torch.tensor(0.0, **dd),
+            torch.tensor(0.0, **self.dd),
         )
 
         return zeta * gw
@@ -288,10 +289,14 @@ class D4Model(TensorLike):
         Tensor
             Scaled charges.
         """
+        eps = torch.tensor(torch.finfo(self.dtype).eps, **self.dd)
+        ga = torch.tensor(self.ga, **self.dd)
+        scale = torch.exp(gam * (1.0 - qref / (qmod - eps)))
+
         return torch.where(
             qmod > 0.0,
-            torch.exp(self.ga * (1.0 - torch.exp(gam * (1.0 - qref / qmod)))),
-            torch.exp(torch.tensor(self.ga, device=self.device, dtype=self.dtype)),
+            torch.exp(ga * (1.0 - scale)),
+            torch.exp(ga),
         )
 
     def _set_refalpha_eeq(self) -> Tensor:
@@ -303,21 +308,21 @@ class D4Model(TensorLike):
         Tensor
             Reference polarizibilities for unique species (not all atoms).
         """
-        zero = torch.tensor(0.0, device=self.device, dtype=self.dtype)
+        zero = torch.tensor(0.0, **self.dd)
 
         numbers = self.unique
-        refsys = params.refsys[numbers].to(self.device)
-        refsq = params.refsq[numbers].type(self.dtype).to(self.device)
-        refascale = params.refascale[numbers].type(self.dtype).to(self.device)
-        refalpha = params.refalpha[numbers].type(self.dtype).to(self.device)
-        refscount = params.refscount[numbers].type(self.dtype).to(self.device)
-        secscale = params.secscale.type(self.dtype).to(self.device)
-        secalpha = params.secalpha.type(self.dtype).to(self.device)
+        refsys = params.refsys.to(self.device)[numbers]
+        refsq = params.refsq.to(**self.dd)[numbers]
+        refascale = params.refascale.to(**self.dd)[numbers]
+        refalpha = params.refalpha.to(**self.dd)[numbers]
+        refscount = params.refscount.to(**self.dd)[numbers]
+        secscale = params.secscale.to(**self.dd)
+        secalpha = params.secalpha.to(**self.dd)
 
         mask = refsys > 0
 
-        zeff = data.zeff[refsys].to(self.device)
-        gam = data.gam[refsys].type(self.dtype).to(self.device) * self.gc
+        zeff = data.zeff.to(self.device)[refsys]
+        gam = data.gam[refsys].to(**self.dd) * self.gc
 
         aiw = secscale[refsys] * secalpha[refsys]
 
