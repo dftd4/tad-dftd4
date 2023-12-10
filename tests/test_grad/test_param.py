@@ -31,7 +31,7 @@ from ..utils import dgradcheck, dgradgradcheck
 
 sample_list = ["LiH", "AmF3", "SiH4"]
 
-tol = 1e-7
+tol = 1e-8
 
 device = None
 
@@ -161,23 +161,23 @@ def test_gradcheck_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
 @pytest.mark.grad
 @pytest.mark.parametrize("dtype", [torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
-@pytest.mark.parametrize("name2", sample_list)
+@pytest.mark.parametrize("name2", ["LiH", "SiH4"])
 def test_gradgradcheck_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
     """
     Check a single analytical gradient of parameters against numerical
     gradient from `torch.autograd.gradgradcheck`.
     """
     func, diffvars = gradchecker_batch(dtype, name1, name2)
-    assert dgradgradcheck(func, diffvars, atol=tol, eps=1e-7)
+    assert dgradgradcheck(func, diffvars, atol=tol)
 
 
 @pytest.mark.grad
 @pytest.mark.parametrize("dtype", [torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
-@pytest.mark.parametrize("name2", ["MB16_43_01"])
+@pytest.mark.parametrize("name2", ["AmF3", "MB16_43_01"])
 def test_gradgradcheck_batch_slow(dtype: torch.dtype, name1: str, name2: str) -> None:
     """
     These fail with `fast_mode=True`.
     """
     func, diffvars = gradchecker_batch(dtype, name1, name2)
-    assert dgradgradcheck(func, diffvars, atol=1e-6, eps=1e-7, fast_mode=False)
+    assert dgradgradcheck(func, diffvars, atol=1e-6, fast_mode=False)
