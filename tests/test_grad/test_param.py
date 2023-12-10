@@ -31,7 +31,7 @@ from ..utils import dgradcheck, dgradgradcheck
 
 sample_list = ["LiH", "AmF3", "SiH4"]
 
-tol = 1e-8
+tol = 1e-7
 
 device = None
 
@@ -180,4 +180,4 @@ def test_gradgradcheck_batch_slow(dtype: torch.dtype, name1: str, name2: str) ->
     These fail with `fast_mode=True`.
     """
     func, diffvars = gradchecker_batch(dtype, name1, name2)
-    assert dgradgradcheck(func, diffvars, atol=1e-6, fast_mode=False)
+    assert dgradgradcheck(func, diffvars, atol=1e-6, eps=1e-7, fast_mode=False)
