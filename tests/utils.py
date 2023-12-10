@@ -23,12 +23,20 @@ from __future__ import annotations
 import torch
 from torch.autograd.gradcheck import gradcheck, gradgradcheck
 
-from tad_dftd4._typing import Any, Callable, Protocol, Size, Tensor, TensorOrTensors
+from tad_dftd4._typing import (
+    Any,
+    Callable,
+    Protocol,
+    Size,
+    Tensor,
+    TensorOrTensors,
+    Molecule,
+)
 
 from .conftest import FAST_MODE
 
 
-def merge_nested_dicts(a: dict[str, dict], b: dict[str, dict]) -> dict:  # type: ignore[type-arg]
+def merge_nested_dicts(a: dict[str, Molecule], b: dict[str, Any]) -> dict[str, Any]:
     """
     Merge nested dictionaries. dictionary `a` remains unaltered, while
     the corresponding keys of it are added to `b`.
