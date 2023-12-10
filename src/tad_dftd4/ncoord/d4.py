@@ -29,7 +29,7 @@ import torch
 from .. import defaults
 from .._typing import Any, CountingFunction, Tensor
 from ..data import cov_rad_d3, pauling_en
-from ..utils import real_pairs
+from ..utils import real_pairs, cdist
 from .count import erf_count
 
 __all__ = ["coordination_number_d4"]
@@ -80,12 +80,14 @@ def coordination_number_d4(
         cutoff = torch.tensor(defaults.D4_CN_CUTOFF, **dd)
 
     if rcov is None:
-        rcov = cov_rad_d3[numbers]
-    rcov = rcov.type(positions.dtype).to(positions.device)
+        rcov = cov_rad_d3.to(**dd)[numbers]
+    else:
+        rcov = rcov.to(**dd)
 
     if en is None:
-        en = pauling_en[numbers]
-    en = en.type(positions.dtype).to(positions.device)
+        en = pauling_en.to(**dd)[numbers]
+    else:
+        en = en.to(**dd)
 
     if numbers.shape != rcov.shape:
         raise ValueError(
@@ -98,13 +100,10 @@ def coordination_number_d4(
             f"with atomic numbers ({numbers.shape})."
         )
 
-    mask = real_pairs(numbers)
+    eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
 
-    distances = torch.where(
-        mask,
-        torch.cdist(positions, positions, p=2, compute_mode="use_mm_for_euclid_dist"),
-        torch.tensor(torch.finfo(positions.dtype).eps, **dd),
-    )
+    mask = real_pairs(numbers)
+    distances = torch.where(mask, cdist(positions, positions, p=2), eps)
 
     # Eq. 6
     endiff = torch.abs(en.unsqueeze(-2) - en.unsqueeze(-1))
@@ -112,7 +111,7 @@ def coordination_number_d4(
         -((endiff + defaults.D4_K5) ** 2.0) / defaults.D4_K6
     )
 
-    rc = rcov.unsqueeze(-2) + rcov.unsqueeze(-1)
+    rc = rcov.unsqueeze(-2) + rcov.unsqueeze(-1) + eps
     cf = torch.where(
         mask * (distances <= cutoff),
         den * counting_function(distances, rc, **kwargs),

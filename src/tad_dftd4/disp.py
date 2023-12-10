@@ -232,7 +232,9 @@ def dispersion2(
 
     edisp = s6 * e6 + s8 * e8
 
-    if "s10" in param and param["s10"] != 0.0:
+    # With `if "s10" in param and param["s10"] != 0.0`, the gradcheck tests fail
+    # if s10 is exactly 0 (other values are fine).
+    if "s10" in param:
         c10 = c6 * torch.pow(qq, 2) * 49.0 / 40.0
         t10 = torch.where(
             mask * (distances <= cutoff),

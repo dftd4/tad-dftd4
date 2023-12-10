@@ -163,7 +163,7 @@ The following example shows how to calculate the DFT-D4 dispersion energy for a 
     # total charge of the system
     charge = torch.tensor(0.0)
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": positions.new_tensor(1.0),
         "s8": positions.new_tensor(1.85897750),
@@ -221,7 +221,7 @@ The next example shows the calculation of dispersion energies for a batch of str
     # total charge of both system
     charge = torch.tensor([0.0, 0.0])
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": positions.new_tensor(1.0),
         "s8": positions.new_tensor(1.85897750),
