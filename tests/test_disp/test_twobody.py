@@ -58,7 +58,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     charge = torch.tensor(0.0, **dd)
     ref = sample["disp2"].to(**dd)
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": torch.tensor(1.00000000, **dd),
         "s8": torch.tensor(1.85897750, **dd),
@@ -78,6 +78,7 @@ def single(name: str, dtype: torch.dtype) -> None:
 
     energy = dispersion2(numbers, positions, param, c6, r4r2)
 
+    print(energy.sum())
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
 
@@ -94,7 +95,7 @@ def test_single_s9_zero(name: str, dtype: torch.dtype) -> None:
     charge = torch.tensor(0.0, **dd)
     ref = sample["disp2"].to(**dd)
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s8": torch.tensor(1.85897750, **dd),
         "s9": torch.tensor(0.00000000, **dd),  # skip ATM
@@ -129,7 +130,7 @@ def test_single_s10_one(name: str, dtype: torch.dtype) -> None:
         **dd,
     )
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s8": torch.tensor(1.85897750, **dd),
         "s9": torch.tensor(0.00000000, **dd),  # skip ATM
@@ -185,7 +186,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
-    # TPSS0-D4-ATM parameters
+    # TPSSh-D4-ATM parameters
     param = {
         "s6": torch.tensor(1.00000000, **dd),
         "s8": torch.tensor(1.85897750, **dd),
