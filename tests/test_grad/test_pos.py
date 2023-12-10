@@ -24,11 +24,11 @@ import pytest
 import torch
 
 from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import Callable, Tensor, DD
+from tad_dftd4._typing import DD, Callable, Tensor
 
-from .samples_grad import samples
-from ..utils import dgradcheck, dgradgradcheck
 from ..conftest import DEVICE
+from ..utils import dgradcheck, dgradgradcheck
+from .samples_grad import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
 

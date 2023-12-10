@@ -26,11 +26,11 @@ from torch.autograd.gradcheck import gradcheck, gradgradcheck
 from tad_dftd4._typing import (
     Any,
     Callable,
+    Molecule,
     Protocol,
     Size,
     Tensor,
     TensorOrTensors,
-    Molecule,
 )
 
 from .conftest import FAST_MODE

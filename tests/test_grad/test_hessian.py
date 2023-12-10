@@ -19,12 +19,12 @@
 Testing dispersion Hessian (autodiff).
 
 The reference values are calculated with the dftd4 standalone (Fortran) program,
-version 3.6.0. However, some minor modifications are required to obtained a 
+version 3.6.0. However, some minor modifications are required to obtained a
 compatible array ordering from Fortran. In Fortran, the shape of the Hessian is
-`(3, mol%nat, 3, mol%nat)`, which we change to `(mol%nat, 3, mol%nat, 3)`. 
-Correspondingly, the calculation in `get_dispersion_hessian` must also be 
+`(3, mol%nat, 3, mol%nat)`, which we change to `(mol%nat, 3, mol%nat, 3)`.
+Correspondingly, the calculation in `get_dispersion_hessian` must also be
 adapted: We replace `hessian(:, :, ix, iat) = (gl - gr) / (2 * step)` by
-`hessian(:, :, iat, ix) = (transpose(gl) - transpose(gr)) / (2 * step)`. The 
+`hessian(:, :, iat, ix) = (transpose(gl) - transpose(gr)) / (2 * step)`. The
 Hessian can then simply be printed via `write(*, '(SP,es23.16e2,",")') hessian`
 and the Python resorting is handled by the reshape function.
 """
@@ -34,10 +34,10 @@ import pytest
 import torch
 
 from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import Tensor, DD
+from tad_dftd4._typing import DD, Tensor
 
-from .samples_hessian import samples
 from ..utils import reshape_fortran
+from .samples_hessian import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
 

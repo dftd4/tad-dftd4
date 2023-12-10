@@ -29,7 +29,7 @@ import torch
 from .. import defaults
 from .._typing import Any, CountingFunction, Tensor
 from ..data import cov_rad_d3, pauling_en
-from ..utils import real_pairs, cdist
+from ..utils import cdist, real_pairs
 from .count import erf_count
 
 __all__ = ["coordination_number_d4"]
