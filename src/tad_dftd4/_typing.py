@@ -29,7 +29,7 @@ from __future__ import annotations
 import sys
 
 # pylint: disable=unused-import
-from typing import Any, Protocol, TypedDict, NoReturn
+from typing import Any, NoReturn, Protocol, TypedDict
 
 import torch
 from torch import Tensor

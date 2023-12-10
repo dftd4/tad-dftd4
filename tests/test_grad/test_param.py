@@ -24,7 +24,7 @@ import pytest
 import torch
 
 from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import Callable, Tensor, DD
+from tad_dftd4._typing import DD, Callable, Tensor
 
 from ..molecules import mols as samples
 from ..utils import dgradcheck, dgradgradcheck
