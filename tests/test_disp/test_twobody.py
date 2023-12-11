@@ -78,7 +78,6 @@ def single(name: str, dtype: torch.dtype) -> None:
 
     energy = dispersion2(numbers, positions, param, c6, r4r2)
 
-    print(energy.sum())
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
 
@@ -178,7 +177,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["positions"].to(**dd),
         ]
     )
-    charge = positions.new_zeros(numbers.shape[0])
+    charge = torch.zeros(numbers.shape[0], **dd)
     ref = pack(
         [
             sample1["disp2"].to(**dd),
@@ -197,8 +196,8 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    r4r2 = data.r4r2[numbers].type(positions.dtype)
-    model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
+    r4r2 = data.r4r2.to(**dd)[numbers]
+    model = D4Model(numbers, **dd)
     cn = coordination_number_d4(numbers, positions)
     q = get_charges(numbers, positions, charge)
     weights = model.weight_references(cn, q)

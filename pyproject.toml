@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
-testpaths = ["test"]
+testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
   "grad: Marks tests which perform 'gradcheck' evaluations, this can be slow.",

@@ -38,7 +38,7 @@ from __future__ import annotations
 import torch
 
 from .. import defaults
-from .._typing import Tensor
+from .._typing import DD, Tensor
 from ..data import r4r2
 from ..utils import cdist, real_pairs, real_triples
 
@@ -82,10 +82,10 @@ def get_atm_dispersion(
     Tensor
         Atom-resolved ATM dispersion energy.
     """
-    dd = {"device": positions.device, "dtype": positions.dtype}
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
-    s9 = s9.type(positions.dtype).to(positions.device)
-    alp = alp.type(positions.dtype).to(positions.device)
+    s9 = s9.to(**dd)
+    alp = alp.to(**dd)
 
     cutoff2 = cutoff * cutoff
 

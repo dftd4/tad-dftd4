@@ -66,7 +66,7 @@ def single(name: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
+    model = D4Model(numbers, **dd)
     cn = coordination_number_d4(numbers, positions)
     weights = model.weight_references(cn, q=None)
     c6 = model.get_atomic_c6(weights)
@@ -128,7 +128,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    model = D4Model(numbers, device=positions.device, dtype=positions.dtype)
+    model = D4Model(numbers, **dd)
     cn = coordination_number_d4(numbers, positions)
     weights = model.weight_references(cn, q=None)
     c6 = model.get_atomic_c6(weights)
