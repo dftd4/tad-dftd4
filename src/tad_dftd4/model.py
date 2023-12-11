@@ -322,9 +322,7 @@ class D4Model(TensorLike):
         mask = refsys > 0
 
         zeff = data.zeff.to(self.device)[refsys]
-        gam = data.gam[refsys].to(**self.dd) * self.gc
-
-        aiw = secscale[refsys] * secalpha[refsys]
+        gam = data.gam.to(**self.dd)[refsys] * self.gc
 
         # charge scaling
         zeta = torch.where(
