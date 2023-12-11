@@ -69,11 +69,11 @@ def single(name: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    model = D4Model(numbers, dtype=dtype)
-    rcov = data.cov_rad_d3[numbers].type(positions.dtype)
-    r4r2 = data.r4r2[numbers].type(positions.dtype)
+    model = D4Model(numbers, **dd)
+    rcov = data.cov_rad_d3.to(**dd)[numbers]
+    r4r2 = data.r4r2.to(**dd)[numbers]
     q = get_charges(numbers, positions, charge)
-    cutoff = Cutoff(dtype=positions.dtype)
+    cutoff = Cutoff(**dd)
 
     energy = dftd4(
         numbers,

@@ -43,7 +43,7 @@ from __future__ import annotations
 import torch
 
 from . import data, params
-from ._typing import DD, Tensor, TensorLike
+from ._typing import Tensor, TensorLike
 
 ga_default = 3.0
 gc_default = 2.0
