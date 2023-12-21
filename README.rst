@@ -17,8 +17,8 @@ Torch autodiff for DFT-D4
     :target: https://www.gnu.org/licenses/lgpl-3.0
     :alt: LGPL-3.0
 
-.. image:: https://github.com/dftd4/dftd4/workflows/CI/badge.svg
-    :target: https://github.com/dftd4/dftd4/actions
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml
     :alt: CI
 
 .. image:: https://readthedocs.org/projects/tad-dftd4/badge/?version=latest
