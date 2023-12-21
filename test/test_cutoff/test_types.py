@@ -22,13 +22,13 @@ from __future__ import annotations
 
 import pytest
 import torch
-from tad_mctc.typing import Tensor
 
 from tad_dftd4 import defaults
 from tad_dftd4.cutoff import Cutoff
+from tad_dftd4.typing import Tensor
 
 
-def test_defaults():
+def test_defaults() -> None:
     cutoff = Cutoff()
     assert pytest.approx(defaults.D4_DISP2_CUTOFF) == cutoff.disp2.cpu()
     assert pytest.approx(defaults.D4_DISP3_CUTOFF) == cutoff.disp3.cpu()
@@ -36,8 +36,8 @@ def test_defaults():
     assert pytest.approx(defaults.D4_CN_EEQ_CUTOFF) == cutoff.cn_eeq.cpu()
 
 
-def test_tensor():
-    tmp = torch.randn(1)
+def test_tensor() -> None:
+    tmp = torch.tensor([1.0])
     cutoff = Cutoff(disp2=tmp)
 
     assert isinstance(cutoff.disp2, Tensor)
@@ -49,7 +49,7 @@ def test_tensor():
 
 
 @pytest.mark.parametrize("vals", [(1, 2, -3, 4), (1.0, 2.0, 3.0, -4.0)])
-def test_int_float(vals: tuple[int | float, ...]):
+def test_int_float(vals: tuple[int | float, ...]) -> None:
     disp2, disp3, cn, cn_eeq = vals
     cutoff = Cutoff(disp2, disp3, cn, cn_eeq)
 

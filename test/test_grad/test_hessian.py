@@ -35,9 +35,9 @@ import torch
 from tad_mctc.autograd import hessian
 from tad_mctc.batch import pack
 from tad_mctc.convert import reshape_fortran
-from tad_mctc.typing import DD, Tensor
 
 from tad_dftd4 import dftd4
+from tad_dftd4.typing import DD, Tensor
 
 from .samples_hessian import samples
 

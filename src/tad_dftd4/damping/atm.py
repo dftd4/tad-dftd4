@@ -38,10 +38,9 @@ from __future__ import annotations
 import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs, real_triples
-from tad_mctc.typing import DD, Tensor
 
-from .. import defaults
-from ..data import r4r2
+from .. import data, defaults
+from ..typing import DD, Tensor
 
 
 def get_atm_dispersion(
@@ -103,7 +102,8 @@ def get_atm_dispersion(
         torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
     )
 
-    radii = r4r2[numbers].unsqueeze(-1) * r4r2[numbers].unsqueeze(-2)
+    rad = data.R4R2[numbers]
+    radii = rad.unsqueeze(-1) * rad.unsqueeze(-2)
     temp = a1 * storch.sqrt(3.0 * radii) + a2
 
     r0ij = temp.unsqueeze(-1)

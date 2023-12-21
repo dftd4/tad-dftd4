@@ -66,4 +66,4 @@ def test_change_device_fail() -> None:
 
     # trying to use setter
     with pytest.raises(AttributeError):
-        cutoff.device = "cpu"
+        cutoff.device = torch.device("cpu")

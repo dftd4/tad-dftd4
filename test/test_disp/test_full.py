@@ -21,13 +21,12 @@ Test calculation of two-body and three-body dispersion terms.
 import pytest
 import torch
 from tad_mctc.batch import pack
-from tad_mctc.data import radii
-from tad_mctc.typing import DD
 
 from tad_dftd4 import data
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import dftd4
 from tad_dftd4.model import D4Model
+from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -71,8 +70,8 @@ def single(name: str, dtype: torch.dtype) -> None:
     }
 
     model = D4Model(numbers, **dd)
-    rcov = radii.COV_D3.to(**dd)[numbers]
-    r4r2 = data.r4r2.to(**dd)[numbers]
+    rcov = data.COV_D3.to(**dd)[numbers]
+    r4r2 = data.R4R2.to(**dd)[numbers]
     cutoff = Cutoff(**dd)
 
     energy = dftd4(

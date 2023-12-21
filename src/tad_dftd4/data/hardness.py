@@ -16,18 +16,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
-Atomic data: Chemical hardnesses
-================================
+Data: Chemical hardnesses
+=========================
 
 Element-specific chemical hardnesses for the charge scaling function used
 to extrapolate the C6 coefficients in DFT-D4.
 """
-
 import torch
 
-__all__ = ["gam"]
+__all__ = ["GAM"]
 
-gam = torch.tensor(
+
+GAM = torch.tensor(
     [
         0.00000000,  # None
         0.47259288,  # H

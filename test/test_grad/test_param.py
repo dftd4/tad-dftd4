@@ -25,9 +25,9 @@ import torch
 from tad_mctc.autograd import dgradcheck, dgradgradcheck
 from tad_mctc.batch import pack
 from tad_mctc.data.molecules import mols as samples
-from tad_mctc.typing import DD, Callable, Tensor
 
 from tad_dftd4 import dftd4
+from tad_dftd4.typing import DD, Callable, Tensor
 
 sample_list = ["LiH", "AmF3", "SiH4"]
 
