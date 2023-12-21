@@ -9,13 +9,8 @@ The following modules are contained with `tad-dftd4`.
 
    damping/index
    data/index
-   ncoord/index
-   charges
-   constants
    cutoff
    defaults
    disp
-   damping
    model
    params
-   utils

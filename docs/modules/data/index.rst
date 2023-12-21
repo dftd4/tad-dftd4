@@ -4,8 +4,5 @@
 
 .. toctree::
 
-   en
    hardness
    r4r2
-   radii
-   zeff

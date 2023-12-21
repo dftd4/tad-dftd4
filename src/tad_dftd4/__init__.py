@@ -33,15 +33,16 @@ Example
 -------
 >>> import torch
 >>> import tad_dftd4 as d4
+>>> import tad_mctc as mctc
 >>>
 >>> # S22 system 4: formamide dimer
->>> numbers = d4.utils.pack((
-...     d4.utils.to_number("C C N N H H H H H H O O".split()),
-...     d4.utils.to_number("C O N H H H".split()),
+>>> numbers = mctc.batch.pack((
+...     mctc.convert.symbol_to_number("C C N N H H H H H H O O".split()),
+...     mctc.convert.symbol_to_number("C O N H H H".split()),
 ... ))
 >>>
 >>> # coordinates in Bohr
->>> positions = d4.utils.pack((
+>>> positions = mctc.batch.pack((
 ...     torch.tensor([
 ...         [-3.81469488143921, +0.09993441402912, 0.00000000000000],
 ...         [+3.81469488143921, -0.09993441402912, 0.00000000000000],
@@ -88,7 +89,6 @@ tensor(-0.0034314217)
 """
 import torch
 
-from . import charges, cutoff, damping, data, disp, model, ncoord, utils
+from . import cutoff, damping, data, disp, model
 from .__version__ import __version__
-from ._typing import CountingFunction, DampingFunction, Tensor
 from .disp import dftd4

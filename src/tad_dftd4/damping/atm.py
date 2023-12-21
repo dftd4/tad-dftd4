@@ -36,11 +36,12 @@ Axilrod-Teller-Muto dispersion term.
 from __future__ import annotations
 
 import torch
+from tad_mctc import storch
+from tad_mctc.batch import real_pairs, real_triples
+from tad_mctc.typing import DD, Tensor
 
 from .. import defaults
-from .._typing import DD, Tensor
 from ..data import r4r2
-from ..utils import cdist, real_pairs, real_triples
 
 
 def get_atm_dispersion(
@@ -89,8 +90,8 @@ def get_atm_dispersion(
 
     cutoff2 = cutoff * cutoff
 
-    mask_pairs = real_pairs(numbers, diagonal=False)
-    mask_triples = real_triples(numbers, diagonal=False, self=False)
+    mask_pairs = real_pairs(numbers, mask_diagonal=True)
+    mask_triples = real_triples(numbers, mask_diagonal=True, mask_self=True)
 
     # filler values for masks
     eps = torch.tensor(torch.finfo(positions.dtype).eps, **dd)
@@ -98,14 +99,12 @@ def get_atm_dispersion(
     one = torch.tensor(1.0, **dd)
 
     # C9_ABC = s9 * sqrt(|C6_AB * C6_AC * C6_BC|)
-    c9 = s9 * torch.sqrt(
-        torch.clamp(
-            torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)), min=eps
-        )
+    c9 = s9 * storch.sqrt(
+        torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
     )
 
     radii = r4r2[numbers].unsqueeze(-1) * r4r2[numbers].unsqueeze(-2)
-    temp = a1 * torch.sqrt(3.0 * radii) + a2
+    temp = a1 * storch.sqrt(3.0 * radii) + a2
 
     r0ij = temp.unsqueeze(-1)
     r0ik = temp.unsqueeze(-2)
@@ -117,7 +116,7 @@ def get_atm_dispersion(
     distances = torch.pow(
         torch.where(
             mask_pairs,
-            cdist(positions, positions, p=2),
+            storch.cdist(positions, positions, p=2),
             eps,
         ),
         2.0,

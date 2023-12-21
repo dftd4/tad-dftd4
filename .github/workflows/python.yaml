@@ -1,0 +1,77 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.rst"
+      - "**/*.ya?ml"
+
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.rst"
+      - "**/*.ya?ml"
+
+  workflow_dispatch:
+
+jobs:
+  main:
+    strategy:
+      fail-fast: false
+      matrix:
+        # torch-version: ["1.11.0", "1.12.1", "1.13.0"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        # PyTorch now fully supports Python =<3.11
+        # see: https://github.com/pytorch/pytorch/issues/86566
+        #
+        # PyTorch does not support Python 3.12 (all platforms)
+        # see: https://github.com/pytorch/pytorch/issues/110436
+        exclude:
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: ${{ contains(matrix.os, 'windows') && 'powershell' || 'bash {0}' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tox
+        # pip install torch==${{ matrix.torch-version }}+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        # pip install pytest pytest-cov codecov
+
+      # - name: Unittests with pytest
+      #   run: pytest -svv --cov=./src --cov-report=term-missing
+
+      # with '-e py' tox runs the python version of the current environment
+      - name: Unittests with tox
+        run: tox -e py
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+        with:
+          files: ./coverage.xml # optional

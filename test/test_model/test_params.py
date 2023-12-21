@@ -15,18 +15,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
-[tox]
-min_version = 4.0
-isolated_build = True
-envlist = py{38,39,310,311}
+"""
+Sanity check for parameters since they are created from the Fortran parameters
+with a script.
+"""
+from __future__ import annotations
 
-[testenv]
-deps = .[tox]
-commands =
-    pytest -vv {posargs: \
-      -n logical \
-      --random-order-bucket=global \
-      --cov=tad_dftd4 \
-      --cov-report=term-missing \
-      --cov-report=xml:coverage.xml \
-      test}
+import torch
+
+from tad_dftd4 import data, params
+
+
+def test_params_shape() -> None:
+    maxel = 104  # 103 elements + dummy
+    assert params.refc.shape == torch.Size((maxel, 7))
+    assert params.refascale.shape == torch.Size((maxel, 7))
+    assert params.refcn.shape == torch.Size((maxel, 7))
+    assert params.refsys.shape == torch.Size((maxel, 7))
+    assert params.refq.shape == torch.Size((maxel, 7))
+    assert params.refalpha.shape == torch.Size((maxel, 7, 23))
+
+
+def test_data_shape() -> None:
+    assert data.gam.shape == torch.Size((119,))
+    assert data.r4r2.shape == torch.Size((119,))

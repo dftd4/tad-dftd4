@@ -38,7 +38,8 @@ For development, additionally install the following tools in your environment.
 
 .. code::
 
-    mamba install black covdefaults coverage mypy pre-commit pylint tox
+    mamba install black covdefaults mypy pre-commit pylint pytest pytest-cov pytest-xdist tox
+    pip install pytest-random-order
 
 With pip, add the option ``-e`` and the development dependencies for installing in development mode.
 

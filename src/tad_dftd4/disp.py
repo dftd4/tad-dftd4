@@ -27,15 +27,17 @@ three-body (`dispersion3`) dispersion energy.
 from __future__ import annotations
 
 import torch
+from tad_mctc import storch
+from tad_mctc.batch import real_pairs
+from tad_mctc.data import radii
+from tad_mctc.ncoord import cn_d4, erf_count
+from tad_mctc.typing import DD, Any, CountingFunction, DampingFunction, Tensor
+from tad_multicharge.eeq import get_charges
 
 from . import data, defaults
-from ._typing import DD, Any, CountingFunction, DampingFunction, Tensor
-from .charges import get_charges
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
-from .ncoord import coordination_number_d4, erf_count
-from .utils import cdist, real_pairs
 
 
 def dftd4(
@@ -106,7 +108,7 @@ def dftd4(
         cutoff = Cutoff(**dd)
 
     if rcov is None:
-        rcov = data.cov_rad_d3.to(**dd)[numbers]
+        rcov = radii.COV_D3.to(**dd)[numbers]
     if r4r2 is None:
         r4r2 = data.r4r2.to(**dd)[numbers]
     if q is None:
@@ -133,8 +135,12 @@ def dftd4(
             f"atomic numbers ({numbers.shape}).",
         )
 
-    cn = coordination_number_d4(
-        numbers, positions, counting_function, rcov, cutoff=cutoff.cn
+    cn = cn_d4(
+        numbers,
+        positions,
+        counting_function=counting_function,
+        rcov=rcov,
+        cutoff=cutoff.cn,
     )
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
@@ -203,10 +209,10 @@ def dispersion2(
     if cutoff is None:
         cutoff = torch.tensor(defaults.D4_DISP2_CUTOFF, **dd)
 
-    mask = real_pairs(numbers, diagonal=False)
+    mask = real_pairs(numbers, mask_diagonal=True)
     distances = torch.where(
         mask,
-        cdist(positions, positions, p=2),
+        storch.cdist(positions, positions, p=2),
         torch.tensor(torch.finfo(positions.dtype).eps, **dd),
     )
 
