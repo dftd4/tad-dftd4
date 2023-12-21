@@ -20,10 +20,12 @@ Setup for pytest.
 """
 from __future__ import annotations
 
+import numpy as np
 import pytest
 import torch
 
 # avoid randomness and non-deterministic algorithms
+np.random.seed(0)
 torch.manual_seed(0)
 torch.use_deterministic_algorithms(True)
 
