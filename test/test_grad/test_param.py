@@ -100,7 +100,7 @@ def test_gradgradcheck_slow(dtype: torch.dtype, name: str) -> None:
     These fail with `fast_mode=True`.
     """
     func, diffvars = gradchecker(dtype, name)
-    assert dgradgradcheck(func, diffvars, atol=1e-6, fast_mode=False)
+    assert dgradgradcheck(func, diffvars, atol=1e-5, rtol=1e-5, fast_mode=False)
 
 
 def gradchecker_batch(
