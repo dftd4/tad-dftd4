@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
-testpaths = ["tests"]
+testpaths = ["test"]
 pythonpath = ["src"]
 markers = [
   "grad: Marks tests which perform 'gradcheck' evaluations, this can be slow.",
@@ -43,7 +43,6 @@ warn_unused_ignores = true
 [tool.coverage.run]
 plugins = ["covdefaults"]
 source = ["./src"]
-omit = ["./src/tad_dftd4/_typing.py"]
 
 [tool.coverage.report]
 fail_under = 90
