@@ -25,10 +25,8 @@ Atomic data required within `tad_dftd4`:
  - expectation values
  - covalent radii
  - effective nuclear charge
-"""
 
-from .en import *
+Some atomic data is imported from the `tad_mctc` library.
+"""
 from .hardness import *
 from .r4r2 import *
-from .radii import *
-from .zeff import *

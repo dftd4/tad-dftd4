@@ -23,12 +23,12 @@ For an explanation of the unusual loose tolerances, see `test_charges.py`.
 import pytest
 import torch
 import torch.nn.functional as F
+from tad_mctc.batch import pack
+from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
+from tad_multicharge.eeq import get_charges
 
-from tad_dftd4._typing import DD
-from tad_dftd4.charges import get_charges
 from tad_dftd4.model import D4Model
-from tad_dftd4.ncoord import coordination_number_d4
-from tad_dftd4.utils import pack
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -50,7 +50,7 @@ def single(
     d4 = D4Model(numbers, **dd)
 
     if with_cn is True:
-        cn = coordination_number_d4(numbers, positions)
+        cn = cn_d4(numbers, positions)
     else:
         cn = None  # positions.new_zeros(numbers.shape)
 
@@ -123,7 +123,7 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
 
     d4 = D4Model(numbers, **dd)
 
-    cn = coordination_number_d4(numbers, positions)
+    cn = cn_d4(numbers, positions)
     total_charge = positions.new_zeros(numbers.shape[0])
     q = get_charges(numbers, positions, total_charge)
 

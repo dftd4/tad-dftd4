@@ -21,11 +21,8 @@ Data for testing D4 coordination number (taken from D4 testsuite).
 from __future__ import annotations
 
 import torch
-
-from tad_dftd4._typing import Molecule, Tensor, TypedDict
-
-from ..molecules import mols
-from ..utils import merge_nested_dicts
+from tad_mctc.data.molecules import merge_nested_dicts, mols
+from tad_mctc.typing import Molecule, Tensor, TypedDict
 
 
 class Refs(TypedDict):

@@ -22,12 +22,13 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.autograd import dgradcheck, dgradgradcheck
+from tad_mctc.batch import pack
+from tad_mctc.typing import DD, Callable, Tensor
 
-from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import DD, Callable, Tensor
+from tad_dftd4 import dftd4
 
 from ..conftest import DEVICE
-from ..utils import dgradcheck, dgradgradcheck
 from .samples_grad import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
@@ -99,13 +100,13 @@ def gradchecker_batch(
     dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample1, sample2 = samples[name1], samples[name2]
-    numbers = utils.pack(
+    numbers = pack(
         [
             sample1["numbers"].to(DEVICE),
             sample2["numbers"].to(DEVICE),
         ]
     )
-    positions = utils.pack(
+    positions = pack(
         [
             sample1["positions"].to(**dd),
             sample2["positions"].to(**dd),

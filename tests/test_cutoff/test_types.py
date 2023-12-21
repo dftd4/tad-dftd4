@@ -22,9 +22,9 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.typing import Tensor
 
 from tad_dftd4 import defaults
-from tad_dftd4._typing import Tensor
 from tad_dftd4.cutoff import Cutoff
 
 

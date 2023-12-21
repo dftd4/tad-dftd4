@@ -20,12 +20,12 @@ Test calculation of two-body and three-body dispersion terms.
 """
 import pytest
 import torch
+from tad_mctc.batch import pack
+from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
 
-from tad_dftd4._typing import DD
 from tad_dftd4.disp import dispersion3
 from tad_dftd4.model import D4Model
-from tad_dftd4.ncoord import coordination_number_d4
-from tad_dftd4.utils import pack
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -67,7 +67,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     }
 
     model = D4Model(numbers, **dd)
-    cn = coordination_number_d4(numbers, positions)
+    cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q=None)
     c6 = model.get_atomic_c6(weights)
     cutoff = torch.tensor(40.0, **dd)
@@ -129,7 +129,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     }
 
     model = D4Model(numbers, **dd)
-    cn = coordination_number_d4(numbers, positions)
+    cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q=None)
     c6 = model.get_atomic_c6(weights)
 

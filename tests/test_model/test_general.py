@@ -22,10 +22,9 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.convert import str_to_device
 
 from tad_dftd4.model import D4Model
-
-from ..utils import get_device_from_str
 
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.float32, torch.float64])
@@ -51,7 +50,7 @@ def test_change_type_fail() -> None:
 @pytest.mark.cuda
 @pytest.mark.parametrize("device_str", ["cpu", "cuda"])
 def test_change_device(device_str: str) -> None:
-    device = get_device_from_str(device_str)
+    device = str_to_device(device_str)
     numbers = torch.tensor([14, 1, 1, 1, 1])
     model = D4Model(numbers).to(device)
     assert model.device == device

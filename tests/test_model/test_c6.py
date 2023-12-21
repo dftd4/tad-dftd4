@@ -22,10 +22,10 @@ Test calculation of DFT-D4 model.
 import pytest
 import torch
 import torch.nn.functional as F
+from tad_mctc.batch import pack
+from tad_mctc.typing import DD
 
-from tad_dftd4._typing import DD
 from tad_dftd4.model import D4Model
-from tad_dftd4.utils import pack
 
 from ..conftest import DEVICE
 from .samples import samples

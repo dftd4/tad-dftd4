@@ -31,9 +31,9 @@ damping.
 from __future__ import annotations
 
 import torch
+from tad_mctc.typing import Tensor
 
 from .. import defaults
-from .._typing import Tensor
 
 
 def rational_damping(

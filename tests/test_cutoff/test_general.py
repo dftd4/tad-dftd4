@@ -22,10 +22,9 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.convert import str_to_device
 
 from tad_dftd4.cutoff import Cutoff
-
-from ..utils import get_device_from_str
 
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.float32, torch.float64])
@@ -53,7 +52,7 @@ def test_change_type_fail() -> None:
 @pytest.mark.cuda
 @pytest.mark.parametrize("device_str", ["cpu", "cuda"])
 def test_change_device(device_str: str) -> None:
-    device = get_device_from_str(device_str)
+    device = str_to_device(device_str)
     cutoff = Cutoff().to(device)
     assert cutoff.device == device
     assert cutoff.disp2.device == device

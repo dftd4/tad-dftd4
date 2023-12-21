@@ -38,6 +38,4 @@ def test_params_shape() -> None:
 
 def test_data_shape() -> None:
     assert data.gam.shape == torch.Size((119,))
-    assert data.pauling_en.shape == torch.Size((119,))
-    assert data.cov_rad_d3.shape == torch.Size((119,))
     assert data.r4r2.shape == torch.Size((119,))

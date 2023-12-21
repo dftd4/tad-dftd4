@@ -41,9 +41,10 @@ Example
 from __future__ import annotations
 
 import torch
+from tad_mctc.data.zeff import ZEFF
+from tad_mctc.typing import Tensor, TensorLike
 
 from . import data, params
-from ._typing import Tensor, TensorLike
 
 ga_default = 3.0
 gc_default = 2.0
@@ -229,7 +230,7 @@ class D4Model(TensorLike):
         )
 
         # unsqueeze for reference dimension
-        zeff = data.zeff.to(self.device)[self.numbers].unsqueeze(-1)
+        zeff = ZEFF.to(self.device)[self.numbers].unsqueeze(-1)
         gam = data.gam.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
@@ -321,7 +322,7 @@ class D4Model(TensorLike):
 
         mask = refsys > 0
 
-        zeff = data.zeff.to(self.device)[refsys]
+        zeff = ZEFF.to(self.device)[refsys]
         gam = data.gam.to(**self.dd)[refsys] * self.gc
 
         # charge scaling

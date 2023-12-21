@@ -25,9 +25,9 @@ as well as the coordination number within D4 and the EEQ Model.
 from __future__ import annotations
 
 import torch
+from tad_mctc.typing import Tensor, TensorLike
 
 from . import defaults
-from ._typing import Tensor, TensorLike
 
 
 class Cutoff(TensorLike):

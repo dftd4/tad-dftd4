@@ -20,14 +20,13 @@ Test calculation of two-body and three-body dispersion terms.
 """
 import pytest
 import torch
+from tad_mctc.batch import pack
+from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
 
 from tad_dftd4 import data
-from tad_dftd4._typing import DD
-from tad_dftd4.charges import get_charges
 from tad_dftd4.disp import dftd4, dispersion2
 from tad_dftd4.model import D4Model
-from tad_dftd4.ncoord import coordination_number_d4
-from tad_dftd4.utils import pack
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -55,6 +54,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
+    q = sample["q"].to(**dd)
     charge = torch.tensor(0.0, **dd)
     ref = sample["disp2"].to(**dd)
 
@@ -71,8 +71,7 @@ def single(name: str, dtype: torch.dtype) -> None:
 
     r4r2 = data.r4r2.to(**dd)[numbers]
     model = D4Model(numbers, **dd)
-    cn = coordination_number_d4(numbers, positions)
-    q = get_charges(numbers, positions, charge)
+    cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 
@@ -170,13 +169,19 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["numbers"].to(DEVICE),
         ]
     )
-
     positions = pack(
         [
             sample1["positions"].to(**dd),
             sample2["positions"].to(**dd),
         ]
     )
+    q = pack(
+        [
+            sample1["q"].to(**dd),
+            sample2["q"].to(**dd),
+        ]
+    )
+
     charge = torch.zeros(numbers.shape[0], **dd)
     ref = pack(
         [
@@ -198,8 +203,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
 
     r4r2 = data.r4r2.to(**dd)[numbers]
     model = D4Model(numbers, **dd)
-    cn = coordination_number_d4(numbers, positions)
-    q = get_charges(numbers, positions, charge)
+    cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 

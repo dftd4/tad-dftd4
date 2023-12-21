@@ -20,14 +20,14 @@ Test calculation of two-body and three-body dispersion terms.
 """
 import pytest
 import torch
+from tad_mctc.batch import pack
+from tad_mctc.data import radii
+from tad_mctc.typing import DD
 
 from tad_dftd4 import data
-from tad_dftd4._typing import DD
-from tad_dftd4.charges import get_charges
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import dftd4
 from tad_dftd4.model import D4Model
-from tad_dftd4.utils import pack
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -55,6 +55,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
+    q = sample["q"].to(**dd)
     charge = torch.tensor(0.0, **dd)
     ref = sample["disp"].to(**dd)
 
@@ -70,9 +71,8 @@ def single(name: str, dtype: torch.dtype) -> None:
     }
 
     model = D4Model(numbers, **dd)
-    rcov = data.cov_rad_d3.to(**dd)[numbers]
+    rcov = radii.COV_D3.to(**dd)[numbers]
     r4r2 = data.r4r2.to(**dd)[numbers]
-    q = get_charges(numbers, positions, charge)
     cutoff = Cutoff(**dd)
 
     energy = dftd4(
@@ -117,13 +117,13 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["numbers"].to(DEVICE),
         ]
     )
-
     positions = pack(
         [
             sample1["positions"].to(**dd),
             sample2["positions"].to(**dd),
         ]
     )
+
     charge = positions.new_zeros(numbers.shape[0])
     ref = pack(
         [

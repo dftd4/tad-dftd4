@@ -22,11 +22,11 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.batch import pack
+from tad_mctc.data.molecules import mols as samples
+from tad_mctc.typing import DD
 
-from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import DD
-
-from ..molecules import mols as samples
+from tad_dftd4 import dftd4
 
 tol = 1e-8
 
@@ -99,13 +99,13 @@ def test_single(dtype: torch.dtype) -> None:
 def test_batch(dtype: torch.dtype, name: str) -> None:
     dd: DD = {"device": device, "dtype": dtype}
 
-    nums = utils.pack(
+    nums = pack(
         (
             numbers.to(device=device),
             samples[name]["numbers"].to(device=device),
         )
     )
-    pos = utils.pack(
+    pos = pack(
         (
             positions.to(**dd),
             samples[name]["positions"].to(**dd),

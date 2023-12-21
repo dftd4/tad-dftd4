@@ -32,11 +32,13 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.autograd import hessian
+from tad_mctc.batch import pack
+from tad_mctc.convert import reshape_fortran
+from tad_mctc.typing import DD, Tensor
 
-from tad_dftd4 import dftd4, utils
-from tad_dftd4._typing import DD, Tensor
+from tad_dftd4 import dftd4
 
-from ..utils import reshape_fortran
 from .samples_hessian import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
@@ -54,7 +56,7 @@ def test_fail() -> None:
 
     # differentiable variable is not a tensor
     with pytest.raises(RuntimeError):
-        utils.hessian(dftd4, (numbers, positions, param), argnums=2)
+        hessian(dftd4, (numbers, positions, param), argnums=2)
 
 
 def test_zeros() -> None:
@@ -64,7 +66,7 @@ def test_zeros() -> None:
     def dummy(x: Tensor) -> Tensor:
         return torch.zeros_like(x)
 
-    hess = utils.hessian(dummy, (d,), argnums=0)
+    hess = hessian(dummy, (d,), argnums=0)
     assert pytest.approx(zeros.cpu()) == hess.detach().cpu()
 
 
@@ -96,7 +98,7 @@ def test_single(dtype: torch.dtype, name: str) -> None:
     # variable to be differentiated
     positions.requires_grad_(True)
 
-    hess = utils.hessian(dftd4, (numbers, positions, charge, param), argnums=1)
+    hess = hessian(dftd4, (numbers, positions, charge, param), argnums=1)
     positions.detach_()
 
     assert pytest.approx(ref.cpu(), abs=tol, rel=tol) == hess.detach().cpu()
@@ -110,13 +112,13 @@ def skip_test_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
     dd: DD = {"device": device, "dtype": dtype}
 
     sample1, sample2 = samples[name1], samples[name2]
-    numbers = utils.pack(
+    numbers = pack(
         [
             sample1["numbers"].to(device),
             sample2["numbers"].to(device),
         ]
     )
-    positions = utils.pack(
+    positions = pack(
         [
             sample1["positions"].to(**dd),
             sample2["positions"].to(**dd),
@@ -133,7 +135,7 @@ def skip_test_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
         "a2": torch.tensor(4.80537871, **dd),
     }
 
-    ref = utils.pack(
+    ref = pack(
         [
             reshape_fortran(
                 sample1["hessian"].to(**dd),
@@ -149,7 +151,7 @@ def skip_test_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
     # variable to be differentiated
     positions.requires_grad_(True)
 
-    hess = utils.hessian(dftd4, (numbers, positions, charge, param), argnums=1)
+    hess = hessian(dftd4, (numbers, positions, charge, param), argnums=1)
     positions.detach_()
 
     assert pytest.approx(ref.cpu(), abs=tol, rel=tol) == hess.detach().cpu()
