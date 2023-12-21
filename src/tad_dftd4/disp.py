@@ -29,15 +29,14 @@ from __future__ import annotations
 import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs
-from tad_mctc.data import radii
 from tad_mctc.ncoord import cn_d4, erf_count
-from tad_mctc.typing import DD, Any, CountingFunction, DampingFunction, Tensor
 from tad_multicharge.eeq import get_charges
 
 from . import data, defaults
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
+from .typing import DD, Any, CountingFunction, DampingFunction, Tensor
 
 
 def dftd4(
@@ -108,9 +107,9 @@ def dftd4(
         cutoff = Cutoff(**dd)
 
     if rcov is None:
-        rcov = radii.COV_D3.to(**dd)[numbers]
+        rcov = data.COV_D3.to(**dd)[numbers]
     if r4r2 is None:
-        r4r2 = data.r4r2.to(**dd)[numbers]
+        r4r2 = data.R4R2.to(**dd)[numbers]
     if q is None:
         q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 

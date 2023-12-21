@@ -114,9 +114,9 @@ def pytest_configure(config: pytest.Config) -> None:
         torch.autograd.anomaly_mode.set_detect_anomaly(True)
 
     if config.getoption("--jit"):
-        torch.jit._state.enable()  # type: ignore # pylint: disable=protected-access
+        torch.jit._state.enable()  # type:ignore  # pylint: disable=protected-access
     else:
-        torch.jit._state.disable()  # type: ignore # pylint: disable=protected-access
+        torch.jit._state.disable()  # type:ignore # pylint: disable=protected-access
 
     if config.getoption("--fast"):
         FAST_MODE = True
@@ -147,7 +147,7 @@ def pytest_configure(config: pytest.Config) -> None:
         if torch.__version__ < (2, 0, 0):  # type: ignore
             torch.set_default_tensor_type("torch.cuda.FloatTensor")  # type: ignore
         else:
-            torch.set_default_device(DEVICE)  # type: ignore
+            torch.set_default_device(DEVICE)  # type: ignore[attr-defined]
     else:
         torch.use_deterministic_algorithms(True)
         DEVICE = None

@@ -16,19 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
-Atomic data
-===========
+Type annotations: Built-ins
+===========================
 
-Atomic data required within `tad_dftd4`:
- - chemical hardness
- - Pauling electronegativities
- - expectation values
- - covalent radii
- - effective nuclear charge
-
-Some atomic data is imported from the `tad_mctc` library or indirectly used within the `tad_mctc` library.
+Built-in type annotations are imported from the *tad-mctc* library, which
+handles some version checking.
 """
-from .hardness import *
-from .r4r2 import *
-from .radii import *
-from .zeff import *
+from tad_mctc.typing import Any, Callable, NoReturn, TypedDict

@@ -22,10 +22,10 @@ import pytest
 import torch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import DD
 
 from tad_dftd4.disp import dispersion3
 from tad_dftd4.model import D4Model
+from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
 from .samples import samples

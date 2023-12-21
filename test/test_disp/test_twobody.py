@@ -22,11 +22,11 @@ import pytest
 import torch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import DD
 
 from tad_dftd4 import data
 from tad_dftd4.disp import dftd4, dispersion2
 from tad_dftd4.model import D4Model
+from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -69,7 +69,7 @@ def single(name: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    r4r2 = data.r4r2.to(**dd)[numbers]
+    r4r2 = data.R4R2.to(**dd)[numbers]
     model = D4Model(numbers, **dd)
     cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)
@@ -201,7 +201,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    r4r2 = data.r4r2.to(**dd)[numbers]
+    r4r2 = data.R4R2.to(**dd)[numbers]
     model = D4Model(numbers, **dd)
     cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)

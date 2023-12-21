@@ -16,19 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
 """
-Atomic data
-===========
+Data: Charges
+=============
 
-Atomic data required within `tad_dftd4`:
- - chemical hardness
- - Pauling electronegativities
- - expectation values
- - covalent radii
- - effective nuclear charge
-
-Some atomic data is imported from the `tad_mctc` library or indirectly used within the `tad_mctc` library.
+Effective charges (imported from *tad-mctc*).
 """
-from .hardness import *
-from .r4r2 import *
-from .radii import *
-from .zeff import *
+from tad_mctc.data.zeff import ZEFF
+
+__all__ = ["ZEFF"]
