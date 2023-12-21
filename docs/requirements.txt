@@ -4,4 +4,6 @@ sphinx-copybutton
 sphinx-design
 numpy
 torch
+tad-mctc
+tad-multicharge
 jinja2<3.1
