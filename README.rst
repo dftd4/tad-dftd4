@@ -64,7 +64,6 @@ pip
 
     pip install tad-dftd4
 
-
 From source
 ~~~~~~~~~~~
 
