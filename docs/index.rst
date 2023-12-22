@@ -56,8 +56,9 @@ The following example shows how to calculate the DFT-D4 dispersion energy for a 
 
     import torch
     import tad_dftd4 as d4
+    import tad_mctc as mctc
 
-    numbers = d4.utils.to_number(symbols="C C C C N C S H H H H H".split())
+    numbers = mctc.convert.symbol_to_number(symbols="C C C C N C S H H H H H".split())
 
     # coordinates in Bohr
     positions = torch.tensor(
