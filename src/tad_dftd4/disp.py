@@ -38,6 +38,8 @@ from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
 from .typing import DD, Any, CountingFunction, DampingFunction, Tensor
 
+__all__ = ["dftd4"]
+
 
 def dftd4(
     numbers: Tensor,
@@ -202,7 +204,7 @@ def dispersion2(
     Tensor
         Atom-resolved two-body dispersion energy.
     """
-    dd = {"device": positions.device, "dtype": positions.dtype}
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
     zero = torch.tensor(0.0, **dd)
 
     if cutoff is None:
@@ -282,7 +284,7 @@ def dispersion3(
     Tensor
         Atom-resolved three-body dispersion energy.
     """
-    dd = {"device": positions.device, "dtype": positions.dtype}
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
     if cutoff is None:
         cutoff = torch.tensor(defaults.D4_DISP3_CUTOFF, **dd)

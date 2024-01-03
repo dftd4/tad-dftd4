@@ -33,7 +33,9 @@ from __future__ import annotations
 import torch
 
 from .. import defaults
-from ..typing import Tensor
+from ..typing import DD, Tensor
+
+__all__ = ["rational_damping"]
 
 
 def rational_damping(
@@ -62,7 +64,7 @@ def rational_damping(
     Tensor
         Values of the damping function.
     """
-    dd = {"device": distances.device, "dtype": distances.dtype}
+    dd: DD = {"device": distances.device, "dtype": distances.dtype}
 
     a1 = param.get("a1", torch.tensor(defaults.A1, **dd))
     a2 = param.get("a2", torch.tensor(defaults.A2, **dd))

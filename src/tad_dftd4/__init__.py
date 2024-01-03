@@ -89,6 +89,6 @@ tensor(-0.0034314217)
 """
 import torch
 
-from . import cutoff, damping, data, disp, model
+from . import cutoff, damping, data, disp, model, typing
 from .__version__ import __version__
-from .disp import dftd4
+from .disp import *
