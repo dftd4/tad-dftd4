@@ -40,7 +40,7 @@ warn_unreachable = true
 warn_unused_ignores = true
 exclude = '''
   (?x)
-  ^test?s/conftest.py$
+  ^test/conftest.py$
 '''
 
 

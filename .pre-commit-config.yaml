@@ -68,4 +68,5 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-all]
-        exclude: 'test/conftest.py'
+        args: [--config-file=pyproject.toml, --ignore-missing-imports]
+        exclude: "test|examples/|test/conftest.py"

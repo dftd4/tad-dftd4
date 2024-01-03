@@ -45,6 +45,9 @@ import torch
 from . import data, params
 from .typing import Tensor, TensorLike
 
+__all__ = ["D4Model"]
+
+
 ga_default = 3.0
 gc_default = 2.0
 wf_default = 6.0

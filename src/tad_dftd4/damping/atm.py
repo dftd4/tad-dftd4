@@ -42,6 +42,8 @@ from tad_mctc.batch import real_pairs, real_triples
 from .. import data, defaults
 from ..typing import DD, Tensor
 
+__all__ = ["get_atm_dispersion"]
+
 
 def get_atm_dispersion(
     numbers: Tensor,

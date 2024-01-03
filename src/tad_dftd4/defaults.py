@@ -5,8 +5,6 @@ Default values
 This module defines the default values for all parameters within `tad_dftd4`.
 """
 
-import torch
-
 # DFT-D4
 
 D4_CN_CUTOFF = 30.0
