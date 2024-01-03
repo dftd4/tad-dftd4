@@ -55,7 +55,6 @@ def single(name: str, dtype: torch.dtype) -> None:
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     q = sample["q"].to(**dd)
-    charge = torch.tensor(0.0, **dd)
     ref = sample["disp2"].to(**dd)
 
     # TPSSh-D4-ATM parameters
@@ -182,7 +181,6 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
         ]
     )
 
-    charge = torch.zeros(numbers.shape[0], **dd)
     ref = pack(
         [
             sample1["disp2"].to(**dd),
