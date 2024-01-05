@@ -97,8 +97,8 @@ pip install .
 The following dependencies are required
 
 - [numpy](https://numpy.org/)
-- [tad_mctc](https://github.com/tad-mctc/tad_mctc/)
-- [tad_multicharge](https://github.com/tad-mctc/tad_multicharge/)
+- [tad-mctc](https://github.com/tad-mctc/tad-mctc/)
+- [tad-multicharge](https://github.com/tad-mctc/tad-multicharge/)
 - [torch](https://pytorch.org/)
 - [pytest](https://docs.pytest.org/) (tests only)
 
@@ -107,7 +107,8 @@ The following dependencies are required
 For development, additionally install the following tools in your environment.
 
 ```bash
-mamba install black covdefaults coverage mypy pre-commit pylint tox
+mamba install black covdefaults mypy pre-commit pylint pytest pytest-cov pytest-xdist tox
+pip install pytest-random-order
 ```
 
 With pip, add the option ``-e`` for installing in development mode, and add ``[dev]`` for the development dependencies
