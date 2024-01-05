@@ -31,6 +31,15 @@ Install the required dependencies from the conda-forge channel.
     mamba env create -n torch -f environment.yaml
     mamba activate torch
 
+The following dependencies are required
+
+- `numpy <https://numpy.org/>`__
+- `tad-mctc <https://github.com/tad-mctc/tad-mctc/>`__
+- `tad-multicharge <https://github.com/tad-mctc/tad-multicharge/>`__
+- `torch <https://pytorch.org/>`__
+- `pytest <https://docs.pytest.org/>`__ (tests only)
+
+
 Development
 ~~~~~~~~~~~
 
