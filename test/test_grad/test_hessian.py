@@ -55,7 +55,7 @@ def test_fail() -> None:
     param = {"a1": numbers}
 
     # differentiable variable is not a tensor
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         hessian(dftd4, (numbers, positions, param), argnums=2)
 
 
