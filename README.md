@@ -65,7 +65,7 @@ For alternative implementations, also check out:
 
 *tad-dftd4* can easily be installed with ``pip``.
 
-```bash
+```sh
 pip install tad-dftd4
 ```
 
@@ -74,23 +74,23 @@ pip install tad-dftd4
 This project is hosted on GitHub at [dftd4/tad-dftd4](https://github.com/dftd4/tad-dftd4).
 Obtain the source by cloning the repository with
 
-```bash
+```sh
 git clone https://github.com/dftd4/tad-dftd4
 cd tad-dftd4
 ```
 
 We recommend using a [conda](https://conda.io/) environment to install the package.
-You can setup the environment manager using a [mambaforge](https://github.com/conda-forge/miniforge>) installer.
+You can setup the environment manager using a [mambaforge](https://github.com/conda-forge/miniforge) installer.
 Install the required dependencies from the conda-forge channel.
 
-```bash
+```sh
 mamba env create -n torch -f environment.yaml
 mamba activate torch
 ```
 
 Install this project with ``pip`` in the environment
 
-```bash
+```sh
 pip install .
 ```
 
@@ -106,32 +106,32 @@ The following dependencies are required
 
 For development, additionally install the following tools in your environment.
 
-```bash
+```sh
 mamba install black covdefaults mypy pre-commit pylint pytest pytest-cov pytest-xdist tox
 pip install pytest-random-order
 ```
 
 With pip, add the option ``-e`` for installing in development mode, and add ``[dev]`` for the development dependencies
 
-```bash
+```sh
 pip install -e .[dev]
 ```
 
 The pre-commit hooks are initialized by running the following command in the root of the repository.
 
-```bash
+```sh
 pre-commit install
 ```
 
 For testing all Python environments, simply run `tox`.
 
-```bash
+```sh
 tox
 ```
 
 Note that this randomizes the order of tests but skips "large" tests. To modify this behavior, `tox` has to skip the optional *posargs*.
 
-```bash
+```sh
 tox -- test
 ```
 
