@@ -93,7 +93,6 @@ def test_single(dtype: torch.dtype, name: str) -> None:
         sample["hessian"].to(**dd),
         torch.Size(2 * (numbers.shape[-1], 3)),
     )
-    print(ref)
 
     # variable to be differentiated
     positions.requires_grad_(True)
