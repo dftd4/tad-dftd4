@@ -30,7 +30,7 @@ import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs
 from tad_mctc.ncoord import cn_d4, erf_count
-from tad_multicharge.eeq import get_charges
+from tad_multicharge import get_eeq_charges
 
 from . import data, defaults
 from .cutoff import Cutoff
@@ -113,7 +113,7 @@ def dftd4(
     if r4r2 is None:
         r4r2 = data.R4R2.to(**dd)[numbers]
     if q is None:
-        q = get_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
+        q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 
     if numbers.shape != positions.shape[:-1]:
         raise ValueError(

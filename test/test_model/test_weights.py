@@ -25,7 +25,6 @@ import torch
 import torch.nn.functional as F
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
-from tad_multicharge.eeq import get_charges
 
 from tad_dftd4.model import D4Model
 from tad_dftd4.typing import DD
@@ -55,7 +54,7 @@ def single(
         cn = None  # positions.new_zeros(numbers.shape)
 
     if with_q is True:
-        q = get_charges(numbers, positions, torch.tensor(0.0, **dd))
+        q = sample["q"].to(**dd)
     else:
         q = None  # positions.new_zeros(numbers.shape)
 
@@ -120,13 +119,16 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["positions"].to(**dd),
         ]
     )
+    q = pack(
+        [
+            sample1["q"].to(**dd),
+            sample2["q"].to(**dd),
+        ]
+    )
 
     d4 = D4Model(numbers, **dd)
 
     cn = cn_d4(numbers, positions)
-    total_charge = positions.new_zeros(numbers.shape[0])
-    q = get_charges(numbers, positions, total_charge)
-
     gwvec = d4.weight_references(cn, q)
 
     # pad reference tensor to always be of shape `(natoms, 7)`
