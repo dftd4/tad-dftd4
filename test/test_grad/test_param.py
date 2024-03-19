@@ -36,9 +36,7 @@ tol = 1e-8
 device = None
 
 
-def gradchecker(
-    dtype: torch.dtype, name: str
-) -> tuple[
+def gradchecker(dtype: torch.dtype, name: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
@@ -103,9 +101,7 @@ def test_gradgradcheck_slow(dtype: torch.dtype, name: str) -> None:
     assert dgradgradcheck(func, diffvars, atol=1e-5, rtol=1e-5, fast_mode=False)
 
 
-def gradchecker_batch(
-    dtype: torch.dtype, name1: str, name2: str
-) -> tuple[
+def gradchecker_batch(dtype: torch.dtype, name1: str, name2: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
