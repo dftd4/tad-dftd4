@@ -29,13 +29,13 @@ from __future__ import annotations
 import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs
-from tad_mctc.ncoord import cn_d4, erf_count
 from tad_multicharge import get_eeq_charges
 
 from . import data, defaults
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
 from .model import D4Model
+from .ncoord import cn_d4, erf_count
 from .typing import DD, Any, CountingFunction, DampingFunction, Tensor
 
 __all__ = ["dftd4"]
