@@ -30,7 +30,7 @@ def test_params_shape() -> None:
     maxel = 104  # 103 elements + dummy
     assert params.refc.shape == torch.Size((maxel, 7))
     assert params.refascale.shape == torch.Size((maxel, 7))
-    assert params.refcn.shape == torch.Size((maxel, 7))
+    assert params.refcovcn.shape == torch.Size((maxel, 7))
     assert params.refsys.shape == torch.Size((maxel, 7))
     assert params.refq.shape == torch.Size((maxel, 7))
     assert params.refalpha.shape == torch.Size((maxel, 7, 23))
