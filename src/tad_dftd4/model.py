@@ -177,9 +177,9 @@ class D4Model(TensorLike):
         # Consequently, some values become zero although the actual result
         # should be close to one. The problem does not arise when using `torch.
         # double`. In order to avoid this error, which is also difficult to
-        # detect, this part always uses `torch.double`. `params.refcn` is saved
-        # with `torch.double`, but I still made sure...
-        refcn = params.refcn.to(device=self.device, dtype=torch.double)[self.numbers]
+        # detect, this part always uses `torch.double`. `params.refcovcn` is
+        # saved with `torch.double`, but I still made sure...
+        refcn = params.refcovcn.to(device=self.device, dtype=torch.double)[self.numbers]
 
         # For vectorization, we reformulate the Gaussian weighting function:
         # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
