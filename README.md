@@ -17,8 +17,8 @@
       <a href="https://pypi.org/project/tad-dftd4/">
         <img src="https://img.shields.io/pypi/v/tad-dftd4?color=orange" alt="PyPI"/>
       </a>
-      <a href="https://www.gnu.org/licenses/lgpl-3.0">
-        <img src="https://img.shields.io/badge/License-LGPL_v3-orange.svg" alt="LGPL-3.0"/>
+      <a href="http://www.apache.org/licenses/LICENSE-2.0">
+        <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
       </a>
     </td>
   </tr>
@@ -252,8 +252,8 @@ Please, take a moment to read the [contributing guidelines](CONTRIBUTING.md).
 
 ## License
 
-This project is free software: you can redistribute it and/or modify it under the terms of the Lesser GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This project is licensed under the Apache License, Version 2.0 (the "License"); you may not use this project's files except in compliance with the License. You may obtain a copy of the License at
 
-This project is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose. See the Lesser GNU General Public License for more details.
+http://www.apache.org/licenses/LICENSE-2.0
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this project by you, as defined in the Lesser GNU General Public license, shall be licensed as above, without any additional terms or conditions.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
