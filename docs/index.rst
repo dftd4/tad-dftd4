@@ -13,9 +13,9 @@ Torch autodiff for DFT-D4
     :target: https://pypi.org/project/tad-dftd4/
     :alt: PyPI
 
-.. image:: https://img.shields.io/badge/License-LGPL_v3-blue.svg
-    :target: https://www.gnu.org/licenses/lgpl-3.0
-    :alt: LGPL-3.0
+.. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+    :target: http://www.apache.org/licenses/LICENSE-2.0
+    :alt: Apache-2.0
 
 .. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml
