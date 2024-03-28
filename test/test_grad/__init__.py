@@ -1,5 +1,7 @@
 # This file is part of tad-dftd4.
+#
 # SPDX-Identifier: Apache-2.0
+# Copyright (C) 2024 Grimme Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

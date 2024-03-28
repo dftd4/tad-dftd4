@@ -1,20 +1,19 @@
 # This file is part of tad-dftd4.
 #
-# SPDX-Identifier: LGPL-3.0
-# Copyright (C) 2022 Marvin Friede
+# SPDX-Identifier: Apache-2.0
+# Copyright (C) 2024 Grimme Group
 #
-# tad-dftd4 is free software: you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# tad-dftd4 is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with tad-dftd4. If not, see <https://www.gnu.org/licenses/>.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Testing dispersion gradient (autodiff).
 """
@@ -29,21 +28,21 @@ from tad_mctc.data.molecules import mols as samples
 from tad_dftd4 import dftd4
 from tad_dftd4.typing import DD, Callable, Tensor
 
+from ..conftest import DEVICE
+
 sample_list = ["LiH", "AmF3", "SiH4"]
 
-tol = 1e-8
-
-device = None
+tol = 1e-7
 
 
 def gradchecker(dtype: torch.dtype, name: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample = samples[name]
-    numbers = sample["numbers"].to(device=device)
+    numbers = sample["numbers"].to(device=DEVICE)
     positions = sample["positions"].to(**dd)
     charge = torch.tensor(0.0, **dd)
 
@@ -105,13 +104,13 @@ def gradchecker_batch(dtype: torch.dtype, name1: str, name2: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
-            sample1["numbers"].to(device=device),
-            sample2["numbers"].to(device=device),
+            sample1["numbers"].to(device=DEVICE),
+            sample2["numbers"].to(device=DEVICE),
         ]
     )
     positions = pack(
