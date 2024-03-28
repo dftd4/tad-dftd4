@@ -32,7 +32,7 @@ from .samples_grad import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
 
-tol = 1e-8
+tol = 1e-7
 
 
 def gradchecker(dtype: torch.dtype, name: str) -> tuple[

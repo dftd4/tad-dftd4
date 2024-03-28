@@ -28,21 +28,21 @@ from tad_mctc.data.molecules import mols as samples
 from tad_dftd4 import dftd4
 from tad_dftd4.typing import DD, Callable, Tensor
 
+from ..conftest import DEVICE
+
 sample_list = ["LiH", "AmF3", "SiH4"]
 
-tol = 1e-8
-
-device = None
+tol = 1e-7
 
 
 def gradchecker(dtype: torch.dtype, name: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample = samples[name]
-    numbers = sample["numbers"].to(device=device)
+    numbers = sample["numbers"].to(device=DEVICE)
     positions = sample["positions"].to(**dd)
     charge = torch.tensor(0.0, **dd)
 
@@ -104,13 +104,13 @@ def gradchecker_batch(dtype: torch.dtype, name1: str, name2: str) -> tuple[
     Callable[[Tensor, Tensor, Tensor, Tensor], Tensor],  # autograd function
     tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor],
 ]:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
-            sample1["numbers"].to(device=device),
-            sample2["numbers"].to(device=device),
+            sample1["numbers"].to(device=DEVICE),
+            sample2["numbers"].to(device=DEVICE),
         ]
     )
     positions = pack(

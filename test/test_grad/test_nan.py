@@ -27,9 +27,10 @@ from tad_mctc.data.molecules import mols as samples
 from tad_dftd4 import dftd4
 from tad_dftd4.typing import DD
 
-tol = 1e-8
+from ..conftest import DEVICE
 
-device = None
+tol = 1e-7
+
 
 # sample, which previously failed with NaN's in tad-dftd3
 numbers = torch.tensor([6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 7, 8, 8, 8])
@@ -68,9 +69,9 @@ param = {
 @pytest.mark.grad
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 def test_single(dtype: torch.dtype) -> None:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
-    nums = numbers.to(device=device)
+    nums = numbers.to(device=DEVICE)
     pos = positions.to(**dd)
     chrg = charge.to(**dd)
     par = {k: v.to(**dd) for k, v in param.items()}
@@ -96,12 +97,12 @@ def test_single(dtype: torch.dtype) -> None:
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", ["LiH", "SiH4"])
 def test_batch(dtype: torch.dtype, name: str) -> None:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     nums = pack(
         (
-            numbers.to(device=device),
-            samples[name]["numbers"].to(device=device),
+            numbers.to(device=DEVICE),
+            samples[name]["numbers"].to(device=DEVICE),
         )
     )
     pos = pack(

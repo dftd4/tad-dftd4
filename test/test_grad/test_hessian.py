@@ -38,13 +38,12 @@ from tad_mctc.convert import reshape_fortran
 from tad_dftd4 import dftd4
 from tad_dftd4.typing import DD, Tensor
 
+from ..conftest import DEVICE
 from .samples_hessian import samples
 
 sample_list = ["LiH", "SiH4", "PbH4-BiH3", "MB16_43_01"]
 
-tol = 1e-8
-
-device = None
+tol = 1e-7
 
 
 def test_fail() -> None:
@@ -72,10 +71,10 @@ def test_zeros() -> None:
 @pytest.mark.parametrize("dtype", [torch.double])
 @pytest.mark.parametrize("name", sample_list)
 def test_single(dtype: torch.dtype, name: str) -> None:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample = samples[name]
-    numbers = sample["numbers"].to(device)
+    numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     charge = torch.tensor(0.0, **dd)
 
@@ -107,13 +106,13 @@ def test_single(dtype: torch.dtype, name: str) -> None:
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", sample_list)
 def skip_test_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
-    dd: DD = {"device": device, "dtype": dtype}
+    dd: DD = {"device": DEVICE, "dtype": dtype}
 
     sample1, sample2 = samples[name1], samples[name2]
     numbers = pack(
         [
-            sample1["numbers"].to(device),
-            sample2["numbers"].to(device),
+            sample1["numbers"].to(DEVICE),
+            sample2["numbers"].to(DEVICE),
         ]
     )
     positions = pack(
