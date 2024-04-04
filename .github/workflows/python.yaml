@@ -22,14 +22,14 @@ on:
       - main
       - master
     paths-ignore:
-      - "docs/**"
+      - "doc*/**"
       - "./*.ya?ml"
       - "**/*.md"
       - "**/*.rst"
 
   pull_request:
     paths-ignore:
-      - "docs/**"
+      - "doc*/**"
       - "./*.ya?ml"
       - "**/*.md"
       - "**/*.rst"
