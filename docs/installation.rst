@@ -4,12 +4,28 @@ Installation
 pip
 ~~~
 
+.. image:: https://img.shields.io/pypi/v/tad-dftd4
+    :target: https://pypi.org/project/tad-dftd4/
+    :alt: PyPI
+
 *tad-dftd4* can easily be installed with ``pip``.
 
 .. code::
 
     pip install tad-dftd4
 
+conda
+~~~~~
+
+.. image:: https://img.shields.io/conda/vn/conda-forge/tad-dftd4.svg
+    :target: https://anaconda.org/conda-forge/tad-dftd4
+    :alt: Conda Version
+
+*tad-dftd4* is also available from ``conda``.
+
+.. code::
+
+    conda install tad-dftd4
 
 From source
 ~~~~~~~~~~~

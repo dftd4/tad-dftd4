@@ -17,6 +17,9 @@
       <a href="https://pypi.org/project/tad-dftd4/">
         <img src="https://img.shields.io/pypi/v/tad-dftd4?color=orange" alt="PyPI"/>
       </a>
+      <a href="https://anaconda.org/conda-forge/tad-dftd4">
+        <img src="https://img.shields.io/conda/vn/conda-forge/tad-dftd4.svg" alt="Conda Version"/>
+      </a>
       <a href="http://www.apache.org/licenses/LICENSE-2.0">
         <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg" alt="Apache-2.0"/>
       </a>
@@ -27,6 +30,12 @@
     <td>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml/badge.svg" alt="Test Status Ubuntu"/>
+      </a>
+      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml">
+        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml/badge.svg" alt="Test Status macOS"/>
+      </a>
+      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml">
+        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml/badge.svg" alt="Test Status Windows"/>
       </a>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/release.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/release.yaml/badge.svg" alt="Build Status"/>
@@ -67,6 +76,14 @@ For alternative implementations, also check out:
 
 ```sh
 pip install tad-dftd4
+```
+
+### conda
+
+_tad-dftd4_ is also available from `conda`.
+
+```sh
+conda install tad-dftd4
 ```
 
 ### From source
