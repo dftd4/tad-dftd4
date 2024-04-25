@@ -17,9 +17,9 @@ Torch autodiff for DFT-D4
     :target: http://www.apache.org/licenses/LICENSE-2.0
     :alt: Apache-2.0
 
-.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg
-    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml
-    :alt: CI
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml
+    :alt: Test Status Ubuntu
 
 .. image:: https://readthedocs.org/projects/tad-dftd4/badge/?version=latest
     :target: https://tad-dftd4.readthedocs.io
