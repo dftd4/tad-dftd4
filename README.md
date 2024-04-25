@@ -25,8 +25,8 @@
   <tr>
     <td>Status:</td>
     <td>
-      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml">
-        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/python.yaml/badge.svg" alt="Test Status"/>
+      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml">
+        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml/badge.svg" alt="Test Status Ubuntu"/>
       </a>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/release.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/release.yaml/badge.svg" alt="Build Status"/>
