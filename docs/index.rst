@@ -13,6 +13,10 @@ Torch autodiff for DFT-D4
     :target: https://pypi.org/project/tad-dftd4/
     :alt: PyPI
 
+.. image:: https://img.shields.io/conda/vn/conda-forge/tad-dftd4.svg
+    :target: https://anaconda.org/conda-forge/tad-dftd4
+    :alt: PyPI
+
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :target: http://www.apache.org/licenses/LICENSE-2.0
     :alt: Apache-2.0
@@ -33,13 +37,13 @@ Torch autodiff for DFT-D4
     :target: https://tad-dftd4.readthedocs.io
     :alt: Documentation Status
 
-.. image:: https://codecov.io/gh/marvinfriede/tad-dftd4/branch/master/graph/badge.svg?token=OGJJnZ6t4G
-    :target: https://codecov.io/gh/marvinfriede/tad-dftd4
-    :alt: Coverage
-
 .. image:: https://results.pre-commit.ci/badge/github/dftd4/tad-dftd4/main.svg
     :target: https://results.pre-commit.ci/latest/github/dftd4/tad-dftd4/main
     :alt: pre-commit.ci status
+
+.. image:: https://codecov.io/gh/marvinfriede/tad-dftd4/branch/master/graph/badge.svg?token=OGJJnZ6t4G
+    :target: https://codecov.io/gh/marvinfriede/tad-dftd4
+    :alt: Coverage
 
 
 Implementation of the DFT-D4 dispersion model in PyTorch.

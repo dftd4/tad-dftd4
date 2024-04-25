@@ -80,7 +80,7 @@ pip install tad-dftd4
 
 ### conda
 
-_tad-dftd4_ is also available from `conda`.
+*tad-dftd4* is also available from ``conda``.
 
 ```sh
 conda install tad-dftd4
