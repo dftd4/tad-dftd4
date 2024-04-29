@@ -42,7 +42,7 @@ Torch autodiff for DFT-D4
     :alt: pre-commit.ci status
 
 .. image:: https://codecov.io/gh/marvinfriede/tad-dftd4/branch/master/graph/badge.svg?token=OGJJnZ6t4G
-    :target: https://codecov.io/gh/marvinfriede/tad-dftd4
+    :target: https://codecov.io/gh/dftd4/tad-dftd4
     :alt: Coverage
 
 
