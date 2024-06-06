@@ -103,7 +103,7 @@ def get_atm_dispersion(
         torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
     )
 
-    rad = data.R4R2[numbers]
+    rad = data.R4R2.to(**dd)[numbers]
     radii = rad.unsqueeze(-1) * rad.unsqueeze(-2)
     temp = a1 * storch.sqrt(3.0 * radii) + a2
 
