@@ -2,7 +2,7 @@ Torch autodiff for DFT-D4
 =========================
 
 .. image:: https://img.shields.io/badge/python-%3E=3.8-blue.svg
-    :target: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11-blue.svg
+    :target: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-blue.svg
     :alt: Python Versions
 
 .. image:: https://img.shields.io/github/v/release/dftd4/tad-dftd4
