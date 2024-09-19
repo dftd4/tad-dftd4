@@ -25,9 +25,13 @@ Torch autodiff for DFT-D4
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml
     :alt: Test Status Ubuntu
 
-.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml/badge.svg
-    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml
-    :alt: Test Status macOS
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml
+    :alt: Test Status macOS (x86)
+
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml
+    :alt: Test Status macOS (ARM)
 
 .. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml/badge.svg
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml
