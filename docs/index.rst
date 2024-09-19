@@ -2,7 +2,7 @@ Torch autodiff for DFT-D4
 =========================
 
 .. image:: https://img.shields.io/badge/python-%3E=3.8-blue.svg
-    :target: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11-blue.svg
+    :target: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-blue.svg
     :alt: Python Versions
 
 .. image:: https://img.shields.io/github/v/release/dftd4/tad-dftd4
@@ -25,9 +25,13 @@ Torch autodiff for DFT-D4
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml
     :alt: Test Status Ubuntu
 
-.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml/badge.svg
-    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml
-    :alt: Test Status macOS
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml
+    :alt: Test Status macOS (x86)
+
+.. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml/badge.svg
+    :target: https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml
+    :alt: Test Status macOS (ARM)
 
 .. image:: https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml/badge.svg
     :target: https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml

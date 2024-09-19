@@ -4,7 +4,7 @@
   <tr>
     <td>Compatibility:</td>
     <td>
-      <img src="https://img.shields.io/badge/Python-3.8%20|%203.9%20|%203.10%20|%203.11-blue.svg" alt="Python Versions"/>
+      <img src="https://img.shields.io/badge/Python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-blue.svg" alt="Python Versions"/>
       <img src="https://img.shields.io/badge/PyTorch-%3E=1.11.0-blue.svg" alt="PyTorch Versions"/>
     </td>
   </tr>
@@ -32,7 +32,10 @@
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml/badge.svg" alt="Test Status Ubuntu"/>
       </a>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml">
-        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml/badge.svg" alt="Test Status macOS"/>
+        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml/badge.svg" alt="Test Status macOS (x86)"/>
+      </a>
+      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml">
+        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml/badge.svg" alt="Test Status macOS (ARM)"/>
       </a>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/windows.yaml/badge.svg" alt="Test Status Windows"/>
@@ -67,6 +70,7 @@ For alternative implementations, also check out:
 
 - [dftd4](https://dftd4.readthedocs.io): Implementation of the DFT-D4 dispersion model in Fortran with Python bindings.
 - [cpp-d4](https://github.com/dftd4/cpp-d4): Implementation of the DFT-D4 dispersion model in C++.
+
 
 ## Installation
 
@@ -118,6 +122,26 @@ The following dependencies are required
 - [tad-multicharge](https://github.com/tad-mctc/tad-multicharge/)
 - [torch](https://pytorch.org/)
 - [pytest](https://docs.pytest.org/) (tests only)
+
+
+## Compatibility
+
+| PyTorch \ Python | 3.8                | 3.9                | 3.10               | 3.11               | 3.12               |
+|------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
+| 1.11.0           | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                |
+| 1.12.1           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                | :x:                |
+| 1.13.1           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| 2.0.1            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| 2.1.2            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| 2.2.2            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 2.3.1            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 2.4.1            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+
+Note that only the latest bug fix version is listed, but all preceding bug fix minor versions are supported.
+For example, although only version 2.2.2 is listed, version 2.2.0 and 2.2.1 are also supported.
+
+On macOS and Windows, PyTorch<2.0.0 does only support Python<3.11.
+
 
 ## Development
 
