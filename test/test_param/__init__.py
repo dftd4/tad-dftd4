@@ -14,15 +14,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: torch
-channels:
-  - defaults
-  - conda-forge
-  - pytorch
-dependencies:
-  - numpy<2
-  - python>=3.8,<3.13
-  - pytorch>=1.11.0,<2.5
-  - tad-mctc
-  - tad-multicharge
-  - tomli

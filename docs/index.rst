@@ -106,6 +106,9 @@ The following example shows how to calculate the DFT-D4 dispersion energy for a 
         "a2": positions.new_tensor(4.60230534),
     }
 
+    # parameters can also be obtained using the functional name:
+    # param = d4.get_params("tpssh")
+
     energy = d4.dftd4(numbers, positions, charge, param)
     torch.set_printoptions(precision=10)
     print(energy)

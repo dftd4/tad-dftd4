@@ -15,11 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Damping schemes
-===============
-
-Available damping schemes for two- and three-body dispersion terms.
+Test reading parameters from TOML file.
 """
-from .atm import *
-from .parameters import *
-from .rational import *
+from __future__ import annotations
+
+import pytest
+
+from tad_dftd4.damping.parameters import get_params, get_params_default
+
+
+def test_default() -> None:
+    params = get_params_default()
+    assert isinstance(params, dict)
+    assert "s6" in params
+
+
+@pytest.mark.parametrize("func", ["pbe", "b3lyp", "revpbe"])
+def test_func(func: str) -> None:
+    params = get_params(func)
+    assert isinstance(params, dict)
+    assert "a1" in params
+    assert "a2" in params
+
+
+def test_with_doi() -> None:
+    params = get_params("pbe", with_reference=True)
+    assert isinstance(params, dict)
+    assert "doi" in params

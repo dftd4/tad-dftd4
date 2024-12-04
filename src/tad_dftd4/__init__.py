@@ -90,6 +90,7 @@ import torch
 
 from . import cutoff, damping, data, disp, model, ncoord, typing
 from .__version__ import __version__
+from .damping import get_params
 from .disp import dftd4
 
 __all__ = [
@@ -99,6 +100,7 @@ __all__ = [
     "data",
     "dftd4",
     "disp",
+    "get_params",
     "model",
     "ncoord",
     "typing",
