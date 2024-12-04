@@ -14,15 +14,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: torch
-channels:
-  - defaults
-  - conda-forge
-  - pytorch
-dependencies:
-  - numpy<2
-  - python>=3.8,<3.13
-  - pytorch>=1.11.0,<2.5
-  - tad-mctc
-  - tad-multicharge
-  - tomli
+"""
+Test reading parameters from TOML file.
+"""
+from __future__ import annotations
+
+import pytest
+
+from tad_dftd4.damping import get_params
+
+
+def test_unknown_func() -> None:
+    with pytest.raises(KeyError):
+        get_params("unknown")
+
+
+def test_unknown_variant() -> None:
+    with pytest.raises(KeyError):
+        get_params("pbe", variant="unknown")  # type: ignore
