@@ -60,11 +60,17 @@
 
 Implementation of the DFT-D4 dispersion model in PyTorch. This module allows to process a single structure or a batch of structures for the calculation of atom-resolved dispersion energies.
 
+If you use this software, please cite the following publication
+
+- M. Friede, C. Hölzer, S. Ehlert, S. Grimme, *J. Chem. Phys.*, **2024**, *161*, 062501. DOI: [10.1063/5.0216715](https://doi.org/10.1063/5.0216715)
+
+
 For details on the D4 dispersion model, see:
 
 - E. Caldeweyher, C. Bannwarth and S. Grimme, *J. Chem. Phys.*, 2017, 147, 034112. [DOI: 10.1063/1.4993215](https://dx.doi.org/10.1063/1.4993215)
 - E. Caldeweyher, S. Ehlert, A. Hansen, H. Neugebauer, S. Spicher, C. Bannwarth and S. Grimme, *J. Chem. Phys.*, 2019, 150, 154122. [DOI: 10.1063/1.5090222](https://dx.doi.org/10.1063/1.5090222)
 - E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*, 2020, 22, 8499-8512. [DOI: 10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
+
 
 For alternative implementations, also check out:
 
@@ -136,6 +142,7 @@ The following dependencies are required
 | 2.2.2            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | 2.3.1            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | 2.4.1            | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 2.5.1            | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 Note that only the latest bug fix version is listed, but all preceding bug fix minor versions are supported.
 For example, although only version 2.2.2 is listed, version 2.2.0 and 2.2.1 are also supported.
