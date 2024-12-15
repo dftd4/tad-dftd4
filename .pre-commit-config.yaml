@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ci:
-    skip: [mypy]
+  skip: [mypy]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -40,7 +40,7 @@ repos:
             --min-py-version,
             "3.8",
             --max-py-version,
-            "3.11",
+            "3.12",
           ]
 
   - repo: https://github.com/asottile/pyupgrade
@@ -62,10 +62,15 @@ repos:
       - id: black
         stages: [pre-commit]
 
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v0.9.2
+    hooks:
+      - id: zizmor
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.13.0
     hooks:
       - id: mypy
-        # additional_dependencies: [types-all]
-        args: [--config-file=pyproject.toml, --ignore-missing-imports]
+        pass_filenames: false
+        args: [--config-file=pyproject.toml, --ignore-missing-imports, src]
         exclude: "test|examples/|test/conftest.py"
