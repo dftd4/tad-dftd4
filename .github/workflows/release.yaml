@@ -20,14 +20,12 @@ on:
   push:
     branches:
       - main
-      - master
     tags:
       - "v*"
 
   pull_request:
     branches:
       - main
-      - master
 
   workflow_dispatch:
 
@@ -37,6 +35,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Build wheel (bdist)
         run: pipx run build --wheel
@@ -51,6 +51,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Build source distribution (sdist)
         run: pipx run build --sdist
@@ -60,9 +62,12 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-  upload_pypi:
-    needs: [wheel, sdist]
+  upload_test_pypi:
+    needs: [sdist, wheel]
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download build artifacts
@@ -74,12 +79,21 @@ jobs:
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
+
+  upload_pypi:
+    needs: [sdist, wheel, upload_test_pypi]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
