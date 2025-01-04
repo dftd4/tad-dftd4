@@ -18,7 +18,9 @@
 Damping Parameters
 ==================
 
-Read damping parameters from toml file.
+Read damping parameters from toml file. The TOML file is coped from the DFT-D4
+Fortran GitHub repository.
+(https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml)
 """
 
 from __future__ import annotations
@@ -28,9 +30,29 @@ from typing import Literal
 
 import torch
 
-from ...typing import Tensor
+from ...typing import Tensor, overload
 
 __all__ = ["get_params", "get_params_default"]
+
+
+@overload
+def get_params(
+    func: str,
+    variant: Literal["bj-eeq-atm"],
+    with_reference: Literal[False],
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+) -> dict[str, Tensor]: ...
+
+
+@overload
+def get_params(
+    func: str,
+    variant: Literal["bj-eeq-atm"],
+    with_reference: Literal[True],
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+) -> dict[str, Tensor | str]: ...
 
 
 def get_params(
@@ -39,7 +61,7 @@ def get_params(
     with_reference: bool = False,
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
-) -> dict[str, Tensor]:
+) -> dict[str, Tensor] | dict[str, Tensor | str]:
     """
     Obtain damping parameters for a given functional.
 
@@ -85,12 +107,12 @@ def get_params(
 
     par_section = variant_section[variant]
 
-    d = {}
+    d: dict[str, Tensor | str] = {}
     for k, v in par_section.items():
         if k == "doi":
             if with_reference is False:
                 continue
-            d[k] = v
+            d[k] = str(v)
         else:
             d[k] = torch.tensor(v, device=device, dtype=dtype)
 
@@ -98,7 +120,9 @@ def get_params(
 
 
 def get_params_default(
-    variant: Literal["bj-eeq-atm", "d4.bj-eeq-two", "d4.bj-eeq-mbd"] = "bj-eeq-atm",
+    variant: Literal[
+        "bj-eeq-atm", "d4.bj-eeq-two", "d4.bj-eeq-mbd"
+    ] = "bj-eeq-atm",
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
 ) -> dict[str, Tensor]:
@@ -128,7 +152,5 @@ def get_params_default(
     for k, v in table["default"]["parameter"]["d4"][variant].items():
         if isinstance(v, float):
             d[k] = torch.tensor(v, device=device, dtype=dtype)
-        else:
-            d[k] = v
 
     return d

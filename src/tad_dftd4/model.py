@@ -42,8 +42,8 @@ from __future__ import annotations
 import torch
 from tad_mctc.math import einsum
 
-from . import data, params
-from .typing import Tensor, TensorLike
+from . import data, reference
+from .typing import Literal, Tensor, TensorLike
 
 __all__ = ["D4Model"]
 
@@ -70,10 +70,13 @@ class D4Model(TensorLike):
     wf: float
     """Weighting factor for coordination number interpolation."""
 
+    ref_charges: Literal["eeq", "gfn2"]
+    """Reference charges to use for the model."""
+
     alpha: Tensor
     """Reference polarizabilities of unique species."""
 
-    __slots__ = ("numbers", "ga", "gc", "wf", "alpha")
+    __slots__ = ("numbers", "ga", "gc", "wf", "ref_charges", "alpha")
 
     def __init__(
         self,
@@ -81,6 +84,7 @@ class D4Model(TensorLike):
         ga: float = ga_default,
         gc: float = gc_default,
         wf: float = wf_default,
+        ref_charges: Literal["eeq", "gfn2"] = "eeq",
         alpha: Tensor | None = None,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
@@ -101,6 +105,8 @@ class D4Model(TensorLike):
         wf : float, optional
             Weighting factor for coordination number interpolation.
             Defaults to `wf_default`.
+        ref_charges : Literal["eeq", "gfn2"], optional
+            Reference charges to use for the model. Defaults to `"eeq"`.
         alpha : Tensor | None, optional
             Reference polarizabilities of unique species. Defaults to `None`.
         device : torch.device | None, optional
@@ -114,6 +120,7 @@ class D4Model(TensorLike):
         self.ga = ga
         self.gc = gc
         self.wf = wf
+        self.ref_charges = ref_charges
 
         if alpha is None:
             self.alpha = self._set_refalpha_eeq()
@@ -167,8 +174,18 @@ class D4Model(TensorLike):
         if q is None:
             q = torch.zeros(self.numbers.shape, **self.dd)
 
-        refc = params.refc.to(self.device)[self.numbers]
-        refq = params.refq.to(**self.dd)[self.numbers]
+        if self.ref_charges == "eeq":
+            from .reference.charge_eeq import clsq as _refq
+
+            refq = _refq.to(**self.dd)[self.numbers]
+        elif self.ref_charges == "gfn2":
+            from .reference.charge_gfn2 import refq as _refq
+
+            refq = _refq.to(**self.dd)[self.numbers]
+        else:
+            raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        refc = reference.refc.to(self.device)[self.numbers]
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -179,7 +196,9 @@ class D4Model(TensorLike):
         # double`. In order to avoid this error, which is also difficult to
         # detect, this part always uses `torch.double`. `params.refcovcn` is
         # saved with `torch.double`, but I still made sure...
-        refcn = params.refcovcn.to(device=self.device, dtype=torch.double)[self.numbers]
+        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
+            self.numbers
+        ]
 
         # For vectorization, we reformulate the Gaussian weighting function:
         # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
@@ -204,14 +223,18 @@ class D4Model(TensorLike):
         expw = torch.where(
             mask,
             refc_pow_final,
-            torch.tensor(0.0, device=self.device, dtype=torch.double),  # double!
+            torch.tensor(
+                0.0, device=self.device, dtype=torch.double
+            ),  # double!
         )
 
         # normalize weights
         norm = torch.where(
             mask,
             torch.sum(expw, dim=-1, keepdim=True),
-            torch.tensor(1e-300, device=self.device, dtype=torch.double),  # double!)
+            torch.tensor(
+                1e-300, device=self.device, dtype=torch.double
+            ),  # double!)
         )
         gw_temp = (expw / norm).type(self.dtype)  # back to real dtype
 
@@ -219,7 +242,9 @@ class D4Model(TensorLike):
         maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
 
         # prevent division by 0 and small values
-        exceptional = (torch.isnan(gw_temp)) | (gw_temp > torch.finfo(self.dtype).max)
+        exceptional = (torch.isnan(gw_temp)) | (
+            gw_temp > torch.finfo(self.dtype).max
+        )
 
         gw = torch.where(
             exceptional,
@@ -323,13 +348,23 @@ class D4Model(TensorLike):
         zero = torch.tensor(0.0, **self.dd)
 
         numbers = self.unique
-        refsys = params.refsys.to(self.device)[numbers]
-        refsq = params.refsq.to(**self.dd)[numbers]
-        refascale = params.refascale.to(**self.dd)[numbers]
-        refalpha = params.refalpha.to(**self.dd)[numbers]
-        refscount = params.refscount.to(**self.dd)[numbers]
-        secscale = params.secscale.to(**self.dd)
-        secalpha = params.secalpha.to(**self.dd)
+        refsys = reference.refsys.to(self.device)[numbers]
+        refascale = reference.refascale.to(**self.dd)[numbers]
+        refalpha = reference.refalpha.to(**self.dd)[numbers]
+        refscount = reference.refscount.to(**self.dd)[numbers]
+        secscale = reference.secscale.to(**self.dd)
+        secalpha = reference.secalpha.to(**self.dd)
+
+        if self.ref_charges == "eeq":
+            from .reference.charge_eeq import clsh as _refsq
+
+            refsq = _refsq.to(**self.dd)[numbers]
+        elif self.ref_charges == "gfn2":
+            from .reference.charge_gfn2 import refh as _refsq
+
+            refsq = _refsq.to(**self.dd)[numbers]
+        else:
+            raise ValueError(f"Unknown reference charges: {self.ref_charges}")
 
         mask = refsys > 0
 

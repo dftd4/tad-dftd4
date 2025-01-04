@@ -49,7 +49,8 @@ refs: dict[str, Refs] = {
     "LiH": Refs(
         {
             "q": torch.tensor(
-                [3.708714958301688e-01, -3.708714958301688e-01], dtype=torch.float64
+                [3.708714958301688e-01, -3.708714958301688e-01],
+                dtype=torch.float64,
             ),
             "disp": torch.tensor(
                 [

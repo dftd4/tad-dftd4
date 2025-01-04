@@ -22,17 +22,24 @@ from __future__ import annotations
 
 import torch
 
-from tad_dftd4 import data, params
+from tad_dftd4 import data, reference
+from tad_dftd4.reference import charge_eeq, charge_gfn2
 
 
 def test_params_shape() -> None:
     maxel = 104  # 103 elements + dummy
-    assert params.refc.shape == torch.Size((maxel, 7))
-    assert params.refascale.shape == torch.Size((maxel, 7))
-    assert params.refcovcn.shape == torch.Size((maxel, 7))
-    assert params.refsys.shape == torch.Size((maxel, 7))
-    assert params.refq.shape == torch.Size((maxel, 7))
-    assert params.refalpha.shape == torch.Size((maxel, 7, 23))
+    assert reference.refc.shape == torch.Size((maxel, 7))
+    assert reference.refascale.shape == torch.Size((maxel, 7))
+    assert reference.refcovcn.shape == torch.Size((maxel, 7))
+    assert reference.refsys.shape == torch.Size((maxel, 7))
+    assert reference.refalpha.shape == torch.Size((maxel, 7, 23))
+
+    assert charge_eeq.clsq.shape == torch.Size((maxel, 7))
+    assert charge_eeq.clsh.shape == torch.Size((maxel, 7))
+
+    # GFN2 charges only up to Rn
+    assert charge_gfn2.refq.shape == torch.Size((86, 7))
+    assert charge_gfn2.refh.shape == torch.Size((86, 7))
 
 
 def test_data_shape() -> None:
