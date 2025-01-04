@@ -15,19 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Type annotations: Built-ins
-===========================
+Reference Parameters
+====================
 
-Built-in type annotations are imported from the *tad-mctc* library, which
-handles some version checking.
+Parameters of reference systems.
 """
-from tad_mctc.typing import (
-    Any,
-    Callable,
-    Literal,
-    NoReturn,
-    TypedDict,
-    overload,
-)
 
-__all__ = ["Any", "Callable", "Literal", "NoReturn", "TypedDict", "overload"]
+from .params import *

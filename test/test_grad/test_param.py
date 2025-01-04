@@ -157,7 +157,9 @@ def test_gradcheck_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
 @pytest.mark.parametrize("dtype", [torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", ["LiH", "SiH4"])
-def test_gradgradcheck_batch(dtype: torch.dtype, name1: str, name2: str) -> None:
+def test_gradgradcheck_batch(
+    dtype: torch.dtype, name1: str, name2: str
+) -> None:
     """
     Check a single analytical gradient of parameters against numerical
     gradient from `torch.autograd.gradgradcheck`.
@@ -170,7 +172,9 @@ def test_gradgradcheck_batch(dtype: torch.dtype, name1: str, name2: str) -> None
 @pytest.mark.parametrize("dtype", [torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", ["AmF3", "MB16_43_01"])
-def test_gradgradcheck_batch_slow(dtype: torch.dtype, name1: str, name2: str) -> None:
+def test_gradgradcheck_batch_slow(
+    dtype: torch.dtype, name1: str, name2: str
+) -> None:
     """
     These fail with `fast_mode=True` (and sometimes randomly on GA runners).
     """

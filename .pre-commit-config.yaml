@@ -54,23 +54,15 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
-        args: ["--profile", "black", "--filter-files"]
+        args: ["--profile", "black", "--line-length", "80", "--filter-files"]
 
   - repo: https://github.com/psf/black
     rev: 24.10.0
     hooks:
       - id: black
-        stages: [pre-commit]
+        args: ["--line-length", "80"]
 
   - repo: https://github.com/woodruffw/zizmor-pre-commit
     rev: v0.10.0
     hooks:
       - id: zizmor
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.0
-    hooks:
-      - id: mypy
-        pass_filenames: false
-        args: [--config-file=pyproject.toml, --ignore-missing-imports, src]
-        exclude: "test|examples/|test/conftest.py"

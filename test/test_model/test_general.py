@@ -62,3 +62,21 @@ def test_change_device_fail() -> None:
     # trying to use setter
     with pytest.raises(AttributeError):
         model.device = torch.device("cpu")
+
+
+# raise error when creating the model in `_set_refalpha_eeq`
+def test_ref_charges_fail() -> None:
+    numbers = torch.tensor([14, 1, 1, 1, 1])
+
+    with pytest.raises(ValueError):
+        D4Model(numbers, ref_charges="wrong")  # type: ignore
+
+
+# raise error in `weight_references` when trying to change the ref_charges
+def test_ref_charges_fail_2() -> None:
+    numbers = torch.tensor([14, 1, 1, 1, 1])
+    model = D4Model(numbers, ref_charges="eeq")
+
+    model.ref_charges = "wrong"  # type: ignore
+    with pytest.raises(ValueError):
+        model.weight_references()

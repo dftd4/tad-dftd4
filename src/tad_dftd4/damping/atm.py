@@ -151,7 +151,10 @@ def get_atm_dispersion(
     )
 
     ang = torch.where(
-        mask_triples * (r2ij <= cutoff2) * (r2jk <= cutoff2) * (r2jk <= cutoff2),
+        mask_triples
+        * (r2ij <= cutoff2)
+        * (r2jk <= cutoff2)
+        * (r2jk <= cutoff2),
         0.375 * s / r5 + 1.0 / r3,
         torch.tensor(0.0, **dd),
     )

@@ -92,3 +92,14 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     gw = d4.weight_references(cn=cn, q=q)
     c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(refs.cpu(), abs=tol, rel=tol) == c6.cpu()
+
+
+def test_ref_charges() -> None:
+    numbers = torch.tensor([14, 1, 1, 1, 1])
+    model_eeq = D4Model(numbers, ref_charges="eeq")
+    model_gfn2 = D4Model(numbers, ref_charges="gfn2")
+
+    weights_eeq = model_eeq.weight_references()
+    weights_gfn2 = model_gfn2.weight_references()
+
+    assert pytest.approx(weights_eeq, abs=1e-1) == weights_gfn2
