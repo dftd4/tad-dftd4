@@ -531,7 +531,9 @@ def trapzd(polarizability: Tensor) -> Tensor:
             1.7500000000000000,
             2.5000000000000000,
             1.2500000000000000,
-        ]
+        ],
+        device=polarizability.device,
+        dtype=polarizability.dtype,
     )
 
     # NOTE: In the old version, a memory inefficient intermediate tensor was
