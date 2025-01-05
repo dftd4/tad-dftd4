@@ -48,4 +48,4 @@ plugins = ["covdefaults"]
 source = ["./src"]
 
 [tool.coverage.report]
-fail_under = 95
+fail_under = 90

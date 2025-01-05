@@ -22,6 +22,8 @@ For an explanation of the unusual loose tolerances, see `test_charges.py`.
 import pytest
 import torch
 import torch.nn.functional as F
+from tad_mctc._version import __tversion__
+from tad_mctc.autograd import jacrev
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
 
@@ -149,3 +151,95 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     assert gwvec.dtype == ref.dtype
     assert gwvec.shape == ref.shape
     assert pytest.approx(gwvec.cpu(), abs=tol) == ref.cpu()
+
+
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
+@pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
+def test_grad_q(name: str) -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+
+    q = sample["q"].to(**dd)
+    q_grad = q.detach().clone().requires_grad_(True)
+
+    d4 = D4Model(numbers, **dd)
+    cn = cn_d4(numbers, positions)
+
+    # analytical gradient
+    _, dgwdq_ana = d4.weight_references(cn, q, with_dgwdq=True)
+
+    # autodiff gradient
+    dgwdq_auto = jacrev(d4.weight_references, 1)(cn, q_grad)
+    assert isinstance(dgwdq_auto, torch.Tensor)
+    dgwdq_auto = dgwdq_auto.sum(-1).detach()
+
+    assert pytest.approx(dgwdq_auto.cpu(), abs=1e-6) == dgwdq_ana.cpu()
+
+
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
+@pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
+def test_grad_cn(name: str) -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+
+    pos = sample["positions"].to(**dd)
+    pos_grad = pos.detach().clone().requires_grad_(True)
+
+    d4 = D4Model(numbers, **dd)
+
+    # analytical gradient
+    cn = cn_d4(numbers, pos)
+    _, dgwdq_ana = d4.weight_references(cn, with_dgwdcn=True)
+
+    # autodiff gradient
+    cn_grad = cn_d4(numbers, pos_grad)
+    dgwdcn_auto = jacrev(d4.weight_references, 0)(cn_grad)
+    assert isinstance(dgwdcn_auto, torch.Tensor)
+    dgwdcn_auto = dgwdcn_auto.sum(-1).detach()
+
+    assert pytest.approx(dgwdcn_auto.cpu(), abs=1e-6) == -dgwdq_ana.cpu()
+
+
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
+@pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
+def test_grad_both(name: str) -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+
+    pos = sample["positions"].to(**dd)
+    pos_grad = pos.detach().clone().requires_grad_(True)
+
+    q = sample["q"].to(**dd)
+    q_grad = q.detach().clone().requires_grad_(True)
+
+    d4 = D4Model(numbers, **dd)
+
+    # analytical gradient
+    cn = cn_d4(numbers, pos)
+    _, dgwdq_ana, dgwdcn_ana = d4.weight_references(
+        cn, q, with_dgwdcn=True, with_dgwdq=True
+    )
+
+    # autodiff gradient
+    cn_grad = cn_d4(numbers, pos_grad)
+    dgwdq_auto, dgwdcn_auto = jacrev(
+        d4.weight_references,
+        (0, 1),  # type: ignore
+    )(cn_grad, q_grad)
+
+    assert isinstance(dgwdcn_auto, torch.Tensor)
+    dgwdcn_auto = dgwdcn_auto.sum(-1).detach()
+
+    assert pytest.approx(dgwdcn_auto.cpu(), abs=1e-6) == dgwdcn_ana.cpu()
+
+    assert isinstance(dgwdq_auto, torch.Tensor)
+    dgwdq_auto = dgwdq_auto.sum(-1).detach()
+
+    assert pytest.approx(dgwdq_auto.cpu(), abs=1e-6) == -dgwdq_ana.cpu()

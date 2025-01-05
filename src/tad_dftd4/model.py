@@ -40,10 +40,11 @@ Example
 from __future__ import annotations
 
 import torch
+from tad_mctc import storch
 from tad_mctc.math import einsum
 
 from . import data, reference
-from .typing import Literal, Tensor, TensorLike
+from .typing import Literal, Tensor, TensorLike, overload
 
 __all__ = ["D4Model"]
 
@@ -76,7 +77,7 @@ class D4Model(TensorLike):
     alpha: Tensor
     """Reference polarizabilities of unique species."""
 
-    __slots__ = ("numbers", "ga", "gc", "wf", "ref_charges", "alpha")
+    __slots__ = ("numbers", "ga", "gc", "wf", "ref_charges", "rc6")
 
     def __init__(
         self,
@@ -85,7 +86,7 @@ class D4Model(TensorLike):
         gc: float = gc_default,
         wf: float = wf_default,
         ref_charges: Literal["eeq", "gfn2"] = "eeq",
-        alpha: Tensor | None = None,
+        rc6: Tensor | None = None,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
@@ -107,8 +108,8 @@ class D4Model(TensorLike):
             Defaults to `wf_default`.
         ref_charges : Literal["eeq", "gfn2"], optional
             Reference charges to use for the model. Defaults to `"eeq"`.
-        alpha : Tensor | None, optional
-            Reference polarizabilities of unique species. Defaults to `None`.
+        rc6 : Tensor | None, optional
+            Reference C6 coefficients of unique species. Defaults to `None`.
         device : torch.device | None, optional
             Pytorch device for calculations. Defaults to `None`.
         dtype : torch.dtype | None, optional
@@ -122,8 +123,8 @@ class D4Model(TensorLike):
         self.wf = wf
         self.ref_charges = ref_charges
 
-        if alpha is None:
-            self.alpha = self._set_refalpha_eeq()
+        if rc6 is None:
+            self.rc6 = self.get_refc6()
 
     @property
     def unique(self) -> Tensor:
@@ -149,11 +150,49 @@ class D4Model(TensorLike):
         """
         return torch.unique(self.numbers, return_inverse=True)[1]
 
+    @overload
     def weight_references(
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-    ) -> Tensor:
+        with_dgwdq: Literal[False] = False,
+        with_dgwdcn: Literal[False] = False,
+    ) -> Tensor: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[True] = True,
+        with_dgwdcn: Literal[False] = False,
+    ) -> tuple[Tensor, Tensor]: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[False] = False,
+        with_dgwdcn: Literal[True] = True,
+    ) -> tuple[Tensor, Tensor]: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[True] = True,
+        with_dgwdcn: Literal[True] = True,
+    ) -> tuple[Tensor, Tensor, Tensor]: ...
+
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: bool = False,
+        with_dgwdcn: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """
         Calculate the weights of the reference system.
 
@@ -163,11 +202,20 @@ class D4Model(TensorLike):
             Coordination number of every atom. Defaults to `None` (0).
         q : Tensor | None, optional
             Partial charge of every atom. Defaults to `None` (0).
+        with_dgwdq : bool, optional
+            Whether to also calculate the derivative of the weights with
+            respect to the partial charges. Defaults to `False`.
+        with_dgwdcn : bool, optional
+            Whether to also calculate the derivative of the weights with
+            respect to the coordination numbers. Defaults to `False`.
 
         Returns
         -------
-        Tensor
-            Weights for the atomic reference systems.
+        Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]
+            Weights for the atomic reference systems. If `with_dgwdq` is `True`,
+            also returns the derivative of the weights with respect to the
+            partial charges. If `with_dgwdcn` is `True`, also returns the
+            derivative of the weights with respect to the coordination numbers.
         """
         if cn is None:
             cn = torch.zeros(self.numbers.shape, **self.dd)
@@ -184,6 +232,9 @@ class D4Model(TensorLike):
             refq = _refq.to(**self.dd)[self.numbers]
         else:
             raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        zero = torch.tensor(0.0, **self.dd)
+        zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
 
         refc = reference.refc.to(self.device)[self.numbers]
         mask = refc > 0
@@ -220,39 +271,28 @@ class D4Model(TensorLike):
         refc_pow_1 = torch.where(refc == 1, refc_pow(1), tmp)
         refc_pow_final = torch.where(refc == 3, refc_pow(3), refc_pow_1)
 
-        expw = torch.where(
-            mask,
-            refc_pow_final,
-            torch.tensor(
-                0.0, device=self.device, dtype=torch.double
-            ),  # double!
-        )
+        expw = torch.where(mask, refc_pow_final, zero_double)
 
-        # normalize weights
+        # Normalize weights, but keep shape. This needs double precision.
+        # Moreover, we need to mask the normalization to avoid division by zero
+        # for autograd. Strangely, `storch.divide` gives erroneous results for
+        # some elements (Mg, e.g. in MB16_43/03).
         norm = torch.where(
             mask,
             torch.sum(expw, dim=-1, keepdim=True),
-            torch.tensor(
-                1e-300, device=self.device, dtype=torch.double
-            ),  # double!)
+            torch.tensor(1e-300, device=self.device, dtype=torch.double),
         )
-        gw_temp = (expw / norm).type(self.dtype)  # back to real dtype
+
+        # back to real dtype
+        gw_temp = (expw / norm).type(self.dtype)
 
         # maximum reference CN for each atom
         maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
 
         # prevent division by 0 and small values
-        exceptional = (torch.isnan(gw_temp)) | (
-            gw_temp > torch.finfo(self.dtype).max
-        )
-
         gw = torch.where(
-            exceptional,
-            torch.where(
-                refcn == maxcn,
-                torch.tensor(1.0, **self.dd),
-                torch.tensor(0.0, **self.dd),
-            ),
+            is_exceptional(gw_temp, self.dtype),
+            torch.where(refcn == maxcn, torch.tensor(1.0, **self.dd), zero),
             gw_temp,
         )
 
@@ -262,13 +302,48 @@ class D4Model(TensorLike):
         q = q.unsqueeze(-1)
 
         # charge scaling
-        zeta = torch.where(
-            mask,
-            self._zeta(gam, refq + zeff, q + zeff),
-            torch.tensor(0.0, **self.dd),
-        )
+        zeta = torch.where(mask, self._zeta(gam, refq + zeff, q + zeff), zero)
 
-        return zeta * gw
+        if with_dgwdq is False and with_dgwdcn is False:
+            return zeta * gw
+
+        # DERIVATIVES
+
+        outputs = [zeta * gw]
+
+        if with_dgwdcn is True:
+
+            def _dpow(n: int) -> Tensor:
+                return sum(
+                    (
+                        2 * i * self.wf * dcn * torch.pow(tmp, i * self.wf)
+                        for i in range(1, n + 1)
+                    ),
+                    zero_double,
+                )
+
+            wf_1 = torch.where(refc == 1, _dpow(1), zero_double)
+            wf_3 = torch.where(refc == 3, _dpow(3), zero_double)
+            dexpw = wf_1 + wf_3
+
+            # no mask needed here, already masked in `dexpw`
+            dnorm = torch.sum(dexpw, dim=-1, keepdim=True)
+
+            _dgw = (dexpw - expw * dnorm / norm) / norm
+            dgw = torch.where(
+                is_exceptional(_dgw, self.dtype), zero, _dgw.type(self.dtype)
+            )
+
+            outputs.append(zeta * dgw)
+
+        if with_dgwdq is True:
+            dzeta = torch.where(
+                mask, self._dzeta(gam, refq + zeff, q + zeff), zero
+            )
+
+            outputs.append(dzeta * gw)
+
+        return tuple(outputs)  # type: ignore
 
     def get_atomic_c6(self, gw: Tensor) -> Tensor:
         """
@@ -285,17 +360,11 @@ class D4Model(TensorLike):
         Tensor
             C6 coefficients for all atom pairs of shape `(..., nat, nat)`.
         """
-        # (..., nunique, r, 23) -> (..., n, r, 23)
-        alpha = self.alpha[self.atom_to_unique]
-
-        # (..., n, r, 23) -> (..., n, n, r, r)
-        rc6 = trapzd(alpha)
-
         # The default einsum path is fastest if the large tensors comes first.
         # (..., n1, n2, r1, r2) * (..., n1, r1) * (..., n2, r2) -> (..., n1, n2)
         return einsum(
             "...ijab,...ia,...jb->...ij",
-            *(rc6, gw, gw),
+            *(self.rc6, gw, gw),
             optimize=[(0, 1), (0, 1)],
         )
 
@@ -306,11 +375,11 @@ class D4Model(TensorLike):
         # g = gw.unsqueeze(-3).unsqueeze(-2) * gw.unsqueeze(-2).unsqueeze(-1)
         #
         # (..., n, n, r, r) * (..., n, n, r, r) -> (..., n, n)
-        # c6 = torch.sum(g * rc6, dim=(-2, -1))
+        # c6 = torch.sum(g * self.rc6, dim=(-2, -1))
 
     def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
         """
-        charge scaling function.
+        Charge scaling function.
 
         Parameters
         ----------
@@ -328,6 +397,7 @@ class D4Model(TensorLike):
         """
         eps = torch.tensor(torch.finfo(self.dtype).eps, **self.dd)
         ga = torch.tensor(self.ga, **self.dd)
+
         scale = torch.exp(gam * (1.0 - qref / (qmod - eps)))
 
         return torch.where(
@@ -336,14 +406,45 @@ class D4Model(TensorLike):
             torch.exp(ga),
         )
 
-    def _set_refalpha_eeq(self) -> Tensor:
+    def _dzeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
         """
-        Set the reference polarizibilities for unique species.
+        Derivative of charge scaling function with respect to `qmod`.
+
+        Parameters
+        ----------
+        gam : Tensor
+            Chemical hardness.
+        qref : Tensor
+            Reference charges.
+        qmod : Tensor
+            Modified charges.
 
         Returns
         -------
         Tensor
-            Reference polarizibilities for unique species (not all atoms).
+            Derivative of charges.
+        """
+        eps = torch.tensor(torch.finfo(self.dtype).eps, **self.dd)
+        ga = torch.tensor(self.ga, **self.dd)
+
+        scale = torch.exp(gam * (1.0 - qref / (qmod - eps)))
+        zeta = torch.exp(ga * (1.0 - scale))
+
+        return torch.where(
+            qmod > 0.0,
+            -ga * gam * scale * zeta * storch.divide(qref, qmod**2),
+            torch.tensor(0.0, **self.dd),
+        )
+
+    def get_refc6(self) -> Tensor:
+        """
+        Calculate reference C6 dispersion coefficients. The reference C6
+        coefficients are not weighted by the Gaussian weights yet.
+
+        Returns
+        -------
+        Tensor
+            Reference C6 coefficients.
         """
         zero = torch.tensor(0.0, **self.dd)
 
@@ -382,7 +483,11 @@ class D4Model(TensorLike):
         h = refalpha - refscount.unsqueeze(-1) * aiw
         alpha = refascale.unsqueeze(-1) * h
 
-        return torch.where(alpha > 0.0, alpha, zero)
+        # (..., nunique, r, 23) -> (..., n, r, 23)
+        a = torch.where(alpha > 0.0, alpha, zero)[self.atom_to_unique]
+
+        # (..., n, r, 23) -> (..., n, n, r, r)
+        return trapzd(a)
 
 
 def trapzd(polarizability: Tensor) -> Tensor:
@@ -442,3 +547,22 @@ def trapzd(polarizability: Tensor) -> Tensor:
         "w,...iaw,...jbw->...ijab",
         *(weights, polarizability, polarizability),
     )
+
+
+def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:
+    """
+    Check if a tensor is exceptional (NaN or too large).
+
+    Parameters
+    ----------
+    x : Tensor
+        Tensor to check.
+    dtype : torch.dtype
+        Data type of the tensor.
+
+    Returns
+    -------
+    Tensor
+        Boolean tensor indicating exceptional values.
+    """
+    return torch.isnan(x) | (x > torch.finfo(dtype).max)

@@ -81,6 +81,39 @@ def single(name: str, dtype: torch.dtype) -> None:
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
+def test_single_matrix(name: str, dtype: torch.dtype) -> None:
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+    tol = torch.finfo(dtype).eps ** 0.5 * 10
+
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+
+    # TPSSh-D4-ATM parameters
+    param = {
+        "s8": torch.tensor(1.85897750, **dd),
+        "s10": torch.tensor(1.0000000, **dd),  # quadrupole-quadrupole
+        "a1": torch.tensor(0.44286966, **dd),
+        "a2": torch.tensor(4.60230534, **dd),
+    }
+
+    r4r2 = data.R4R2.to(**dd)[numbers]
+    model = D4Model(numbers, **dd)
+    cn = cn_d4(numbers, positions)
+    weights = model.weight_references(cn)
+    c6 = model.get_atomic_c6(weights)
+
+    e_sca = dispersion2(numbers, positions, param, c6, r4r2, as_matrix=False)
+    assert e_sca.dtype == dtype
+
+    e_mat = dispersion2(numbers, positions, param, c6, r4r2, as_matrix=True)
+    assert e_mat.dtype == dtype
+
+    assert pytest.approx(e_sca.cpu(), abs=tol) == 0.5 * e_mat.sum(-1).cpu()
+
+
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
+@pytest.mark.parametrize("name", sample_list)
 def test_single_s9_zero(name: str, dtype: torch.dtype) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
     tol = torch.finfo(dtype).eps ** 0.5 * 10

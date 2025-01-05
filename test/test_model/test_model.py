@@ -102,4 +102,4 @@ def test_ref_charges() -> None:
     weights_eeq = model_eeq.weight_references()
     weights_gfn2 = model_gfn2.weight_references()
 
-    assert pytest.approx(weights_eeq, abs=1e-1) == weights_gfn2
+    assert pytest.approx(weights_eeq.cpu(), abs=1e-1) == weights_gfn2.cpu()

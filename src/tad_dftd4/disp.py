@@ -173,6 +173,7 @@ def dispersion2(
     r4r2: Tensor,
     damping_function: DampingFunction = rational_damping,
     cutoff: Tensor | None = None,
+    as_matrix: bool = False,
     **kwargs: Any,
 ) -> Tensor:
     """
@@ -197,6 +198,10 @@ def dispersion2(
     cutoff : Tensor | None, optional
         Real-space cutoff for two-body dispersion. Defaults to `None`, which
         will be evaluated to `defaults.D4_DISP2_CUTOFF`.
+    as_matrix : bool, optional
+        Return dispersion energy as a matrix. If you sum up the dispersion
+        energy from the matrix, do not forget the factor `0.5` that fixes the
+        double counting. Defaults to `False`.
 
     Returns
     -------
@@ -230,8 +235,12 @@ def dispersion2(
         zero,
     )
 
-    e6 = torch.sum(c6 * t6, dim=-1)
-    e8 = torch.sum(c8 * t8, dim=-1)
+    if as_matrix is True:
+        e6 = c6 * t6
+        e8 = c8 * t8
+    else:
+        e6 = torch.sum(c6 * t6, dim=-1)
+        e8 = torch.sum(c8 * t8, dim=-1)
 
     s6 = param.get("s6", torch.tensor(defaults.S6, **dd))
     s8 = param.get("s8", torch.tensor(defaults.S8, **dd))
@@ -247,9 +256,16 @@ def dispersion2(
             damping_function(10, distances, qq, param, **kwargs),
             zero,
         )
-        e10 = torch.sum(c10 * t10, dim=-1)
+
+        if as_matrix is True:
+            e10 = c10 * t10
+        else:
+            e10 = torch.sum(c10 * t10, dim=-1)
+
         edisp += param["s10"] * e10
 
+    if as_matrix is True:
+        return -edisp
     return -0.5 * edisp
 
 
