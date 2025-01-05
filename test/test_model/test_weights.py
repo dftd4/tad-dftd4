@@ -22,6 +22,7 @@ For an explanation of the unusual loose tolerances, see `test_charges.py`.
 import pytest
 import torch
 import torch.nn.functional as F
+from tad_mctc._version import __tversion__
 from tad_mctc.autograd import jacrev
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
@@ -152,6 +153,7 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     assert pytest.approx(gwvec.cpu(), abs=tol) == ref.cpu()
 
 
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
 @pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
 def test_grad_q(name: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": torch.float64}
@@ -177,6 +179,7 @@ def test_grad_q(name: str) -> None:
     assert pytest.approx(dgwdq_auto.cpu(), abs=1e-6) == dgwdq_ana.cpu()
 
 
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
 @pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
 def test_grad_cn(name: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": torch.float64}
@@ -202,6 +205,7 @@ def test_grad_cn(name: str) -> None:
     assert pytest.approx(dgwdcn_auto.cpu(), abs=1e-6) == -dgwdq_ana.cpu()
 
 
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
 @pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
 def test_grad_both(name: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": torch.float64}
