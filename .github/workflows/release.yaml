@@ -31,7 +31,11 @@ on:
 
 jobs:
   wheel:
+    permissions:
+      contents: read
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,7 +51,11 @@ jobs:
           path: dist/*.whl
 
   sdist:
+    permissions:
+      contents: read
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -64,10 +72,15 @@ jobs:
 
   upload_test_pypi:
     needs: [sdist, wheel]
+
     runs-on: ubuntu-latest
+
     environment: release
+
     permissions:
+      contents: read
       id-token: write
+
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download build artifacts
@@ -83,10 +96,15 @@ jobs:
 
   upload_pypi:
     needs: [sdist, wheel, upload_test_pypi]
+
     runs-on: ubuntu-latest
+
     environment: release
+
     permissions:
+      contents: read
       id-token: write
+
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download build artifacts
