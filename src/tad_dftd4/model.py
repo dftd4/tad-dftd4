@@ -49,9 +49,9 @@ from .typing import Literal, Tensor, TensorLike, overload
 __all__ = ["D4Model"]
 
 
-ga_default = 3.0
-gc_default = 2.0
-wf_default = 6.0
+GA_DEFAULT = 3.0
+GC_DEFAULT = 2.0
+WF_DEFAULT = 6.0
 
 
 class D4Model(TensorLike):
@@ -63,28 +63,48 @@ class D4Model(TensorLike):
     """Atomic numbers of all atoms in the system."""
 
     ga: float
-    """Maximum charge scaling height for partial charge extrapolation."""
+    """
+    Maximum charge scaling height for partial charge extrapolation.
+
+    :default: :data:`.GA_DEFAULT`
+    """
 
     gc: float
-    """Charge scaling steepness for partial charge extrapolation."""
+    """
+    Charge scaling steepness for partial charge extrapolation.
+
+    :default: :data:`.GC_DEFAULT`
+    """
 
     wf: float
-    """Weighting factor for coordination number interpolation."""
+    """
+    Weighting factor for coordination number interpolation.
+
+    :default: :data:`.WF_DEFAULT`
+    """
 
     ref_charges: Literal["eeq", "gfn2"]
-    """Reference charges to use for the model."""
+    """
+    Reference charges to use for the model.
 
-    alpha: Tensor
-    """Reference polarizabilities of unique species."""
+    :default: ``"eeq"``
+    """
+
+    rc6: Tensor
+    """
+    Reference C6 coefficients of unique species.
+
+    :default: ``None`` (calculated upon instantiation)
+    """
 
     __slots__ = ("numbers", "ga", "gc", "wf", "ref_charges", "rc6")
 
     def __init__(
         self,
         numbers: Tensor,
-        ga: float = ga_default,
-        gc: float = gc_default,
-        wf: float = wf_default,
+        ga: float = GA_DEFAULT,
+        gc: float = GC_DEFAULT,
+        wf: float = WF_DEFAULT,
         ref_charges: Literal["eeq", "gfn2"] = "eeq",
         rc6: Tensor | None = None,
         device: torch.device | None = None,
@@ -99,13 +119,13 @@ class D4Model(TensorLike):
             Atomic numbers of all atoms in the system.
         ga : float, optional
             Maximum charge scaling height for partial charge extrapolation.
-            Defaults to `ga_default`.
+            Defaults to `GA_DEFAULT`.
         gc : float, optional
             Charge scaling steepness for partial charge extrapolation.
-            Defaults to `gc_default`.
+            Defaults to `GC_DEFAULT`.
         wf : float, optional
             Weighting factor for coordination number interpolation.
-            Defaults to `wf_default`.
+            Defaults to `WF_DEFAULT`.
         ref_charges : Literal["eeq", "gfn2"], optional
             Reference charges to use for the model. Defaults to `"eeq"`.
         rc6 : Tensor | None, optional
