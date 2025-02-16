@@ -111,9 +111,11 @@ jobs:
 
       - name: Determine package name
         run: |
-          name=$(echo "${{ github.event.repository.name }}" | tr '-' '_')
+          name=$(echo "${REPO_NAME}" | tr '-' '_')
           echo "PKG_NAME=$name" >> "$GITHUB_OUTPUT"
           echo "PKG_NAME is set to '${name}'."
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
 
       - name: Test import
         run: python -c "import ${PKG_NAME}; print(${PKG_NAME}.__version__)"
