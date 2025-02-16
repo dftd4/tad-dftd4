@@ -140,7 +140,7 @@ def dftd4(
             raise ValueError(
                 f"Shape of atomic charges ({q.shape}) is not consistent with "
                 f"atomic numbers ({numbers.shape}).",
-        )
+            )
 
     energy = torch.zeros(numbers.shape, **dd)
 
