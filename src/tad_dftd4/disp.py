@@ -102,38 +102,44 @@ def dftd4(
     """
     dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
-    if model is None:
-        model = D4Model(numbers, **dd)
-    if cutoff is None:
-        cutoff = Cutoff(**dd)
-
-    if rcov is None:
-        rcov = data.COV_D3.to(**dd)[numbers]
-    if r4r2 is None:
-        r4r2 = data.R4R2.to(**dd)[numbers]
-    if q is None:
-        q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
-
     if numbers.shape != positions.shape[:-1]:
         raise ValueError(
             f"Shape of positions ({positions.shape}) is not consistent "
             f"with atomic numbers ({numbers.shape}).",
         )
+
+    if model is None:
+        model = D4Model(numbers, **dd)
+    if cutoff is None:
+        cutoff = Cutoff(**dd)
+
+    if r4r2 is None:
+        r4r2 = data.R4R2.to(**dd)[numbers]
     if numbers.shape != r4r2.shape:
         raise ValueError(
             f"Shape of expectation values r4r2 ({r4r2.shape}) is not "
             f"consistent with atomic numbers ({numbers.shape}).",
         )
+
+    if rcov is None:
+        rcov = data.COV_D3.to(**dd)[numbers]
     if numbers.shape != rcov.shape:
         raise ValueError(
             f"Shape of covalent radii ({rcov.shape}) is not consistent with "
             f"atomic numbers ({numbers.shape}).",
         )
-    if numbers.shape != q.shape:
-        raise ValueError(
-            f"Shape of atomic charges ({q.shape}) is not consistent with "
-            f"atomic numbers ({numbers.shape}).",
-        )
+
+    # No charges required for ATM only (e.g. for GFN2 non-sc part)
+    if q is None and param["s6"] != 0.0 and param["s8"] != 0.0:
+        q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
+
+        if numbers.shape != q.shape:
+            raise ValueError(
+                f"Shape of atomic charges ({q.shape}) is not consistent with "
+                f"atomic numbers ({numbers.shape}).",
+            )
+
+    energy = torch.zeros(numbers.shape, **dd)
 
     cn = cn_d4(
         numbers,
@@ -142,18 +148,20 @@ def dftd4(
         rcov=rcov,
         cutoff=cutoff.cn,
     )
+
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 
-    energy = dispersion2(
-        numbers,
-        positions,
-        param,
-        c6,
-        r4r2=r4r2,
-        damping_function=damping_function,
-        cutoff=cutoff.disp2,
-    )
+    if param["s6"] != 0.0 and param["s8"] != 0.0:
+        energy += dispersion2(
+            numbers,
+            positions,
+            param,
+            c6,
+            r4r2=r4r2,
+            damping_function=damping_function,
+            cutoff=cutoff.disp2,
+        )
 
     # three-body dispersion
     if "s9" in param and param["s9"] != 0.0:
