@@ -87,6 +87,8 @@ jobs:
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: dist
 
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -108,6 +110,8 @@ jobs:
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
