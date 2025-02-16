@@ -80,7 +80,7 @@ For alternative implementations, also check out:
 
 ## Installation
 
-### pip
+### pip <a href="https://pypi.org/project/tad-dftd4/"><img src="https://img.shields.io/pypi/v/tad-dftd4" alt="PyPI Version"></a> <a href="https://pypi.org/project/tad-dftd4/"><img src="https://img.shields.io/pypi/dm/tad-dftd4?color=orange" alt="PyPI Downloads"></a>
 
 *tad-dftd4* can easily be installed with ``pip``.
 
@@ -88,7 +88,7 @@ For alternative implementations, also check out:
 pip install tad-dftd4
 ```
 
-### conda
+### conda <a href="https://anaconda.org/conda-forge/tad-dftd4"><img src="https://img.shields.io/conda/vn/conda-forge/tad-dftd4.svg" alt="Conda Version"></a> <a href="https://anaconda.org/conda-forge/tad-dftd4"><img src="https://img.shields.io/conda/dn/conda-forge/tad-dftd4?style=flat&color=orange" alt="Conda Downloads"></a>
 
 *tad-dftd4* is also available from ``conda``.
 
