@@ -48,7 +48,7 @@ jobs:
       - name: Upload source distribution as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dxtb-sdist
+          name: ${{ github.event.repository.name }}-sdist
           path: dist/*.tar.gz
 
   wheel:
@@ -69,7 +69,7 @@ jobs:
       - name: Upload wheel as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dxtb-wheel
+          name: ${{ github.event.repository.name }}-wheel
           path: dist/*.whl
 
   upload_test_pypi:
@@ -87,8 +87,6 @@ jobs:
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
-        with:
-          path: dist
 
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -110,9 +108,6 @@ jobs:
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: artifact
-          path: dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
