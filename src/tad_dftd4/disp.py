@@ -130,14 +130,17 @@ def dftd4(
         )
 
     # No charges required for ATM only (e.g. for GFN2 non-sc part)
-    if q is None and param["s6"] != 0.0 and param["s8"] != 0.0:
+    s6_nonzero = "s6" in param and param["s6"] != 0.0
+    s8_nonzero = "s8" in param and param["s8"] != 0.0
+    if q is None and (s6_nonzero or s8_nonzero):
         q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 
+    if q is not None:
         if numbers.shape != q.shape:
             raise ValueError(
                 f"Shape of atomic charges ({q.shape}) is not consistent with "
                 f"atomic numbers ({numbers.shape}).",
-            )
+        )
 
     energy = torch.zeros(numbers.shape, **dd)
 
@@ -152,7 +155,7 @@ def dftd4(
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 
-    if param["s6"] != 0.0 and param["s8"] != 0.0:
+    if s6_nonzero or s8_nonzero:
         energy += dispersion2(
             numbers,
             positions,
