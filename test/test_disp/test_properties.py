@@ -20,8 +20,8 @@ Test calculation of dispersion model properties.
 import pytest
 import torch
 from tad_mctc.batch import pack
-from tad_mctc.ncoord import cn_d4
 from tad_mctc.math import einsum
+from tad_mctc.ncoord import cn_d4
 
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import get_properties

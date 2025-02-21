@@ -22,7 +22,7 @@ import torch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
 
-from tad_dftd4.disp import dispersion3, dftd4
+from tad_dftd4.disp import dftd4, dispersion3
 from tad_dftd4.model import D4Model
 from tad_dftd4.typing import DD
 
