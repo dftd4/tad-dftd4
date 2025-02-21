@@ -15,10 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-DFT-D4 Model
-============
+Model: Base
+===========
 
-This module contains the definition of the D4 dispersion model for the
+This module contains the definition of the base dispersion model for the
 evaluation of C6 coefficients.
 
 Upon instantiation, the reference polarizabilities are calculated for the
@@ -39,22 +39,24 @@ Example
 """
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import torch
 from tad_mctc import storch
 from tad_mctc.math import einsum
 
-from . import data, reference
-from .typing import Literal, Tensor, TensorLike, overload
+from .. import data, reference
+from ..typing import Literal, Tensor, TensorLike, overload
+from .utils import trapzd
 
-__all__ = ["D4Model"]
+__all__ = ["BaseModel"]
 
 
 GA_DEFAULT = 3.0
 GC_DEFAULT = 2.0
-WF_DEFAULT = 6.0
 
 
-class D4Model(TensorLike):
+class BaseModel(TensorLike):
     """
     The D4 dispersion model.
     """
@@ -76,11 +78,11 @@ class D4Model(TensorLike):
     :default: :data:`.GC_DEFAULT`
     """
 
-    wf: float
+    wf: Tensor | float
     """
     Weighting factor for coordination number interpolation.
 
-    :default: :data:`.WF_DEFAULT`
+    :default: ``None`` (model-dependent, set upon instantiation)
     """
 
     ref_charges: Literal["eeq", "gfn2"]
@@ -104,7 +106,7 @@ class D4Model(TensorLike):
         numbers: Tensor,
         ga: float = GA_DEFAULT,
         gc: float = GC_DEFAULT,
-        wf: float = WF_DEFAULT,
+        wf: Tensor | float | None = None,
         ref_charges: Literal["eeq", "gfn2"] = "eeq",
         rc6: Tensor | None = None,
         device: torch.device | None = None,
@@ -140,11 +142,24 @@ class D4Model(TensorLike):
 
         self.ga = ga
         self.gc = gc
-        self.wf = wf
         self.ref_charges = ref_charges
+
+        if wf is None:
+            self.wf = self._get_wf()
 
         if rc6 is None:
             self.rc6 = self._get_refc6()
+
+    @abstractmethod
+    def _get_wf(self) -> Tensor | float:
+        """
+        Get the weighting factor for the Gaussian weights.
+
+        Returns
+        -------
+        Tensor
+            Weighting factor for the Gaussian weights.
+        """
 
     @property
     def unique(self) -> Tensor:
@@ -171,6 +186,7 @@ class D4Model(TensorLike):
         return torch.unique(self.numbers, return_inverse=True)[1]
 
     @overload
+    @abstractmethod
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -180,6 +196,7 @@ class D4Model(TensorLike):
     ) -> Tensor: ...
 
     @overload
+    @abstractmethod
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -189,6 +206,7 @@ class D4Model(TensorLike):
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
+    @abstractmethod
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -198,6 +216,7 @@ class D4Model(TensorLike):
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
+    @abstractmethod
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -206,6 +225,7 @@ class D4Model(TensorLike):
         with_dgwdcn: Literal[True] = True,
     ) -> tuple[Tensor, Tensor, Tensor]: ...
 
+    @abstractmethod
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -239,133 +259,6 @@ class D4Model(TensorLike):
             If ``with_dgwdcn`` is ``True``, also returns the derivative of the
             weights with respect to the coordination numbers.
         """
-        if cn is None:
-            cn = torch.zeros(self.numbers.shape, **self.dd)
-        if q is None:
-            q = torch.zeros(self.numbers.shape, **self.dd)
-
-        if self.ref_charges == "eeq":
-            from .reference.charge_eeq import clsq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
-        elif self.ref_charges == "gfn2":
-            from .reference.charge_gfn2 import refq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
-        else:
-            raise ValueError(f"Unknown reference charges: {self.ref_charges}")
-
-        zero = torch.tensor(0.0, **self.dd)
-        zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
-
-        refc = reference.refc.to(self.device)[self.numbers]
-        mask = refc > 0
-
-        # Due to the exponentiation, `norm` and `expw` may become very small
-        # (down to 1e-300). This causes problems for the division by `norm`,
-        # since single precision, i.e. `torch.float`, only goes to around 1e-38.
-        # Consequently, some values become zero although the actual result
-        # should be close to one. The problem does not arise when using `torch.
-        # double`. In order to avoid this error, which is also difficult to
-        # detect, this part always uses `torch.double`. `params.refcovcn` is
-        # saved with `torch.double`, but I still made sure...
-        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
-            self.numbers
-        ]
-
-        # For vectorization, we reformulate the Gaussian weighting function:
-        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
-        # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
-        dcn = cn.unsqueeze(-1).type(torch.double) - refcn
-        tmp = torch.exp(-dcn * dcn)
-
-        # Gaussian weighting function part 2: tmp^(wf * igw)
-        # (While the Fortran version just loops over the number of gaussian
-        # weights `igw`, we have to use masks and explicitly implement the
-        # formulas for exponentiation. Luckily, `igw` only takes on the values
-        # 1 and 3.)
-        def refc_pow(n: int) -> Tensor:
-            return sum(
-                (torch.pow(tmp, i * self.wf) for i in range(1, n + 1)),
-                torch.tensor(0.0, device=tmp.device),
-            )
-
-        refc_pow_1 = torch.where(refc == 1, refc_pow(1), tmp)
-        refc_pow_final = torch.where(refc == 3, refc_pow(3), refc_pow_1)
-
-        expw = torch.where(mask, refc_pow_final, zero_double)
-
-        # Normalize weights, but keep shape. This needs double precision.
-        # Moreover, we need to mask the normalization to avoid division by zero
-        # for autograd. Strangely, `storch.divide` gives erroneous results for
-        # some elements (Mg, e.g. in MB16_43/03).
-        norm = torch.where(
-            mask,
-            torch.sum(expw, dim=-1, keepdim=True),
-            torch.tensor(1e-300, device=self.device, dtype=torch.double),
-        )
-
-        # back to real dtype
-        gw_temp = (expw / norm).type(self.dtype)
-
-        # maximum reference CN for each atom
-        maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
-
-        # prevent division by 0 and small values
-        gw = torch.where(
-            is_exceptional(gw_temp, self.dtype),
-            torch.where(refcn == maxcn, torch.tensor(1.0, **self.dd), zero),
-            gw_temp,
-        )
-
-        # unsqueeze for reference dimension
-        zeff = data.ZEFF.to(self.device)[self.numbers].unsqueeze(-1)
-        gam = data.GAM.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
-        q = q.unsqueeze(-1)
-
-        # charge scaling
-        zeta = torch.where(mask, self._zeta(gam, refq + zeff, q + zeff), zero)
-
-        if with_dgwdq is False and with_dgwdcn is False:
-            return zeta * gw
-
-        # DERIVATIVES
-
-        outputs = [zeta * gw]
-
-        if with_dgwdcn is True:
-
-            def _dpow(n: int) -> Tensor:
-                return sum(
-                    (
-                        2 * i * self.wf * dcn * torch.pow(tmp, i * self.wf)
-                        for i in range(1, n + 1)
-                    ),
-                    zero_double,
-                )
-
-            wf_1 = torch.where(refc == 1, _dpow(1), zero_double)
-            wf_3 = torch.where(refc == 3, _dpow(3), zero_double)
-            dexpw = wf_1 + wf_3
-
-            # no mask needed here, already masked in `dexpw`
-            dnorm = torch.sum(dexpw, dim=-1, keepdim=True)
-
-            _dgw = (dexpw - expw * dnorm / norm) / norm
-            dgw = torch.where(
-                is_exceptional(_dgw, self.dtype), zero, _dgw.type(self.dtype)
-            )
-
-            outputs.append(zeta * dgw)
-
-        if with_dgwdq is True:
-            dzeta = torch.where(
-                mask, self._dzeta(gam, refq + zeff, q + zeff), zero
-            )
-
-            outputs.append(dzeta * gw)
-
-        return tuple(outputs)  # type: ignore
 
     def get_atomic_c6(self, gw: Tensor) -> Tensor:
         """
@@ -496,11 +389,11 @@ class D4Model(TensorLike):
         secalpha = reference.secalpha.to(**self.dd)
 
         if self.ref_charges == "eeq":
-            from .reference.charge_eeq import clsh as _refsq
+            from ..reference.charge_eeq import clsh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         elif self.ref_charges == "gfn2":
-            from .reference.charge_gfn2 import refh as _refsq
+            from ..reference.charge_gfn2 import refh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         else:
@@ -554,144 +447,3 @@ class D4Model(TensorLike):
     def __repr__(self) -> str:  # pragma: no cover
         """Return a string representation of the model."""
         return str(self)
-
-
-def trapzd(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
-    """
-    Numerical Casimir--Polder integration.
-
-    Parameters
-    ----------
-    pol1 : Tensor
-        Polarizabilities of shape ``(..., nat, nref, 23)``.
-    pol2 : Tensor | None, optional
-        Polarizabilities of shape ``(..., nat, nref, 23)``. Defaults to
-        ``None``, in which case ``pol2`` is set to ``pol1``.
-
-    Returns
-    -------
-    Tensor
-        C6 coefficients of shape ``(..., nat, nat, nref, nref)``.
-    """
-    thopi = 3.0 / 3.141592653589793238462643383279502884197
-
-    weights = torch.tensor(
-        [
-            2.4999500000000000e-002,
-            4.9999500000000000e-002,
-            7.5000000000000010e-002,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1500000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.3500000000000000,
-            0.5000000000000000,
-            0.7500000000000000,
-            1.0000000000000000,
-            1.7500000000000000,
-            2.5000000000000000,
-            1.2500000000000000,
-        ],
-        device=pol1.device,
-        dtype=pol1.dtype,
-    )
-
-    # NOTE: In the old version, a memory inefficient intermediate tensor was
-    # created. The new version uses `einsum` to avoid this.
-    #
-    # (..., 1, nat, 1, nref, 23) * (..., nat, 1, nref, 1, 23) =
-    # (..., nat, nat, nref, nref, 23) -> (..., nat, nat, nref, nref)
-    # a = alpha.unsqueeze(-4).unsqueeze(-3) * alpha.unsqueeze(-3).unsqueeze(-2)
-    #
-    # rc6 = thopi * torch.sum(weights * a, dim=-1)
-
-    return thopi * einsum(
-        "w,...iaw,...jbw->...ijab",
-        *(weights, pol1, pol1 if pol2 is None else pol2),
-    )
-
-
-def trapzd2(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
-    """
-    Numerical Casimir--Polder integration.
-
-    This version takes polarizabilities of shape ``(..., nat, 23)``, i.e.,
-    the reference dimension has already been summed over.
-
-    Parameters
-    ----------
-    pol1 : Tensor
-        Polarizabilities of shape ``(..., nat, 23)``.
-    pol2 : Tensor | None, optional
-        Polarizabilities of shape ``(..., nat, 23)``. Defaults to
-        ``None``, in which case ``pol2`` is set to ``pol1``.
-
-    Returns
-    -------
-    Tensor
-        C6 coefficients of shape ``(..., nat, nat)``.
-    """
-    thopi = 3.0 / 3.141592653589793238462643383279502884197
-
-    weights = torch.tensor(
-        [
-            2.4999500000000000e-002,
-            4.9999500000000000e-002,
-            7.5000000000000010e-002,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1500000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.3500000000000000,
-            0.5000000000000000,
-            0.7500000000000000,
-            1.0000000000000000,
-            1.7500000000000000,
-            2.5000000000000000,
-            1.2500000000000000,
-        ],
-        device=pol1.device,
-        dtype=pol1.dtype,
-    )
-
-    return thopi * einsum(
-        "w,...iw,...jw->...ij",
-        *(weights, pol1, pol1 if pol2 is None else pol2),
-    )
-
-
-def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:
-    """
-    Check if a tensor is exceptional (``NaN`` or too large).
-
-    Parameters
-    ----------
-    x : Tensor
-        Tensor to check.
-    dtype : torch.dtype
-        Data type of the tensor.
-
-    Returns
-    -------
-    Tensor
-        Boolean tensor indicating exceptional values.
-    """
-    return torch.isnan(x) | (x > torch.finfo(dtype).max)
