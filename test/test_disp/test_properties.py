@@ -15,15 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test calculation of two-body and three-body dispersion terms.
+Test calculation of dispersion model properties.
 """
 import pytest
 import torch
 from tad_mctc.batch import pack
+from tad_mctc.math import einsum
 from tad_mctc.ncoord import cn_d4
 
-from tad_dftd4.disp import dftd4, dispersion3
-from tad_dftd4.model import D4Model
+from tad_dftd4.cutoff import Cutoff
+from tad_dftd4.disp import get_properties
+from tad_dftd4.model import D4Model, trapzd, trapzd2
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -52,58 +54,32 @@ def single(name: str, dtype: torch.dtype) -> None:
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
-    ref = sample["disp3"].to(**dd)
 
-    # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
-
+    qref = sample["q"].to(**dd)
     model = D4Model(numbers, **dd)
     cn = cn_d4(numbers, positions)
-    weights = model.weight_references(cn, q=None)
-    c6 = model.get_atomic_c6(weights)
-    cutoff = torch.tensor(40.0, **dd)
+    weights = model.weight_references(cn, qref)
+    c6ref = model.get_atomic_c6(weights).sum((-2, -1))
 
-    energy = dispersion3(numbers, positions, param, c6, cutoff=cutoff)
+    _cn, _, _c6, _ = get_properties(numbers, positions)
 
-    assert energy.dtype == dtype
-    assert pytest.approx(ref.cpu().cpu(), abs=tol) == energy.cpu()
+    assert pytest.approx(cn, rel=tol) == _cn
+    assert pytest.approx(c6ref.cpu(), rel=tol) == _c6.sum((-2, -1)).cpu()
 
+    # Manually calculate C6 values
 
-@pytest.mark.parametrize("dtype", [torch.float, torch.double])
-@pytest.mark.parametrize("name", sample_list)
-def test_s6_s8_zero(name: str, dtype: torch.dtype) -> None:
-    dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 10
+    aiw = model._get_alpha()  # pylint: disable=protected-access
 
-    sample = samples[name]
-    numbers = sample["numbers"].to(DEVICE)
-    positions = sample["positions"].to(**dd)
-    charge = torch.tensor(0.0, **dd)
-    ref = sample["disp3"].to(**dd)
+    alpha1 = einsum("...nr,...nra->...nra", weights, aiw)
+    c61 = trapzd(alpha1, alpha1).sum((-4, -3, -2, -1))
 
-    # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(0.00000000, **dd),
-        "s8": torch.tensor(0.00000000, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
+    alpha2 = einsum("...nr,...nra->...na", weights, aiw)
+    c62 = trapzd2(alpha2, alpha2).sum((-2, -1))
 
-    energy = dftd4(numbers, positions, charge, param)
-
-    assert energy.dtype == dtype
-    assert pytest.approx(ref.cpu().cpu(), abs=tol) == energy.cpu()
+    assert c6ref.shape == c61.shape
+    assert c6ref.shape == c62.shape
+    assert pytest.approx(c6ref.cpu(), rel=tol) == c61.cpu()
+    assert pytest.approx(c6ref.cpu(), rel=tol) == c62.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
@@ -138,30 +114,36 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["positions"].to(**dd),
         ]
     )
-    ref = pack(
+    charge = torch.tensor([0.0, 0.0], **dd)
+    qref = pack(
         [
-            sample1["disp3"].to(**dd),
-            sample2["disp3"].to(**dd),
+            sample1["q"].to(**dd),
+            sample2["q"].to(**dd),
         ]
     )
 
-    # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
-
     model = D4Model(numbers, **dd)
+    cutoff = Cutoff(**dd)
     cn = cn_d4(numbers, positions)
-    weights = model.weight_references(cn, q=None)
-    c6 = model.get_atomic_c6(weights)
+    weights = model.weight_references(cn, qref)
+    c6ref = model.get_atomic_c6(weights).sum((-2, -1))
 
-    energy = dispersion3(numbers, positions, param, c6)
+    _cn, _, _c6, _ = get_properties(numbers, positions, charge, cutoff=cutoff)
 
-    assert energy.dtype == dtype
-    assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
+    assert pytest.approx(cn, rel=tol) == _cn
+    assert pytest.approx(c6ref.cpu(), rel=tol) == _c6.sum((-2, -1)).cpu()
+
+    # Manually calculate C6 values
+
+    aiw = model._get_alpha()  # pylint: disable=protected-access
+
+    alpha1 = einsum("...nr,...nra->...nra", weights, aiw)
+    c61 = trapzd(alpha1, alpha1).sum((-4, -3, -2, -1))
+
+    alpha2 = einsum("...nr,...nra->...na", weights, aiw)
+    c62 = trapzd2(alpha2, alpha2).sum((-2, -1))
+
+    assert c6ref.shape == c61.shape
+    assert c6ref.shape == c62.shape
+    assert pytest.approx(c6ref.cpu(), rel=tol) == c61.cpu()
+    assert pytest.approx(c6ref.cpu(), rel=tol) == c62.cpu()

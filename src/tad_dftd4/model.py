@@ -144,7 +144,7 @@ class D4Model(TensorLike):
         self.ref_charges = ref_charges
 
         if rc6 is None:
-            self.rc6 = self.get_refc6()
+            self.rc6 = self._get_refc6()
 
     @property
     def unique(self) -> Tensor:
@@ -214,7 +214,8 @@ class D4Model(TensorLike):
         with_dgwdcn: bool = False,
     ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """
-        Calculate the weights of the reference system.
+        Calculate the weights of the reference system
+        (shape: ``(..., nat, nref)``).
 
         Parameters
         ----------
@@ -232,10 +233,11 @@ class D4Model(TensorLike):
         Returns
         -------
         Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]
-            Weights for the atomic reference systems. If `with_dgwdq` is `True`,
-            also returns the derivative of the weights with respect to the
-            partial charges. If `with_dgwdcn` is `True`, also returns the
-            derivative of the weights with respect to the coordination numbers.
+            Weights for the atomic reference systems (shape:
+            ``(..., nat, ref)``). If ``with_dgwdq`` is ``True``, also returns
+            the derivative of the weights with respect to the partial charges.
+            If ``with_dgwdcn`` is ``True``, also returns the derivative of the
+            weights with respect to the coordination numbers.
         """
         if cn is None:
             cn = torch.zeros(self.numbers.shape, **self.dd)
@@ -397,6 +399,24 @@ class D4Model(TensorLike):
         # (..., n, n, r, r) * (..., n, n, r, r) -> (..., n, n)
         # c6 = torch.sum(g * self.rc6, dim=(-2, -1))
 
+    def get_polarizabilities(self, weights: Tensor) -> Tensor:
+        """
+        Calculate static polarizabilities for all atoms.
+
+        Parameters
+        ----------
+        weights : Tensor
+            Weights for the atomic reference systems of shape
+            ``(..., nat, nref)``.
+
+        Returns
+        -------
+        Tensor
+            Polarizabilities of shape `(..., nat)`.
+        """
+        # (..., n, r) * (..., n, r) -> (..., n)
+        return einsum("...nr,...nr->...n", weights, self._get_alpha()[..., 0])
+
     def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
         """
         Charge scaling function.
@@ -456,15 +476,14 @@ class D4Model(TensorLike):
             torch.tensor(0.0, **self.dd),
         )
 
-    def get_refc6(self) -> Tensor:
+    def _get_alpha(self) -> Tensor:
         """
-        Calculate reference C6 dispersion coefficients. The reference C6
-        coefficients are not weighted by the Gaussian weights yet.
+        Calculate reference polarizabilities.
 
         Returns
         -------
         Tensor
-            Reference C6 coefficients.
+            Reference polarizabilities of shape `(..., nat, ref, 23)`.
         """
         zero = torch.tensor(0.0, **self.dd)
 
@@ -504,25 +523,55 @@ class D4Model(TensorLike):
         alpha = refascale.unsqueeze(-1) * h
 
         # (..., nunique, r, 23) -> (..., n, r, 23)
-        a = torch.where(alpha > 0.0, alpha, zero)[self.atom_to_unique]
+        return torch.where(alpha > 0.0, alpha, zero)[self.atom_to_unique]
 
+    def _get_refc6(self) -> Tensor:
+        """
+        Calculate reference C6 dispersion coefficients. The reference C6
+        coefficients are not weighted by the Gaussian weights yet.
+
+        Returns
+        -------
+        Tensor
+            Reference C6 coefficients of shape ``(..., nat, nat, nref, nref)``.
+        """
         # (..., n, r, 23) -> (..., n, n, r, r)
-        return trapzd(a)
+        return trapzd(self._get_alpha())
+
+    def __str__(self) -> str:  # pragma: no cover
+        """Return a string representation of the model."""
+        return (
+            f"{self.__class__.__name__}(\n"
+            f"  unique={self.unique},\n"
+            f"  ga={self.ga},\n"
+            f"  gc={self.gc},\n"
+            f"  wf={self.wf},\n"
+            f"  ref_charges={self.ref_charges},\n"
+            f"  rc6={self.rc6.shape},\n"
+            f")"
+        )
+
+    def __repr__(self) -> str:  # pragma: no cover
+        """Return a string representation of the model."""
+        return str(self)
 
 
-def trapzd(polarizability: Tensor) -> Tensor:
+def trapzd(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
     """
     Numerical Casimir--Polder integration.
 
     Parameters
     ----------
-    polarizability : Tensor
-        Polarizabilities of shape `(..., nat, nref, 23)`
+    pol1 : Tensor
+        Polarizabilities of shape ``(..., nat, nref, 23)``.
+    pol2 : Tensor | None, optional
+        Polarizabilities of shape ``(..., nat, nref, 23)``. Defaults to
+        ``None``, in which case ``pol2`` is set to ``pol1``.
 
     Returns
     -------
     Tensor
-        C6 coefficients.
+        C6 coefficients of shape ``(..., nat, nat, nref, nref)``.
     """
     thopi = 3.0 / 3.141592653589793238462643383279502884197
 
@@ -552,8 +601,8 @@ def trapzd(polarizability: Tensor) -> Tensor:
             2.5000000000000000,
             1.2500000000000000,
         ],
-        device=polarizability.device,
-        dtype=polarizability.dtype,
+        device=pol1.device,
+        dtype=pol1.dtype,
     )
 
     # NOTE: In the old version, a memory inefficient intermediate tensor was
@@ -567,13 +616,71 @@ def trapzd(polarizability: Tensor) -> Tensor:
 
     return thopi * einsum(
         "w,...iaw,...jbw->...ijab",
-        *(weights, polarizability, polarizability),
+        *(weights, pol1, pol1 if pol2 is None else pol2),
+    )
+
+
+def trapzd2(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
+    """
+    Numerical Casimir--Polder integration.
+
+    This version takes polarizabilities of shape ``(..., nat, 23)``, i.e.,
+    the reference dimension has already been summed over.
+
+    Parameters
+    ----------
+    pol1 : Tensor
+        Polarizabilities of shape ``(..., nat, 23)``.
+    pol2 : Tensor | None, optional
+        Polarizabilities of shape ``(..., nat, 23)``. Defaults to
+        ``None``, in which case ``pol2`` is set to ``pol1``.
+
+    Returns
+    -------
+    Tensor
+        C6 coefficients of shape ``(..., nat, nat)``.
+    """
+    thopi = 3.0 / 3.141592653589793238462643383279502884197
+
+    weights = torch.tensor(
+        [
+            2.4999500000000000e-002,
+            4.9999500000000000e-002,
+            7.5000000000000010e-002,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1500000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.3500000000000000,
+            0.5000000000000000,
+            0.7500000000000000,
+            1.0000000000000000,
+            1.7500000000000000,
+            2.5000000000000000,
+            1.2500000000000000,
+        ],
+        device=pol1.device,
+        dtype=pol1.dtype,
+    )
+
+    return thopi * einsum(
+        "w,...iw,...jw->...ij",
+        *(weights, pol1, pol1 if pol2 is None else pol2),
     )
 
 
 def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:
     """
-    Check if a tensor is exceptional (NaN or too large).
+    Check if a tensor is exceptional (``NaN`` or too large).
 
     Parameters
     ----------

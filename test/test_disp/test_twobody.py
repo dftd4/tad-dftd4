@@ -21,6 +21,7 @@ import pytest
 import torch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
+from tad_multicharge import get_eeq_charges
 
 from tad_dftd4 import data
 from tad_dftd4.disp import dftd4, dispersion2
@@ -122,6 +123,7 @@ def test_single_s9_zero(name: str, dtype: torch.dtype) -> None:
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     charge = torch.tensor(0.0, **dd)
+    q = get_eeq_charges(numbers, positions, charge)
     ref = sample["disp2"].to(**dd)
 
     # TPSSh-D4-ATM parameters
@@ -132,7 +134,7 @@ def test_single_s9_zero(name: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
-    energy = dftd4(numbers, positions, charge, param)
+    energy = dftd4(numbers, positions, charge, param, q=q)
 
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
