@@ -407,7 +407,7 @@ class D4Model(TensorLike):
         ----------
         weights : Tensor
             Weights for the atomic reference systems of shape
-            `(..., nat, nref)`.
+            ``(..., nat, nref)``.
 
         Returns
         -------
@@ -680,7 +680,7 @@ def trapzd2(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
 
 def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:
     """
-    Check if a tensor is exceptional (NaN or too large).
+    Check if a tensor is exceptional (``NaN`` or too large).
 
     Parameters
     ----------

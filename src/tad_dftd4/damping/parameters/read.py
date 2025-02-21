@@ -38,8 +38,8 @@ __all__ = ["get_params", "get_params_default"]
 @overload
 def get_params(
     func: str,
-    variant: Literal["bj-eeq-atm"],
-    with_reference: Literal[False],
+    variant: Literal["bj-eeq-atm"] = "bj-eeq-atm",
+    with_reference: Literal[False] = False,
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
 ) -> dict[str, Tensor]: ...
@@ -48,8 +48,8 @@ def get_params(
 @overload
 def get_params(
     func: str,
-    variant: Literal["bj-eeq-atm"],
-    with_reference: Literal[True],
+    variant: Literal["bj-eeq-atm"] = "bj-eeq-atm",
+    with_reference: Literal[True] = True,
     device: torch.device | None = None,
     dtype: torch.dtype | None = None,
 ) -> dict[str, Tensor | str]: ...
@@ -70,11 +70,11 @@ def get_params(
     func : str
         Functional name, case-insensitive.
     variant : Literal["bj-eeq-atm"]
-        D4 variant. Only 'bj-eeq-atm' (default D4 model) is supported.
+        D4 variant. Only ``'bj-eeq-atm'`` (default D4 model) is supported.
     device : torch.device | None, optional
-        Pytorch device for calculations. Defaults to `None`.
+        Pytorch device for calculations. Defaults to ``None``.
     dtype : torch.dtype | None, optional
-        Pytorch dtype for calculations. Defaults to `None`.
+        Pytorch dtype for calculations. Defaults to ``None``.
 
     Returns
     -------

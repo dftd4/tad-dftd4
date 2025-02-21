@@ -60,15 +60,15 @@ def get_atm_dispersion(
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system.
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
     cutoff : Tensor
         Real-space cutoff.
     c6 : Tensor
         Atomic C6 dispersion coefficients.
     s9 : Tensor, optional
-        Scaling for dispersion coefficients. Defaults to `1.0`.
+        Scaling for dispersion coefficients. Defaults to ``1.0``.
     a1 : Tensor, optional
         Scaling for the C8 / C6 ratio in the critical radius within the
         Becke-Johnson damping function.
@@ -76,7 +76,7 @@ def get_atm_dispersion(
         Offset parameter for the critical radius within the Becke-Johnson
         damping function.
     alp : Tensor, optional
-        Exponent of zero damping function. Defaults to `14.0`.
+        Exponent of zero damping function. Defaults to ``14.0``.
 
     Returns
     -------
