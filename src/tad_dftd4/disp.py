@@ -60,9 +60,9 @@ def dftd4(
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
     charge : Tensor
         Total charge of the system.
     param : dict[str, Tensor]
@@ -193,9 +193,9 @@ def dispersion2(
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
     param : dict[str, Tensor]
         DFT-D3 damping parameters.
     c6 : Tensor
@@ -294,9 +294,9 @@ def dispersion3(
     Parameters
     ----------
     numbers : Tensor
-        Atomic numbers of the atoms in the system.
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
     positions : Tensor
-        Cartesian coordinates of the atoms in the system (batch, natoms, 3).
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
     param : dict[str, Tensor]
         Dictionary of dispersion parameters. Default values are used for
         missing keys.
@@ -321,3 +321,52 @@ def dispersion3(
     alp = param.get("alp", torch.tensor(defaults.ALP, **dd))
 
     return get_atm_dispersion(numbers, positions, cutoff, c6, s9, a1, a2, alp)
+
+
+def get_properties(
+    numbers: Tensor,
+    positions: Tensor,
+    charge: Tensor | None = None,
+    cutoff: Cutoff | None = None,
+) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+    """
+    Wrapper to evaluate properties related to this dispersion model.
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
+    positions : Tensor
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
+    charge : Tensor | None
+        Total charge of the system. Defaults to ``None``, i.e., ``0``.
+    cutoff : Cutoff | None
+        Real-space cutoff. Defaults to ``None``, i.e., the defaults for
+        all cutoffs are used.
+
+    Returns
+    -------
+    (Tensor, Tensor, Tensor, Tensor)
+        Properties related to the dispersion model:
+        - DFT-D4 coordination number
+        - Atomic partial charges
+        - Atom-resolved C6 dispersion coefficients
+        - Static polarizabilities
+    """
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
+
+    if cutoff is None:
+        cutoff = Cutoff(**dd)
+
+    if charge is None:
+        charge = torch.tensor(0.0, **dd)
+
+    cn = cn_d4(numbers, positions, cutoff=cutoff.cn)
+    q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
+
+    model = D4Model(numbers, **dd)
+    weights = model.weight_references(cn, q)
+    c6 = model.get_atomic_c6(weights)
+    alpha = model.get_polarizabilities(weights)
+
+    return cn, q, c6, alpha
