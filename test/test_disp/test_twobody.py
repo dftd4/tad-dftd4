@@ -25,7 +25,7 @@ from tad_multicharge import get_eeq_charges
 
 from tad_dftd4 import data
 from tad_dftd4.disp import dftd4, dispersion2
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -69,12 +69,23 @@ def single(name: str, dtype: torch.dtype) -> None:
     }
 
     r4r2 = data.R4R2.to(**dd)[numbers]
+    model = D4SModel(numbers, **dd)
+    cn = cn_d4(numbers, positions)
+    weights = model.weight_references(cn, q)
+    c6 = model.get_atomic_c6(weights)
+
+    energy = dispersion2(numbers, positions, param, c6, r4r2)
+    print("d4s", energy.sum())
+
+    r4r2 = data.R4R2.to(**dd)[numbers]
     model = D4Model(numbers, **dd)
     cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 
     energy = dispersion2(numbers, positions, param, c6, r4r2)
+
+    print("d4 ", energy.sum())
 
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()

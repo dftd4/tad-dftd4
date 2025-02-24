@@ -56,9 +56,9 @@ class D4Model(BaseModel):
     The D4 dispersion model.
     """
 
-    def _get_wf(self) -> float:
+    def _get_wf(self) -> Tensor:
         """Default weighting factor."""
-        return WF_DEFAULT
+        return torch.tensor(WF_DEFAULT, **self.dd)
 
     @overload
     def weight_references(
@@ -95,6 +95,7 @@ class D4Model(BaseModel):
         with_dgwdq: Literal[True] = True,
         with_dgwdcn: Literal[True] = True,
     ) -> tuple[Tensor, Tensor, Tensor]: ...
+
     def weight_references(
         self,
         cn: Tensor | None = None,
@@ -163,19 +164,19 @@ class D4Model(BaseModel):
         ]
 
         # For vectorization, we reformulate the Gaussian weighting function:
-        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
-        # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
+        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-wf * (cn - cn_ref)^2)]^(igw)
+        # Gaussian weighting function part 1: exp(-wf * (cn - cn_ref)^2)
         dcn = cn.unsqueeze(-1).type(torch.double) - refcn
-        tmp = torch.exp(-dcn * dcn)
+        tmp = torch.exp(-dcn * dcn * self.wf)
 
-        # Gaussian weighting function part 2: tmp^(wf * igw)
+        # Gaussian weighting function part 2: tmp^(igw)
         # (While the Fortran version just loops over the number of gaussian
         # weights `igw`, we have to use masks and explicitly implement the
         # formulas for exponentiation. Luckily, `igw` only takes on the values
         # 1 and 3.)
         def refc_pow(n: int) -> Tensor:
             return sum(
-                (torch.pow(tmp, i * self.wf) for i in range(1, n + 1)),
+                (torch.pow(tmp, i) for i in range(1, n + 1)),
                 torch.tensor(0.0, device=tmp.device),
             )
 

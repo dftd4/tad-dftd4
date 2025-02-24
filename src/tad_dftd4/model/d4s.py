@@ -42,9 +42,10 @@ from __future__ import annotations
 import torch
 
 from .. import data, reference
-from ..typing import Tensor
+from ..typing import Tensor, Literal, overload
 from .base import BaseModel
 from .utils import is_exceptional
+from tad_mctc.math import einsum
 
 __all__ = ["D4SModel"]
 
@@ -58,7 +59,43 @@ class D4SModel(BaseModel):
         """Pairwise weighting factor."""
         from ..data.wfpair import wfpair
 
-        return wfpair.to(**self.dd)[self.unique, self.unique]
+        return wfpair.to(**self.dd)[self.numbers][:, self.numbers]
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[False] = False,
+        with_dgwdcn: Literal[False] = False,
+    ) -> Tensor: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[True] = True,
+        with_dgwdcn: Literal[False] = False,
+    ) -> tuple[Tensor, Tensor]: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[False] = False,
+        with_dgwdcn: Literal[True] = True,
+    ) -> tuple[Tensor, Tensor]: ...
+
+    @overload
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: Literal[True] = True,
+        with_dgwdcn: Literal[True] = True,
+    ) -> tuple[Tensor, Tensor, Tensor]: ...
 
     def weight_references(
         self,
@@ -131,7 +168,10 @@ class D4SModel(BaseModel):
         # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
         # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
         dcn = cn.unsqueeze(-1).type(torch.double) - refcn
-        tmp = torch.exp(-dcn * dcn)
+        tmp = torch.exp(einsum("...nr,...nr,nm->...nmr", -dcn, dcn, self.wf))
+
+        print()
+        print(tmp)
 
         # Gaussian weighting function part 2: tmp^(wf * igw)
         # (While the Fortran version just loops over the number of gaussian
@@ -140,7 +180,7 @@ class D4SModel(BaseModel):
         # 1 and 3.)
         def refc_pow(n: int) -> Tensor:
             return sum(
-                (torch.pow(tmp, i * self.wf) for i in range(1, n + 1)),
+                (torch.pow(tmp, i) for i in range(1, n + 1)),
                 torch.tensor(0.0, device=tmp.device),
             )
 
@@ -158,7 +198,11 @@ class D4SModel(BaseModel):
             torch.sum(expw, dim=-1, keepdim=True),
             torch.tensor(1e-300, device=self.device, dtype=torch.double),
         )
-
+        print("\nnorm")
+        print(norm.shape)
+        print(norm)
+        print("")
+        print("")
         # back to real dtype
         gw_temp = (expw / norm).type(self.dtype)
 
@@ -172,6 +216,11 @@ class D4SModel(BaseModel):
             gw_temp,
         )
 
+        # print("\ngw")
+        # print(gw)
+        # print("")
+        # print("")
+
         # unsqueeze for reference dimension
         zeff = data.ZEFF.to(self.device)[self.numbers].unsqueeze(-1)
         gam = data.GAM.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
@@ -179,9 +228,10 @@ class D4SModel(BaseModel):
 
         # charge scaling
         zeta = torch.where(mask, self._zeta(gam, refq + zeff, q + zeff), zero)
+        print(zeta.shape)
 
         if with_dgwdq is False and with_dgwdcn is False:
-            return zeta * gw
+            return zeta.unsqueeze(-2) * gw
 
         # DERIVATIVES
 

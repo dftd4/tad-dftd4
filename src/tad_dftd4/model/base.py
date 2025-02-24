@@ -78,7 +78,7 @@ class BaseModel(TensorLike):
     :default: :data:`.GC_DEFAULT`
     """
 
-    wf: Tensor | float
+    wf: Tensor
     """
     Weighting factor for coordination number interpolation.
 
@@ -151,7 +151,7 @@ class BaseModel(TensorLike):
             self.rc6 = self._get_refc6()
 
     @abstractmethod
-    def _get_wf(self) -> Tensor | float:
+    def _get_wf(self) -> Tensor:
         """
         Get the weighting factor for the Gaussian weights.
 
