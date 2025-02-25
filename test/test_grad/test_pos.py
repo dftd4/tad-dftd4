@@ -183,7 +183,6 @@ def test_autograd(dtype: torch.dtype, name: str) -> None:
 
     # automatic gradient
     energy = torch.sum(dftd4(numbers, positions, charge, param))
-    print(energy)
     (grad,) = torch.autograd.grad(energy, positions)
 
     positions.detach_()

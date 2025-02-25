@@ -249,9 +249,8 @@ class D4SModel(BaseModel):
             )
 
         if with_dgwdq is True:
-            dzeta = torch.where(
-                mask, self._dzeta(gam, refq + zeff, q + zeff), zero
-            )
+            _dzeta = self._dzeta(gam, refq + zeff, q + zeff)
+            dzeta = torch.where(mask, _dzeta.unsqueeze(-3).expand(*shp), zero)
 
             outputs.append(dzeta * gw)
 

@@ -23,7 +23,7 @@ import torch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
 
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -35,7 +35,8 @@ sample_list = ["LiH", "SiH4", "MB16_43_03"]
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
-def test_single(name: str, dtype: torch.dtype) -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_single(name: str, dtype: torch.dtype, model: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
     tol = 1e-5
 
@@ -43,9 +44,15 @@ def test_single(name: str, dtype: torch.dtype) -> None:
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     q = sample["q"].to(**dd)
-    ref = sample["c6"].to(**dd)
 
-    d4 = D4Model(numbers, **dd)
+    if model == "d4":
+        d4 = D4Model(numbers, **dd)
+        ref = sample["c6"].to(**dd)
+    elif model == "d4s":
+        d4 = D4SModel(numbers, **dd)
+        ref = sample["c6_d4s"].to(**dd)
+    else:
+        raise ValueError(f"Unknown model: {model}")
 
     cn = cn_d4(numbers, positions)
     gw = d4.weight_references(cn=cn, q=q)
@@ -56,7 +63,8 @@ def test_single(name: str, dtype: torch.dtype) -> None:
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name1", ["LiH"])
 @pytest.mark.parametrize("name2", sample_list)
-def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_batch(name1: str, name2: str, dtype: torch.dtype, model: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
     tol = 1e-5
 
@@ -79,14 +87,25 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["q"].to(**dd),
         ]
     )
-    refs = pack(
-        [
-            sample1["c6"].to(**dd),
-            sample2["c6"].to(**dd),
-        ]
-    )
 
-    d4 = D4Model(numbers, **dd)
+    if model == "d4":
+        d4 = D4Model(numbers, **dd)
+        refs = pack(
+            [
+                sample1["c6"].to(**dd),
+                sample2["c6"].to(**dd),
+            ]
+        )
+    elif model == "d4s":
+        d4 = D4SModel(numbers, **dd)
+        refs = pack(
+            [
+                sample1["c6_d4s"].to(**dd),
+                sample2["c6_d4s"].to(**dd),
+            ]
+        )
+    else:
+        raise ValueError(f"Unknown model: {model}")
 
     cn = cn_d4(numbers, positions)
     gw = d4.weight_references(cn=cn, q=q)
@@ -94,10 +113,18 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     assert pytest.approx(refs.cpu(), abs=tol, rel=tol) == c6.cpu()
 
 
-def test_ref_charges() -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_ref_charges_d4(model: str) -> None:
     numbers = torch.tensor([14, 1, 1, 1, 1])
-    model_eeq = D4Model(numbers, ref_charges="eeq")
-    model_gfn2 = D4Model(numbers, ref_charges="gfn2")
+
+    if model == "d4":
+        model_eeq = D4Model(numbers, ref_charges="eeq")
+        model_gfn2 = D4Model(numbers, ref_charges="gfn2")
+    elif model == "d4s":
+        model_eeq = D4SModel(numbers, ref_charges="eeq")
+        model_gfn2 = D4SModel(numbers, ref_charges="gfn2")
+    else:
+        raise ValueError(f"Unknown model: {model}")
 
     weights_eeq = model_eeq.weight_references()
     weights_gfn2 = model_gfn2.weight_references()
