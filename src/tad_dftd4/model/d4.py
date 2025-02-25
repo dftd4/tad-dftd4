@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-DFT-D4 Model
-============
+Model: D4S
+==========
 
 This module contains the definition of the D4 dispersion model for the
 evaluation of C6 coefficients.
@@ -31,7 +31,7 @@ Example
 >>> import tad_dftd4 as d4
 >>>
 >>> numbers = torch.tensor([14, 1, 1, 1, 1]) # SiH4
->>> model = d4.D4Model(numbers)
+>>> model = d4.D4SModel(numbers)
 >>>
 >>> # calculate Gaussian weights, optionally pass CN and partial charges
 >>> gw = model.weight_references()

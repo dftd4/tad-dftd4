@@ -16,6 +16,9 @@
 # limitations under the License.
 """
 Dispersion Models
+=================
+
+Collection of dispersion models. Currently, the D4 and D4S models are available.
 """
 
 from .d4 import *

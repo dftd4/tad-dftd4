@@ -15,15 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-DFT-D4 Model
-============
+Model: DFT-D4
+=============
 
 This module contains the definition of the D4 dispersion model for the
 evaluation of C6 coefficients.
 
 Upon instantiation, the reference polarizabilities are calculated for the
 unique species/elements of the molecule(s) and stored in the model class.
-
+Moreover, the weighting factors ``wf`` are gathered from the parameter file.
 
 Example
 -------
