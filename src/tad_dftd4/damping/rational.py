@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Rational (Becke-Johnson) damping function
-=========================================
+Damping: Rational (Becke-Johnson) damping function
+==================================================
 
 This module defines the rational damping function, also known as Becke-Johnson
 damping.

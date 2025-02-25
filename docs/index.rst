@@ -183,7 +183,7 @@ The next example shows the calculation of dispersion energies for a batch of str
     print(energy[0] - 2*energy[1])
     # tensor(-0.0034314217)
 
-To last example shows how to use the `D4SModel <https://dx.doi.org/10.1021/acs.jpclett.4c02653>`__.
+The last example shows how to use the `D4SModel <https://dx.doi.org/10.1021/acs.jpclett.4c02653>`__.
 
 .. code:: python
 
@@ -230,4 +230,5 @@ To last example shows how to use the `D4SModel <https://dx.doi.org/10.1021/acs.j
    :maxdepth: 1
 
    installation
+   disp
    modules/index

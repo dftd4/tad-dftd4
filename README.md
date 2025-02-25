@@ -60,7 +60,7 @@
 
 Implementation of the DFT-D4 dispersion model in PyTorch. This module allows to process a single structure or a batch of structures for the calculation of atom-resolved dispersion energies.
 
-If you use this software, please cite the following publication
+If you use this software, please cite the following publication:
 
 - M. Friede, C. Hölzer, S. Ehlert, S. Grimme, *J. Chem. Phys.*, **2024**, *161*, 062501. DOI: [10.1063/5.0216715](https://doi.org/10.1063/5.0216715)
 
@@ -295,7 +295,7 @@ print(energy[0] - 2*energy[1])
 # tensor(-0.0034314217)
 ```
 
-To last example shows how to use the [D4SModel](https://dx.doi.org/10.1021/acs.jpclett.4c02653).
+The last example shows how to use the [D4SModel](https://dx.doi.org/10.1021/acs.jpclett.4c02653).
 
 ```python
 import torch
