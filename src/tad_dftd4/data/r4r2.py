@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Atomic data: Expectation values
-===============================
+Data: Expectation values
+========================
 
 PBE0/def2-QZVP atomic values calculated by S. Grimme in Gaussian (2010).
 Rare gases recalculated by J. Mewes with PBE0/aug-cc-pVQZ in Dirac (2018).

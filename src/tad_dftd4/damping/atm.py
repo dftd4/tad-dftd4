@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Axilrod-Teller-Muto (ATM) dispersion term
-=========================================
+Damping: Axilrod-Teller-Muto (ATM) dispersion term
+==================================================
 
 This module provides the dispersion energy evaluation for the three-body
 Axilrod-Teller-Muto dispersion term.

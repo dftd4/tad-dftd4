@@ -230,4 +230,5 @@ The last example shows how to use the `D4SModel <https://dx.doi.org/10.1021/acs.
    :maxdepth: 1
 
    installation
+   disp
    modules/index

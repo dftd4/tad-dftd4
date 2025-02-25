@@ -7,4 +7,5 @@
    hardness
    r4r2
    radii
+   wfpair
    zeff

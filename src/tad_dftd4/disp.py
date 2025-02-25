@@ -20,8 +20,9 @@ Dispersion energy
 
 This module provides the dispersion energy evaluation for the pairwise
 interactions. It contains the main entrypoint for the dispersion energy
-(:func:`.dftd4`) as well as wrappers for the two-body (:func:`.dispersion2`)
-and the three-body (:func:`.dispersion3`) dispersion energy.
+(:func:`.dftd4`) as well as wrappers for the two-body
+(:func:`tad_dftd4.disp.dispersion2`) and the three-body
+(:func:`tad_dftd4.disp.dispersion3`) dispersion energy.
 """
 from __future__ import annotations
 
@@ -69,7 +70,7 @@ def dftd4(
         DFT-D4 damping parameters.
     model : D4Model | D4SModel | None, optional
         The DFT-D4 dispersion model for the evaluation of the C6 coefficients.
-        Defaults to ``None``, which creates the :class:`d4.model.D4Model`.
+        Defaults to ``None``, which creates :class:`tad_dftd4.model.D4Model`.
     rcov : Tensor | None, optional
         Covalent radii of the atoms in the system. Defaults to
         ``None``, i.e., default values are used.
