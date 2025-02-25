@@ -72,7 +72,6 @@ def single(
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     q = sample["q"].to(**dd)
-    ref = sample["disp2"].to(**dd)
 
     # TPSSh-D4-ATM parameters
     param = {
