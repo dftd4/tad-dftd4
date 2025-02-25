@@ -295,7 +295,7 @@ print(energy[0] - 2*energy[1])
 # tensor(-0.0034314217)
 ```
 
-To last example shows how to use the [D4SModel](https://dx.doi.org/10.1021/acs.jpclett.4c02653).
+The last example shows how to use the [D4SModel](https://dx.doi.org/10.1021/acs.jpclett.4c02653).
 
 ```python
 import torch
