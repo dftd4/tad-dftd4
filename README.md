@@ -60,7 +60,7 @@
 
 Implementation of the DFT-D4 dispersion model in PyTorch. This module allows to process a single structure or a batch of structures for the calculation of atom-resolved dispersion energies.
 
-If you use this software, please cite the following publication
+If you use this software, please cite the following publication:
 
 - M. Friede, C. Hölzer, S. Ehlert, S. Grimme, *J. Chem. Phys.*, **2024**, *161*, 062501. DOI: [10.1063/5.0216715](https://doi.org/10.1063/5.0216715)
 
