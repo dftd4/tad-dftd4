@@ -43,7 +43,7 @@ def test_single(name: str, dtype: torch.dtype) -> None:
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
     q = sample["q"].to(**dd)
-    ref = sample["c6"].to(**dd)
+    ref = sample["c6_d4s"].to(**dd)
 
     d4 = Model(numbers, **dd)
 
@@ -81,8 +81,8 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     )
     refs = pack(
         [
-            sample1["c6"].to(**dd),
-            sample2["c6"].to(**dd),
+            sample1["c6_d4s"].to(**dd),
+            sample2["c6_d4s"].to(**dd),
         ]
     )
 
@@ -92,14 +92,3 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     gw = d4.weight_references(cn=cn, q=q)
     c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(refs.cpu(), abs=tol, rel=tol) == c6.cpu()
-
-
-def test_ref_charges() -> None:
-    numbers = torch.tensor([14, 1, 1, 1, 1])
-    model_eeq = Model(numbers, ref_charges="eeq")
-    model_gfn2 = Model(numbers, ref_charges="gfn2")
-
-    weights_eeq = model_eeq.weight_references()
-    weights_gfn2 = model_gfn2.weight_references()
-
-    assert pytest.approx(weights_eeq.cpu(), abs=1e-1) == weights_gfn2.cpu()

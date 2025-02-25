@@ -40,12 +40,12 @@ Example
 from __future__ import annotations
 
 import torch
+from tad_mctc.math import einsum
 
 from .. import data, reference
-from ..typing import Tensor, Literal, overload
+from ..typing import Literal, Tensor, overload
 from .base import BaseModel
 from .utils import is_exceptional
-from tad_mctc.math import einsum
 
 __all__ = ["D4SModel"]
 
@@ -59,7 +59,7 @@ class D4SModel(BaseModel):
         """Pairwise weighting factor."""
         from ..data.wfpair import wfpair
 
-        return wfpair.to(**self.dd)[self.numbers][:, self.numbers]
+        return wfpair.to(**self.dd)[self.unique][:, self.unique]
 
     @overload
     def weight_references(
@@ -149,7 +149,12 @@ class D4SModel(BaseModel):
         zero = torch.tensor(0.0, **self.dd)
         zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
 
-        refc = reference.refc.to(self.device)[self.numbers]
+        _refc = reference.refc.to(self.device)[self.numbers]
+
+        # (..., nat1, nref) -> (..., nat2, nat1, nref)
+        shp = (*_refc.shape[:-1], _refc.shape[-2], _refc.shape[-1])
+        refc = _refc.unsqueeze(-3).expand(*shp)
+
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -163,25 +168,34 @@ class D4SModel(BaseModel):
         refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
             self.numbers
         ]
+        refcn = refcn.unsqueeze(-3).expand(*shp)
 
         # For vectorization, we reformulate the Gaussian weighting function:
-        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf * igw)
-        # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
-        dcn = cn.unsqueeze(-1).type(torch.double) - refcn
-        tmp = torch.exp(einsum("...nr,...nr,nm->...nmr", -dcn, dcn, self.wf))
+        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-wf * (cn - cn_ref)^2)]^(igw)
+        # Gaussian weighting function part 1: exp(-wf * (cn - cn_ref)^2)
+        dcn = cn.type(torch.double).unsqueeze(-1).unsqueeze(-3) - refcn
 
-        print()
-        print(tmp)
+        # Expand from unique indices to all atoms
+        # (..., n, 1) , (..., 1, n) -> (..., n, n)
+        wf = self.wf[
+            self.atom_to_unique.unsqueeze(-1), self.atom_to_unique.unsqueeze(-2)
+        ]
 
-        # Gaussian weighting function part 2: tmp^(wf * igw)
+        # We have to create the additional dimension in `-3` to match the
+        # ordering of the zeta function. Inserting in `-2` does not work!
+        #
+        # (..., n1, nref) * (..., n1, nref) * (n1, n2) -> (..., n2, n1, nref)
+        arg = einsum("...mnr,...mnr,...nm->...mnr", -dcn, dcn, wf)
+        tmp = torch.where(mask, torch.exp(arg), zero_double)
+
+        # Gaussian weighting function part 2: tmp^(igw)
         # (While the Fortran version just loops over the number of gaussian
         # weights `igw`, we have to use masks and explicitly implement the
         # formulas for exponentiation. Luckily, `igw` only takes on the values
         # 1 and 3.)
         def refc_pow(n: int) -> Tensor:
             return sum(
-                (torch.pow(tmp, i) for i in range(1, n + 1)),
-                torch.tensor(0.0, device=tmp.device),
+                (torch.pow(tmp, i) for i in range(1, n + 1)), zero_double
             )
 
         refc_pow_1 = torch.where(refc == 1, refc_pow(1), tmp)
@@ -198,11 +212,7 @@ class D4SModel(BaseModel):
             torch.sum(expw, dim=-1, keepdim=True),
             torch.tensor(1e-300, device=self.device, dtype=torch.double),
         )
-        print("\nnorm")
-        print(norm.shape)
-        print(norm)
-        print("")
-        print("")
+
         # back to real dtype
         gw_temp = (expw / norm).type(self.dtype)
 
@@ -216,51 +226,27 @@ class D4SModel(BaseModel):
             gw_temp,
         )
 
-        # print("\ngw")
-        # print(gw)
-        # print("")
-        # print("")
-
         # unsqueeze for reference dimension
         zeff = data.ZEFF.to(self.device)[self.numbers].unsqueeze(-1)
         gam = data.GAM.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
         # charge scaling
-        zeta = torch.where(mask, self._zeta(gam, refq + zeff, q + zeff), zero)
-        print(zeta.shape)
+        _zeta = self._zeta(gam, refq + zeff, q + zeff)
+        zeta = torch.where(mask, _zeta.unsqueeze(-3).expand(*shp), zero)
 
         if with_dgwdq is False and with_dgwdcn is False:
-            return zeta.unsqueeze(-2) * gw
+            return zeta * gw
 
         # DERIVATIVES
 
         outputs = [zeta * gw]
 
         if with_dgwdcn is True:
-
-            def _dpow(n: int) -> Tensor:
-                return sum(
-                    (
-                        2 * i * self.wf * dcn * torch.pow(tmp, i * self.wf)
-                        for i in range(1, n + 1)
-                    ),
-                    zero_double,
-                )
-
-            wf_1 = torch.where(refc == 1, _dpow(1), zero_double)
-            wf_3 = torch.where(refc == 3, _dpow(3), zero_double)
-            dexpw = wf_1 + wf_3
-
-            # no mask needed here, already masked in `dexpw`
-            dnorm = torch.sum(dexpw, dim=-1, keepdim=True)
-
-            _dgw = (dexpw - expw * dnorm / norm) / norm
-            dgw = torch.where(
-                is_exceptional(_dgw, self.dtype), zero, _dgw.type(self.dtype)
+            raise NotImplementedError(
+                "Analytical derivative of Gaussian weights with respect to "
+                "CN not implemented."
             )
-
-            outputs.append(zeta * dgw)
 
         if with_dgwdq is True:
             dzeta = torch.where(
@@ -270,3 +256,27 @@ class D4SModel(BaseModel):
             outputs.append(dzeta * gw)
 
         return tuple(outputs)  # type: ignore
+
+    def get_atomic_c6(self, gw: Tensor) -> Tensor:
+        """
+        Calculate atomic C6 dispersion coefficients.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            `(..., nat, nat, nref)`.
+
+        Returns
+        -------
+        Tensor
+            C6 coefficients for all atom pairs of shape `(..., nat, nat)`.
+        """
+        # The default einsum path is fastest if the large tensors comes first.
+        # (..., n1, n2, r1, r2) * (..., n2, n1, r1) * (..., n1, n2, r2)
+        # -> (..., n1, n2)
+        return einsum(
+            "...ijab,...jia,...ijb->...ij",
+            *(self.rc6, gw, gw),
+            optimize=[(0, 1), (0, 1)],
+        )

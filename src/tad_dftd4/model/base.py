@@ -150,6 +150,10 @@ class BaseModel(TensorLike):
         if rc6 is None:
             self.rc6 = self._get_refc6()
 
+    ####################
+    # Abstract methods #
+    ####################
+
     @abstractmethod
     def _get_wf(self) -> Tensor:
         """
@@ -161,29 +165,22 @@ class BaseModel(TensorLike):
             Weighting factor for the Gaussian weights.
         """
 
-    @property
-    def unique(self) -> Tensor:
+    @abstractmethod
+    def get_atomic_c6(self, gw: Tensor) -> Tensor:
         """
-        Unique species (elements) in molecule(s). Sorted in ascending order.
+        Calculate atomic C6 dispersion coefficients.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            `(..., nat, nref)`.
 
         Returns
         -------
         Tensor
-            Unique species within `D4Model.numbers`.
+            C6 coefficients for all atom pairs of shape `(..., nat, nat)`.
         """
-        return torch.unique(self.numbers)
-
-    @property
-    def atom_to_unique(self) -> Tensor:
-        """
-        Mapping of atoms to unique species.
-
-        Returns
-        -------
-        Tensor
-            Mapping of atoms (`D4Model.numbers`) to unique species.
-        """
-        return torch.unique(self.numbers, return_inverse=True)[1]
 
     @overload
     @abstractmethod
@@ -260,37 +257,37 @@ class BaseModel(TensorLike):
             weights with respect to the coordination numbers.
         """
 
-    def get_atomic_c6(self, gw: Tensor) -> Tensor:
-        """
-        Calculate atomic C6 dispersion coefficients.
+    ##############
+    # Properties #
+    ##############
 
-        Parameters
-        ----------
-        gw : Tensor
-            Weights for the atomic reference systems of shape
-            `(..., nat, nref)`.
+    @property
+    def unique(self) -> Tensor:
+        """
+        Unique species (elements) in molecule(s). Sorted in ascending order.
 
         Returns
         -------
         Tensor
-            C6 coefficients for all atom pairs of shape `(..., nat, nat)`.
+            Unique species within `D4Model.numbers`.
         """
-        # The default einsum path is fastest if the large tensors comes first.
-        # (..., n1, n2, r1, r2) * (..., n1, r1) * (..., n2, r2) -> (..., n1, n2)
-        return einsum(
-            "...ijab,...ia,...jb->...ij",
-            *(self.rc6, gw, gw),
-            optimize=[(0, 1), (0, 1)],
-        )
+        return torch.unique(self.numbers)
 
-        # NOTE: This old version creates large intermediate tensors and builds
-        # the full matrix before the sum reduction, requiring a lot of memory.
-        #
-        # (..., 1, n, 1, r) * (..., n, 1, r, 1) = (..., n, n, r, r)
-        # g = gw.unsqueeze(-3).unsqueeze(-2) * gw.unsqueeze(-2).unsqueeze(-1)
-        #
-        # (..., n, n, r, r) * (..., n, n, r, r) -> (..., n, n)
-        # c6 = torch.sum(g * self.rc6, dim=(-2, -1))
+    @property
+    def atom_to_unique(self) -> Tensor:
+        """
+        Mapping of atoms to unique species.
+
+        Returns
+        -------
+        Tensor
+            Mapping of atoms (:attr:`.D4Model.numbers`) to unique species.
+        """
+        return torch.unique(self.numbers, return_inverse=True)[1]
+
+    ##################
+    # Public methods #
+    ##################
 
     def get_polarizabilities(self, weights: Tensor) -> Tensor:
         """
@@ -305,10 +302,14 @@ class BaseModel(TensorLike):
         Returns
         -------
         Tensor
-            Polarizabilities of shape `(..., nat)`.
+            Polarizabilities of shape ``(..., nat)``.
         """
         # (..., n, r) * (..., n, r) -> (..., n)
         return einsum("...nr,...nr->...n", weights, self._get_alpha()[..., 0])
+
+    ###################
+    # Private methods #
+    ###################
 
     def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
         """
@@ -430,6 +431,10 @@ class BaseModel(TensorLike):
         """
         # (..., n, r, 23) -> (..., n, n, r, r)
         return trapzd(self._get_alpha())
+
+    ############
+    # Printing #
+    ############
 
     def __str__(self) -> str:  # pragma: no cover
         """Return a string representation of the model."""

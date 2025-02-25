@@ -40,6 +40,7 @@ Example
 from __future__ import annotations
 
 import torch
+from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, overload
@@ -164,19 +165,19 @@ class D4Model(BaseModel):
         ]
 
         # For vectorization, we reformulate the Gaussian weighting function:
-        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-wf * (cn - cn_ref)^2)]^(igw)
-        # Gaussian weighting function part 1: exp(-wf * (cn - cn_ref)^2)
+        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-(cn - cn_ref)^2)]^(wf *igw)
+        # Gaussian weighting function part 1: exp(-(cn - cn_ref)^2)
         dcn = cn.unsqueeze(-1).type(torch.double) - refcn
-        tmp = torch.exp(-dcn * dcn * self.wf)
+        tmp = torch.exp(-dcn * dcn)
 
-        # Gaussian weighting function part 2: tmp^(igw)
+        # Gaussian weighting function part 2: tmp^(wf * igw)
         # (While the Fortran version just loops over the number of gaussian
         # weights `igw`, we have to use masks and explicitly implement the
         # formulas for exponentiation. Luckily, `igw` only takes on the values
         # 1 and 3.)
         def refc_pow(n: int) -> Tensor:
             return sum(
-                (torch.pow(tmp, i) for i in range(1, n + 1)),
+                (torch.pow(tmp, i * self.wf) for i in range(1, n + 1)),
                 torch.tensor(0.0, device=tmp.device),
             )
 
@@ -256,3 +257,26 @@ class D4Model(BaseModel):
             outputs.append(dzeta * gw)
 
         return tuple(outputs)  # type: ignore
+
+    def get_atomic_c6(self, gw: Tensor) -> Tensor:
+        """
+        Calculate atomic C6 dispersion coefficients.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            `(..., nat, nref)`.
+
+        Returns
+        -------
+        Tensor
+            C6 coefficients for all atom pairs of shape `(..., nat, nat)`.
+        """
+        # The default einsum path is fastest if the large tensors comes first.
+        # (..., n1, n2, r1, r2) * (..., n1, r1) * (..., n2, r2) -> (..., n1, n2)
+        return einsum(
+            "...ijab,...ia,...jb->...ij",
+            *(self.rc6, gw, gw),
+            optimize=[(0, 1), (0, 1)],
+        )

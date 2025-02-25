@@ -25,7 +25,8 @@ from tad_mctc.ncoord import cn_d4
 
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import get_properties
-from tad_dftd4.model import D4Model, trapzd, trapzd2
+from tad_dftd4.model import D4Model
+from tad_dftd4.model.utils import trapzd, trapzd2
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
