@@ -20,7 +20,7 @@ Config file for docs.
 import os.path as op
 import sys
 
-sys.path.insert(0, op.join(op.dirname(__file__), "..", "src"))
+sys.path.insert(0, op.join(op.dirname(__file__), "../../", "src"))
 
 import tad_dftd4
 
@@ -57,9 +57,7 @@ html_theme_options = {
 
 html_sidebars = {}  # type: ignore[var-annotated]
 
-html_css_files = [
-    "css/custom.css",
-]
+html_css_files = ["css/custom.css"]
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 
