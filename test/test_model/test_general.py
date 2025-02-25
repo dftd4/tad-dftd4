@@ -87,6 +87,8 @@ def test_ref_charges_fail_2(model: str) -> None:
         d4 = D4Model(numbers, ref_charges="eeq")
     elif model == "d4s":
         d4 = D4SModel(numbers, ref_charges="eeq")
+    else:
+        raise ValueError(f"Unknown model: {model}")
 
     d4.ref_charges = "wrong"  # type: ignore
     with pytest.raises(ValueError):
