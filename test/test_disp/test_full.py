@@ -142,6 +142,5 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     }
 
     energy = dftd4(numbers, positions, charge, param)
-
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()

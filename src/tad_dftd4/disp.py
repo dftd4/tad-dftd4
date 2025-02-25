@@ -20,8 +20,8 @@ Dispersion energy
 
 This module provides the dispersion energy evaluation for the pairwise
 interactions. It contains the main entrypoint for the dispersion energy
-(`dftd4`) as well as wrappers for the two-body (`dispersion2`) and the
-three-body (`dispersion3`) dispersion energy.
+(:func:`.dftd4`) as well as wrappers for the two-body (:func:`.dispersion2`)
+and the three-body (:func:`.dispersion3`) dispersion energy.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ from tad_multicharge import get_eeq_charges
 from . import data, defaults
 from .cutoff import Cutoff
 from .damping import get_atm_dispersion, rational_damping
-from .model import D4Model
+from .model import D4Model, D4SModel
 from .ncoord import cn_d4, erf_count
 from .typing import DD, Any, CountingFunction, DampingFunction, Tensor
 
@@ -46,7 +46,7 @@ def dftd4(
     charge: Tensor,
     param: dict[str, Tensor],
     *,
-    model: D4Model | None = None,
+    model: D4Model | D4SModel | None = None,
     rcov: Tensor | None = None,
     r4r2: Tensor | None = None,
     q: Tensor | None = None,
@@ -67,27 +67,28 @@ def dftd4(
         Total charge of the system.
     param : dict[str, Tensor]
         DFT-D4 damping parameters.
-    model : D4Model | None, optional
+    model : D4Model | D4SModel | None, optional
         The DFT-D4 dispersion model for the evaluation of the C6 coefficients.
-        Defaults to `None`.
+        Defaults to ``None``, which creates the :class:`d4.model.D4Model`.
     rcov : Tensor | None, optional
         Covalent radii of the atoms in the system. Defaults to
-        `None`, i.e., default values are used.
+        ``None``, i.e., default values are used.
     r4r2 : Tensor | None, optional
         r⁴ over r² expectation values of the atoms in the system. Defaults to
-        `None`, i.e., default values are used.
+        ``None``, i.e., default values are used.
     q : Tensor | None, optional
-        Atomic partial charges. Defaults to `None`, i.e., EEQ charges are
-        calculated using the total `charge`.
+        Atomic partial charges. Defaults to ``None``, i.e., EEQ charges are
+        calculated using the total ``charge``.
     cutoff : Cutoff | None, optional
-        Collection of real-space cutoffs. Defaults to `None`, i.e., `Cutoff` is
-        initialized with its defaults.
+        Collection of real-space cutoffs. Defaults to ``None``, i.e.,
+        :class:`tad_dftd4.cutoff.Cutoff` is initialized with its defaults.
     counting_function : CountingFunction, optional
         Counting function used for the DFT-D4 coordination number. Defaults to
-        the error function counting function `erf_count`.
+        the error function counting function :func:`tad_mctc.ncoord.erf_count`.
     damping_function : DampingFunction, optional
         Damping function to evaluate distance dependent contributions. Defaults
-        to the Becke-Johnson rational damping function `rational_damping`.
+        to the Becke-Johnson rational damping function
+        :func:`tad_dftd4.damping.rational_damping`.
 
     Returns
     -------
@@ -97,8 +98,8 @@ def dftd4(
     Raises
     ------
     ValueError
-        Shape inconsistencies between `numbers`, `positions`, `r4r2`, or,
-        `rcov`.
+        Shape inconsistencies between ``numbers``, ``positions``, ``r4r2``,
+        or, ``rcov``.
     """
     dd: DD = {"device": positions.device, "dtype": positions.dtype}
 

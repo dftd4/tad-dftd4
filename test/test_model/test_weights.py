@@ -27,7 +27,7 @@ from tad_mctc.autograd import jacrev
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
 
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -155,7 +155,8 @@ def test_batch(name1: str, name2: str, dtype: torch.dtype) -> None:
 
 @pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
 @pytest.mark.parametrize("name", ["LiH", "SiH4", "MB16_43_03"])
-def test_grad_q(name: str) -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_grad_q(name: str, model: str) -> None:
     dd: DD = {"device": DEVICE, "dtype": torch.float64}
 
     sample = samples[name]
@@ -165,7 +166,13 @@ def test_grad_q(name: str) -> None:
     q = sample["q"].to(**dd)
     q_grad = q.detach().clone().requires_grad_(True)
 
-    d4 = D4Model(numbers, **dd)
+    if model == "d4":
+        d4 = D4Model(numbers, **dd)
+    elif model == "d4s":
+        d4 = D4SModel(numbers, **dd)
+    else:
+        raise ValueError(f"Invalid model: {model}")
+
     cn = cn_d4(numbers, positions)
 
     # analytical gradient
@@ -176,6 +183,57 @@ def test_grad_q(name: str) -> None:
     assert isinstance(dgwdq_auto, torch.Tensor)
     dgwdq_auto = dgwdq_auto.sum(-1).detach()
 
+    assert pytest.approx(dgwdq_auto.cpu(), abs=1e-6) == dgwdq_ana.cpu()
+
+
+@pytest.mark.skipif(__tversion__ < (2, 0, 0), reason="Requires torch>=2.0.0")
+@pytest.mark.parametrize("name1", ["LiH"])
+@pytest.mark.parametrize("name2", ["LiH", "SiH4", "MB16_43_03"])
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_grad_q_batch(name1: str, name2: str, model: str) -> None:
+    dd: DD = {"device": DEVICE, "dtype": torch.float64}
+
+    sample1, sample2 = samples[name1], samples[name2]
+    numbers = pack(
+        [
+            sample1["numbers"].to(DEVICE),
+            sample2["numbers"].to(DEVICE),
+        ]
+    )
+    positions = pack(
+        [
+            sample1["positions"].to(**dd),
+            sample2["positions"].to(**dd),
+        ]
+    )
+
+    q = pack(
+        [
+            sample1["q"].to(**dd),
+            sample2["q"].to(**dd),
+        ]
+    )
+
+    q_grad = q.detach().clone().requires_grad_(True)
+
+    if model == "d4":
+        d4 = D4Model(numbers, **dd)
+    elif model == "d4s":
+        d4 = D4SModel(numbers, **dd)
+    else:
+        raise ValueError(f"Invalid model: {model}")
+
+    cn = cn_d4(numbers, positions)
+
+    # analytical gradient
+    _, dgwdq_ana = d4.weight_references(cn, q, with_dgwdq=True)
+
+    # autodiff gradient
+    dgwdq_auto = jacrev(d4.weight_references, 1)(cn, q_grad)
+    assert isinstance(dgwdq_auto, torch.Tensor)
+    dgwdq_auto = dgwdq_auto.sum((-1, -2)).detach()
+
+    assert dgwdq_auto.shape == dgwdq_ana.shape
     assert pytest.approx(dgwdq_auto.cpu(), abs=1e-6) == dgwdq_ana.cpu()
 
 

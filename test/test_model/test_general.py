@@ -23,7 +23,7 @@ import pytest
 import torch
 from tad_mctc.convert import str_to_device
 
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.float32, torch.float64])
@@ -65,18 +65,31 @@ def test_change_device_fail() -> None:
 
 
 # raise error when creating the model in `_set_refalpha_eeq`
-def test_ref_charges_fail() -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_ref_charges_fail(model: str) -> None:
     numbers = torch.tensor([14, 1, 1, 1, 1])
 
     with pytest.raises(ValueError):
-        D4Model(numbers, ref_charges="wrong")  # type: ignore
+        if model == "d4":
+            D4Model(numbers, ref_charges="wrong")  # type: ignore
+        elif model == "d4s":
+            D4SModel(numbers, ref_charges="wrong")  # type: ignore
+        else:
+            raise ValueError(f"Unknown model: {model}")
 
 
 # raise error in `weight_references` when trying to change the ref_charges
-def test_ref_charges_fail_2() -> None:
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_ref_charges_fail_2(model: str) -> None:
     numbers = torch.tensor([14, 1, 1, 1, 1])
-    model = D4Model(numbers, ref_charges="eeq")
 
-    model.ref_charges = "wrong"  # type: ignore
+    if model == "d4":
+        d4 = D4Model(numbers, ref_charges="eeq")
+    elif model == "d4s":
+        d4 = D4SModel(numbers, ref_charges="eeq")
+    else:
+        raise ValueError(f"Unknown model: {model}")
+
+    d4.ref_charges = "wrong"  # type: ignore
     with pytest.raises(ValueError):
-        model.weight_references()
+        d4.weight_references()

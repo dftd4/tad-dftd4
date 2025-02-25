@@ -238,7 +238,6 @@ print(energy)
 The next example shows the calculation of dispersion energies for a batch of structures.
 
 ```python
-
 import torch
 import tad_dftd4 as d4
 import tad_mctc as mctc
@@ -294,6 +293,48 @@ print(energy)
 # tensor([-0.0088341432, -0.0027013607])
 print(energy[0] - 2*energy[1])
 # tensor(-0.0034314217)
+```
+
+To last example shows how to use the [D4SModel](https://dx.doi.org/10.1021/acs.jpclett.4c02653).
+
+```python
+import torch
+import tad_dftd4 as d4
+import tad_mctc as mctc
+
+numbers = mctc.convert.symbol_to_number(symbols="C C C C N C S H H H H H".split())
+
+# coordinates in Bohr
+positions = torch.tensor(
+    [
+        [-2.56745685564671, -0.02509985979910, 0.00000000000000],
+        [-1.39177582455797, +2.27696188880014, 0.00000000000000],
+        [+1.27784995624894, +2.45107479759386, 0.00000000000000],
+        [+2.62801937615793, +0.25927727028120, 0.00000000000000],
+        [+1.41097033661123, -1.99890996077412, 0.00000000000000],
+        [-1.17186102298849, -2.34220576284180, 0.00000000000000],
+        [-2.39505990368378, -5.22635838332362, 0.00000000000000],
+        [+2.41961980455457, -3.62158019253045, 0.00000000000000],
+        [-2.51744374846065, +3.98181713686746, 0.00000000000000],
+        [+2.24269048384775, +4.24389473203647, 0.00000000000000],
+        [+4.66488984573956, +0.17907568006409, 0.00000000000000],
+        [-4.60044244782237, -0.17794734637413, 0.00000000000000],
+    ]
+)
+
+# total charge of the system
+charge = torch.tensor(0.0)
+
+# Create the D4S model
+model = d4.model.D4SModel(numbers, **dd)
+
+param = d4.get_params("tpssh")
+energy = d4.dftd4(numbers, positions, charge, param, model=model)
+torch.set_printoptions(precision=10)
+print(energy)
+# tensor([-0.0020843975, -0.0019013016, -0.0018165035, -0.0018363572,
+#         -0.0021877293, -0.0019495023, -0.0022923108, -0.0004326892,
+#         -0.0004439871, -0.0004362087, -0.0004454589, -0.0005344027])
 ```
 
 ## Contributing

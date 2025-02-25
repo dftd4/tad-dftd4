@@ -17,6 +17,8 @@
 """
 Test calculation of two-body and three-body dispersion terms.
 """
+from __future__ import annotations
+
 import pytest
 import torch
 from tad_mctc.batch import pack
@@ -25,7 +27,7 @@ from tad_multicharge import get_eeq_charges
 
 from tad_dftd4 import data
 from tad_dftd4.disp import dftd4, dispersion2
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -36,20 +38,35 @@ sample_list = ["LiH", "SiH4", "MB16_43_01", "MB16_43_02", "AmF3", "actinides"]
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
-def test_single(name: str, dtype: torch.dtype) -> None:
-    single(name, dtype)
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_single(name: str, dtype: torch.dtype, model: str) -> None:
+    # Skip test for double precision for actinides and AmF3
+    if dtype == torch.double and name in ("actinides", "AmF3"):
+        return
+
+    single(name, dtype, model)
+
+
+@pytest.mark.parametrize("dtype", [torch.double])
+@pytest.mark.parametrize("name", ["actinides", "AmF3"])
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_single_tol(name: str, dtype: torch.dtype, model: str) -> None:
+    single(name, dtype, model, tol=1e-4)
 
 
 @pytest.mark.large
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", ["vancoh2"])
-def test_single_large(name: str, dtype: torch.dtype) -> None:
-    single(name, dtype)
+@pytest.mark.parametrize("model", ["d4", "d4s"])
+def test_single_large(name: str, dtype: torch.dtype, model: str) -> None:
+    single(name, dtype, model)
 
 
-def single(name: str, dtype: torch.dtype) -> None:
+def single(
+    name: str, dtype: torch.dtype, model_str: str, tol: float | None = None
+) -> None:
     dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 10
+    tol = torch.finfo(dtype).eps ** 0.5 * 10 if tol is None else tol
 
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
@@ -68,14 +85,23 @@ def single(name: str, dtype: torch.dtype) -> None:
         "a2": torch.tensor(4.60230534, **dd),
     }
 
+    if model_str == "d4":
+        model = D4Model(numbers, **dd)
+        ref = sample["disp2"].to(**dd)
+    elif model_str == "d4s":
+        model = D4SModel(numbers, **dd)
+        ref = sample["disp2_d4s"].to(**dd)
+    else:
+        raise ValueError(f"Invalid model: {model_str}")
+
     r4r2 = data.R4R2.to(**dd)[numbers]
-    model = D4Model(numbers, **dd)
     cn = cn_d4(numbers, positions)
     weights = model.weight_references(cn, q)
     c6 = model.get_atomic_c6(weights)
 
     energy = dispersion2(numbers, positions, param, c6, r4r2)
 
+    assert energy.shape == ref.shape
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
 

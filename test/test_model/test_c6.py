@@ -23,7 +23,7 @@ import torch
 import torch.nn.functional as F
 from tad_mctc.batch import pack
 
-from tad_dftd4.model import D4Model
+from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -53,6 +53,31 @@ def test_single(name: str, dtype: torch.dtype) -> None:
         mode="constant",
         value=0,
     ).mT
+
+    c6 = d4.get_atomic_c6(gw)
+    assert pytest.approx(ref.cpu(), rel=tol) == c6.cpu()
+
+
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
+@pytest.mark.parametrize("name", sample_list)
+def test_single_d4s(name: str, dtype: torch.dtype) -> None:
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+
+    tol = 1e-4 if dtype == torch.float else 1e-5
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+    ref = sample["c6_d4s"].to(**dd)
+
+    d4 = D4SModel(numbers, **dd)
+
+    # pad reference tensor to always be of shape `(natoms, 7)`
+    src = sample["gw_d4s"].to(**dd)
+    gw = F.pad(
+        input=src,
+        pad=(0, 0, 0, 0, 0, 7 - src.size(0)),
+        mode="constant",
+        value=0,
+    ).permute(2, 1, 0)
 
     c6 = d4.get_atomic_c6(gw)
     assert pytest.approx(ref.cpu(), rel=tol) == c6.cpu()
