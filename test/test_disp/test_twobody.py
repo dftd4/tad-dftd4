@@ -18,6 +18,7 @@
 Test calculation of two-body and three-body dispersion terms.
 """
 from __future__ import annotations
+
 import pytest
 import torch
 from tad_mctc.batch import pack
