@@ -11,6 +11,5 @@ The following modules are contained with `tad-dftd4`.
    damping/index
    data/index
    defaults
-   model
-   params
+   model/index
    typing/index

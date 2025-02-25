@@ -21,8 +21,8 @@ Dispersion energy
 This module provides the dispersion energy evaluation for the pairwise
 interactions. It contains the main entrypoint for the dispersion energy
 (:func:`.dftd4`) as well as wrappers for the two-body
-(:func:`tad_dftd4.disp.dispersion2`) and the three-body
-(:func:`tad_dftd4.disp.dispersion3`) dispersion energy.
+(:func:`.dispersion2`) and the three-body
+(:func:`.dispersion3`) dispersion energy.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from .model import D4Model, D4SModel
 from .ncoord import cn_d4, erf_count
 from .typing import DD, Any, CountingFunction, DampingFunction, Tensor
 
-__all__ = ["dftd4"]
+__all__ = ["dftd4", "dispersion2", "dispersion3", "get_properties"]
 
 
 def dftd4(
@@ -70,7 +70,7 @@ def dftd4(
         DFT-D4 damping parameters.
     model : D4Model | D4SModel | None, optional
         The DFT-D4 dispersion model for the evaluation of the C6 coefficients.
-        Defaults to ``None``, which creates :class:`tad_dftd4.model.D4Model`.
+        Defaults to ``None``, which creates :class:`tad_dftd4.model.d4.D4Model`.
     rcov : Tensor | None, optional
         Covalent radii of the atoms in the system. Defaults to
         ``None``, i.e., default values are used.
@@ -85,11 +85,12 @@ def dftd4(
         :class:`tad_dftd4.cutoff.Cutoff` is initialized with its defaults.
     counting_function : CountingFunction, optional
         Counting function used for the DFT-D4 coordination number. Defaults to
-        the error function counting function :func:`tad_mctc.ncoord.erf_count`.
+        the error function counting function
+        :func:`tad_mctc.ncoord.count.erf_count`.
     damping_function : DampingFunction, optional
         Damping function to evaluate distance dependent contributions. Defaults
         to the Becke-Johnson rational damping function
-        :func:`tad_dftd4.damping.rational_damping`.
+        :func:`tad_dftd4.damping.rational.rational_damping`.
 
     Returns
     -------
