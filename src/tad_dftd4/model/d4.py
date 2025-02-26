@@ -44,12 +44,10 @@ from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, overload
-from .base import BaseModel
+from .base import WF_DEFAULT, BaseModel
 from .utils import is_exceptional
 
 __all__ = ["D4Model"]
-
-WF_DEFAULT = 6.0
 
 
 class D4Model(BaseModel):
@@ -280,3 +278,21 @@ class D4Model(BaseModel):
             *(self.rc6, gw, gw),
             optimize=[(0, 1), (0, 1)],
         )
+
+    def get_weighted_pols(self, gw: Tensor) -> Tensor:
+        """
+        Calculate the weighted polarizabilities for each atom and frequency.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            ``(..., nat, nref)``.
+
+        Returns
+        -------
+        Tensor
+            Weighted polarizabilities of shape ``(..., nat, 23)``.
+        """
+        a = self._get_alpha()
+        return einsum("...nr,...nrw->...nw", gw, a)

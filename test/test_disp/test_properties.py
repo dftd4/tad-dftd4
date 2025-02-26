@@ -26,7 +26,7 @@ from tad_mctc.ncoord import cn_d4
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import get_properties
 from tad_dftd4.model import D4Model
-from tad_dftd4.model.utils import trapzd, trapzd2
+from tad_dftd4.model.utils import trapzd, trapzd_noref
 from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
@@ -75,7 +75,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     c61 = trapzd(alpha1, alpha1).sum((-4, -3, -2, -1))
 
     alpha2 = einsum("...nr,...nra->...na", weights, aiw)
-    c62 = trapzd2(alpha2, alpha2).sum((-2, -1))
+    c62 = trapzd_noref(alpha2, alpha2).sum((-2, -1))
 
     assert c6ref.shape == c61.shape
     assert c6ref.shape == c62.shape
@@ -142,7 +142,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     c61 = trapzd(alpha1, alpha1).sum((-4, -3, -2, -1))
 
     alpha2 = einsum("...nr,...nra->...na", weights, aiw)
-    c62 = trapzd2(alpha2, alpha2).sum((-2, -1))
+    c62 = trapzd_noref(alpha2, alpha2).sum((-2, -1))
 
     assert c6ref.shape == c61.shape
     assert c6ref.shape == c62.shape

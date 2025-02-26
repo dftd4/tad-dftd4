@@ -37,16 +37,32 @@ class Cutoff(TensorLike):
     """
 
     disp2: Tensor
-    """Two-body interaction cutoff (60.0)."""
+    """
+    Two-body interaction cutoff.
+
+    :default: `60.0`
+    """
 
     disp3: Tensor
-    """Three-body interaction cutoff (40.0)."""
+    """
+    Three-body interaction cutoff.
+
+    :default: `40.0`
+    """
 
     cn: Tensor
-    """Coordination number cutoff (30.0)."""
+    """
+    Coordination number cutoff.
+
+    :default: `30.0`
+    """
 
     cn_eeq: Tensor
-    """Coordination number cutoff within EEQ (25.0)."""
+    """
+    Coordination number cutoff within EEQ.
+
+    :default: `25.0`
+    """
 
     __slots__ = ("disp2", "disp3", "cn", "cn_eeq")
 

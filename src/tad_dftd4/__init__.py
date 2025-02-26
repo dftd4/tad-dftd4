@@ -71,11 +71,11 @@ Example
 >>>
 >>> # TPSSh-D4-ATM parameters
 >>> param = {
-...     "s6": positions.new_tensor(1.0),
-...     "s8": positions.new_tensor(1.85897750),
-...     "s9": positions.new_tensor(1.0),
-...     "a1": positions.new_tensor(0.44286966),
-...     "a2": positions.new_tensor(4.60230534),
+...     "s6": torch.tensor(1.0),
+...     "s8": torch.tensor(1.85897750),
+...     "s9": torch.tensor(1.0),
+...     "a1": torch.tensor(0.44286966),
+...     "a2": torch.tensor(4.60230534),
 ... }
 >>>
 >>> # calculate dispersion energy in Hartree
@@ -92,6 +92,7 @@ from . import cutoff, damping, data, disp, model, ncoord, typing
 from .__version__ import __version__
 from .damping import get_params
 from .disp import dftd4
+from .model import D4Model, D4SModel
 
 __all__ = [
     "__version__",
@@ -104,4 +105,6 @@ __all__ = [
     "model",
     "ncoord",
     "typing",
+    "D4Model",
+    "D4SModel",
 ]
