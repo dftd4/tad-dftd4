@@ -27,7 +27,7 @@ from tad_mctc.math import einsum
 
 from ..typing import Tensor
 
-__all__ = ["trapzd", "trapzd2", "is_exceptional"]
+__all__ = ["trapzd", "trapzd_noref", "is_exceptional"]
 
 
 def trapzd(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
@@ -94,7 +94,7 @@ def trapzd(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
     )
 
 
-def trapzd2(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
+def trapzd_noref(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
     """
     Numerical Casimir--Polder integration.
 

@@ -49,11 +49,12 @@ from .. import data, reference
 from ..typing import Literal, Tensor, TensorLike, overload
 from .utils import trapzd
 
-__all__ = ["BaseModel"]
+__all__ = ["BaseModel", "WF_DEFAULT"]
 
 
 GA_DEFAULT = 3.0
 GC_DEFAULT = 2.0
+WF_DEFAULT = 6.0
 
 
 class BaseModel(TensorLike):
@@ -255,6 +256,23 @@ class BaseModel(TensorLike):
             the derivative of the weights with respect to the partial charges.
             If ``with_dgwdcn`` is ``True``, also returns the derivative of the
             weights with respect to the coordination numbers.
+        """
+
+    @abstractmethod
+    def get_weighted_pols(self, gw: Tensor) -> Tensor:
+        """
+        Calculate the weighted polarizabilities for each atom and frequency.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            ``(..., nat, nref)``.
+
+        Returns
+        -------
+        Tensor
+            Weighted polarizabilities of shape ``(..., nat, 23)``.
         """
 
     ##############

@@ -40,11 +40,12 @@ Example
 from __future__ import annotations
 
 import torch
+from tad_mctc.batch.mask import real_atoms
 from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, overload
-from .base import BaseModel
+from .base import WF_DEFAULT, BaseModel
 from .utils import is_exceptional
 
 __all__ = ["D4SModel"]
@@ -279,3 +280,42 @@ class D4SModel(BaseModel):
             *(self.rc6, gw, gw),
             optimize=[(0, 1), (0, 1)],
         )
+
+    def get_weighted_pols(self, gw: Tensor) -> Tensor:
+        """
+        Calculate the weighted polarizabilities for each atom and frequency.
+
+        This is helpful for calculating C6 coefficients between molecules.
+
+        Parameters
+        ----------
+        gw : Tensor
+            Weights for the atomic reference systems of shape
+            ``(..., nat, nat, nref)``.
+
+        Returns
+        -------
+        Tensor
+            Weighted polarizabilities of shape ``(..., nat, 23)``.
+        """
+        mask = real_atoms(self.numbers)
+        nat = mask.sum(dim=-1, keepdim=True)
+
+        a = self._get_alpha()
+
+        # Since we sum over one of the atom dimensions here, we need to
+        # divide by the number of atoms.
+        return einsum("...mnr,...nrw->...mw", gw, a) / nat
+
+
+class D4SDebug(D4SModel):
+    """
+    Debugging version of D4SModel.
+
+    Here, the weighting factors are all set to :data:`.WF_DEFAULT`.
+    """
+
+    def _get_wf(self) -> Tensor:
+        """Pairwise weighting factor."""
+        s = self.unique.size(0)
+        return torch.full((s, s), WF_DEFAULT, **self.dd)
