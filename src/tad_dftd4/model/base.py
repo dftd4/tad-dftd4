@@ -49,7 +49,7 @@ from .. import data, reference
 from ..typing import Literal, Tensor, TensorLike, overload
 from .utils import trapzd
 
-__all__ = ["BaseModel"]
+__all__ = ["BaseModel", "WF_DEFAULT"]
 
 
 GA_DEFAULT = 3.0
