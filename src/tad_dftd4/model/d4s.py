@@ -319,3 +319,236 @@ class D4SDebug(D4SModel):
         """Pairwise weighting factor."""
         s = self.unique.size(0)
         return torch.full((s, s), WF_DEFAULT, **self.dd)
+
+
+class D4SNewZeta(D4SModel):
+    """
+    D4S model with ``tanh``-based charge scaling.
+    """
+
+    def weight_references(
+        self,
+        cn: Tensor | None = None,
+        q: Tensor | None = None,
+        with_dgwdq: bool = False,
+        with_dgwdcn: bool = False,
+    ) -> Tensor:
+        """
+        Calculate the weights of the reference system
+        (shape: ``(..., nat, nref)``).
+
+        Parameters
+        ----------
+        cn : Tensor | None, optional
+            Coordination number of every atom. Defaults to `None` (0).
+        q : Tensor | None, optional
+            Partial charge of every atom. Defaults to `None` (0).
+        with_dgwdq : bool, optional
+            Whether to also calculate the derivative of the weights with
+            respect to the partial charges. Defaults to `False`.
+        with_dgwdcn : bool, optional
+            Whether to also calculate the derivative of the weights with
+            respect to the coordination numbers. Defaults to `False`.
+
+        Returns
+        -------
+        Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]
+            Weights for the atomic reference systems (shape:
+            ``(..., nat, ref)``). If ``with_dgwdq`` is ``True``, also returns
+            the derivative of the weights with respect to the partial charges.
+            If ``with_dgwdcn`` is ``True``, also returns the derivative of the
+            weights with respect to the coordination numbers.
+        """
+        if cn is None:
+            cn = torch.zeros(self.numbers.shape, **self.dd)
+        if q is None:
+            q = torch.zeros(self.numbers.shape, **self.dd)
+
+        if self.ref_charges == "eeq":
+            from ..reference.charge_eeq import clsq as _refq
+
+            refq = _refq.to(**self.dd)[self.numbers]
+        elif self.ref_charges == "gfn2":
+            from ..reference.charge_gfn2 import refq as _refq
+
+            refq = _refq.to(**self.dd)[self.numbers]
+        else:
+            raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        zero = torch.tensor(0.0, **self.dd)
+        zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
+
+        _refc = reference.refc.to(self.device)[self.numbers]
+
+        # (..., nat1, nref) -> (..., nat2, nat1, nref)
+        shp = (*_refc.shape[:-1], _refc.shape[-2], _refc.shape[-1])
+        refc = _refc.unsqueeze(-3).expand(*shp)
+
+        mask = refc > 0
+
+        # Due to the exponentiation, `norm` and `expw` may become very small
+        # (down to 1e-300). This causes problems for the division by `norm`,
+        # since single precision, i.e. `torch.float`, only goes to around 1e-38.
+        # Consequently, some values become zero although the actual result
+        # should be close to one. The problem does not arise when using `torch.
+        # double`. In order to avoid this error, which is also difficult to
+        # detect, this part always uses `torch.double`. `params.refcovcn` is
+        # saved with `torch.double`, but I still made sure...
+        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
+            self.numbers
+        ]
+        refcn = refcn.unsqueeze(-3).expand(*shp)
+
+        # For vectorization, we reformulate the Gaussian weighting function:
+        # exp(-wf * igw * (cn - cn_ref)^2) = [exp(-wf * (cn - cn_ref)^2)]^(igw)
+        # Gaussian weighting function part 1: exp(-wf * (cn - cn_ref)^2)
+        dcn = cn.type(torch.double).unsqueeze(-1).unsqueeze(-3) - refcn
+
+        # Expand from unique indices to all atoms
+        # (..., n, 1) , (..., 1, n) -> (..., n, n)
+        wf = self.wf[
+            self.atom_to_unique.unsqueeze(-1), self.atom_to_unique.unsqueeze(-2)
+        ]
+
+        # We have to create the additional dimension in `-3` to match the
+        # ordering of the zeta function. Inserting in `-2` does not work!
+        #
+        # (..., n1, nref) * (..., n1, nref) * (n1, n2) -> (..., n2, n1, nref)
+        arg = einsum("...mnr,...mnr,...nm->...mnr", -dcn, dcn, wf)
+        tmp = torch.where(mask, torch.exp(arg), zero_double)
+
+        # Gaussian weighting function part 2: tmp^(igw)
+        # (While the Fortran version just loops over the number of gaussian
+        # weights `igw`, we have to use masks and explicitly implement the
+        # formulas for exponentiation. Luckily, `igw` only takes on the values
+        # 1 and 3.)
+        def refc_pow(n: int) -> Tensor:
+            return sum(
+                (torch.pow(tmp, i) for i in range(1, n + 1)), zero_double
+            )
+
+        refc_pow_1 = torch.where(refc == 1, refc_pow(1), tmp)
+        refc_pow_final = torch.where(refc == 3, refc_pow(3), refc_pow_1)
+
+        expw = torch.where(mask, refc_pow_final, zero_double)
+
+        # Normalize weights, but keep shape. This needs double precision.
+        # Moreover, we need to mask the normalization to avoid division by zero
+        # for autograd. Strangely, `storch.divide` gives erroneous results for
+        # some elements (Mg, e.g. in MB16_43/03).
+        norm = torch.where(
+            mask,
+            torch.sum(expw, dim=-1, keepdim=True),
+            torch.tensor(1e-300, device=self.device, dtype=torch.double),
+        )
+
+        # back to real dtype
+        gw_temp = (expw / norm).type(self.dtype)
+
+        # maximum reference CN for each atom
+        maxcn = torch.max(refcn, dim=-1, keepdim=True)[0]
+
+        # prevent division by 0 and small values
+        gw = torch.where(
+            is_exceptional(gw_temp, self.dtype),
+            torch.where(refcn == maxcn, torch.tensor(1.0, **self.dd), zero),
+            gw_temp,
+        )
+
+        # unsqueeze for reference dimension
+        gam = data.GAM.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
+        q = q.unsqueeze(-1)
+
+        # charge scaling
+        _zeta = self._zeta(gam, refq, q)
+        zeta = torch.where(mask, _zeta.unsqueeze(-3).expand(*shp), zero)
+
+        return zeta * gw
+
+    def _get_alpha(self) -> Tensor:
+        """
+        Calculate reference polarizabilities.
+
+        Returns
+        -------
+        Tensor
+            Reference polarizabilities of shape `(..., nat, ref, 23)`.
+        """
+        zero = torch.tensor(0.0, **self.dd)
+
+        numbers = self.unique
+        refsys = reference.refsys.to(self.device)[numbers]
+        refascale = reference.refascale.to(**self.dd)[numbers]
+        refalpha = reference.refalpha.to(**self.dd)[numbers]
+        refscount = reference.refscount.to(**self.dd)[numbers]
+        secscale = reference.secscale.to(**self.dd)
+        secalpha = reference.secalpha.to(**self.dd)
+
+        if self.ref_charges == "eeq":
+            from ..reference.charge_eeq import clsh as _refsq
+
+            refsq = _refsq.to(**self.dd)[numbers]
+        elif self.ref_charges == "gfn2":
+            from ..reference.charge_gfn2 import refh as _refsq
+
+            refsq = _refsq.to(**self.dd)[numbers]
+        else:
+            raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        mask = refsys > 0
+
+        zeff = data.ZEFF.to(self.device)[refsys]
+        gam = data.GAM.to(**self.dd)[refsys] * self.gc
+
+        # charge scaling
+        zeta = torch.where(
+            mask,
+            self._zeta1(gam, torch.zeros_like(zeff), refsq),
+            zero,
+        )
+
+        aiw = secscale[refsys] * secalpha[refsys] * zeta.unsqueeze(-1)
+        h = refalpha - refscount.unsqueeze(-1) * aiw
+        alpha = refascale.unsqueeze(-1) * h
+
+        # (..., nunique, r, 23) -> (..., n, r, 23)
+        return torch.where(alpha > 0.0, alpha, zero)[self.atom_to_unique]
+
+    def _zeta(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
+        from ..data.tanh import tanh_params
+
+        params = tanh_params.to(**self.dd)
+
+        # (..., 119, 4) -> (..., n, 4)
+        abcd = params[self.numbers]
+
+        # (..., n, 4) -> (..., n, 7, 4)
+        abcd = abcd.unsqueeze(-2).expand(*abcd.shape[:-1], 7, 4)
+
+        zeta_mod = abcd[..., 0] + abcd[..., 1] * torch.tanh(
+            abcd[..., 2] * qmod + abcd[..., 3]
+        )
+        zeta_ref = abcd[..., 0] + abcd[..., 1] * torch.tanh(
+            abcd[..., 2] * qref + abcd[..., 3]
+        )
+
+        return zeta_mod / zeta_ref
+
+    def _zeta1(self, gam: Tensor, qref: Tensor, qmod: Tensor) -> Tensor:
+        from ..data.tanh import tanh_params
+
+        params = tanh_params.to(**self.dd)
+
+        refsys = reference.refsys.to(self.device)[self.unique]
+
+        # (..., 119, 4) -> (..., n, 7, 4)
+        abcd = params[refsys]
+
+        zeta_mod = abcd[..., 0] + abcd[..., 1] * torch.tanh(
+            abcd[..., 2] * qmod + abcd[..., 3]
+        )
+        zeta_ref = abcd[..., 0] + abcd[..., 1] * torch.tanh(
+            abcd[..., 2] * qref + abcd[..., 3]
+        )
+
+        return zeta_mod / zeta_ref

@@ -38,6 +38,40 @@ sample_list = ["LiH", "SiH4", "MB16_43_01", "MB16_43_02", "AmF3", "actinides"]
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
 @pytest.mark.parametrize("name", sample_list)
+def test_new_zeta(name: str, dtype: torch.dtype) -> None:
+    from tad_dftd4.model.d4s import D4SNewZeta
+
+    dd: DD = {"device": DEVICE, "dtype": dtype}
+
+    sample = samples[name]
+    numbers = sample["numbers"].to(DEVICE)
+    positions = sample["positions"].to(**dd)
+    q = sample["q"].to(**dd)
+
+    # TPSSh-D4-ATM parameters
+    param = {
+        "s6": torch.tensor(1.00000000, **dd),
+        "s8": torch.tensor(1.85897750, **dd),
+        "s9": torch.tensor(1.00000000, **dd),
+        "s10": torch.tensor(0.0000000, **dd),
+        "alp": torch.tensor(16.000000, **dd),
+        "a1": torch.tensor(0.44286966, **dd),
+        "a2": torch.tensor(4.60230534, **dd),
+    }
+
+    model = D4SNewZeta(numbers, **dd)
+    r4r2 = data.R4R2.to(**dd)[numbers]
+    cn = cn_d4(numbers, positions)
+    weights = model.weight_references(cn, q)
+    c6 = model.get_atomic_c6(weights)
+
+    energy = dispersion2(numbers, positions, param, c6, r4r2)
+    print(energy)
+    print(energy.sum())
+
+
+@pytest.mark.parametrize("dtype", [torch.float, torch.double])
+@pytest.mark.parametrize("name", sample_list)
 @pytest.mark.parametrize("model", ["d4", "d4s"])
 def test_single(name: str, dtype: torch.dtype, model: str) -> None:
     # Skip test for double precision for actinides and AmF3
