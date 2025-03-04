@@ -38,8 +38,8 @@ def test_params_shape() -> None:
     assert charge_eeq.clsh.shape == torch.Size((maxel, 7))
 
     # GFN2 charges only up to Rn
-    assert charge_gfn2.refq.shape == torch.Size((86, 7))
-    assert charge_gfn2.refh.shape == torch.Size((86, 7))
+    assert charge_gfn2.refq.shape == torch.Size((87, 7))
+    assert charge_gfn2.refh.shape == torch.Size((87, 7))
 
 
 def test_data_shape() -> None:
