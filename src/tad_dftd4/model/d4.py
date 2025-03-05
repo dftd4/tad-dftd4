@@ -134,10 +134,12 @@ class D4Model(BaseModel):
             q = torch.zeros(self.numbers.shape, **self.dd)
 
         if self.ref_charges == "eeq":
+            # pylint: disable=import-outside-toplevel
             from ..reference.charge_eeq import clsq as _refq
 
             refq = _refq.to(**self.dd)[self.numbers]
         elif self.ref_charges == "gfn2":
+            # pylint: disable=import-outside-toplevel
             from ..reference.charge_gfn2 import refq as _refq
 
             refq = _refq.to(**self.dd)[self.numbers]

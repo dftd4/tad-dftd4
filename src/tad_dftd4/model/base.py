@@ -408,10 +408,12 @@ class BaseModel(TensorLike):
         secalpha = reference.secalpha.to(**self.dd)
 
         if self.ref_charges == "eeq":
+            # pylint: disable=import-outside-toplevel
             from ..reference.charge_eeq import clsh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         elif self.ref_charges == "gfn2":
+            # pylint: disable=import-outside-toplevel
             from ..reference.charge_gfn2 import refh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
