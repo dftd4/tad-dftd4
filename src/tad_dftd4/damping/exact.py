@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Damping: Axilrod-Teller-Muto (ATM) dispersion term
-==================================================
+Damping: Exact Axilrod-Teller-Muto (ATM) dispersion term
+========================================================
 
 This module provides the dispersion energy evaluation for the three-body
 Axilrod-Teller-Muto dispersion term.
@@ -31,6 +31,18 @@ Axilrod-Teller-Muto dispersion term.
     {\left(r_\text{AB} r_\text{BC} r_\text{AC} \right)^3} \\
     f_\text{damp} &=
     \dfrac{1}{1+ 6 \left(\overline{R}_\text{ABC}\right)^{-16}}
+
+Instead of using the approximation to the C9 via
+
+.. math::
+
+    C_9 = \sqrt{C_{6}^{AB} C_{6}^{AC} C_{6}^{BC}}
+
+the exact C9 is calculated from via the Casimir-Polder formula
+
+.. math::
+
+   C_9 = \int \text{d}\omega \alpha_A\left(i\omega\right) \alpha_B\left(i\omega\right) \alpha_C\left(i\omega\right)
 """
 from __future__ import annotations
 
@@ -39,16 +51,17 @@ from tad_mctc import storch
 from tad_mctc.batch import real_pairs, real_triples
 
 from .. import data, defaults
+from ..model.utils import trapzd_noref
 from ..typing import DD, Tensor
 
-__all__ = ["get_atm_dispersion"]
+__all__ = ["get_exact_atm_dispersion"]
 
 
-def get_atm_dispersion(
+def get_exact_atm_dispersion(
     numbers: Tensor,
     positions: Tensor,
     cutoff: Tensor,
-    c6: Tensor,
+    aiw: Tensor,
     s9: Tensor = torch.tensor(defaults.S9),
     a1: Tensor = torch.tensor(defaults.A1),
     a2: Tensor = torch.tensor(defaults.A2),
@@ -65,8 +78,8 @@ def get_atm_dispersion(
         Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
     cutoff : Tensor
         Real-space cutoff.
-    c6 : Tensor
-        Atomic C6 dispersion coefficients.
+    aiw : Tensor
+        Weighted dynamic polarizabilities.
     s9 : Tensor, optional
         Scaling for dispersion coefficients. Defaults to ``1.0``.
     a1 : Tensor, optional
@@ -98,16 +111,52 @@ def get_atm_dispersion(
     zero = torch.tensor(0.0, **dd)
     one = torch.tensor(1.0, **dd)
 
-    # C9_ABC = s9 * sqrt(|C6_AB * C6_AC * C6_BC|)
-    print(c6.shape)
-    print(c6.unsqueeze(-1).shape)
-    print(c6.unsqueeze(-2).shape)
-    print()
-    c9 = s9 * storch.sqrt(
-        torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
+    # C9_ABC = aiw_A * aiw_B * aiw_C
+    print(aiw.shape)
+    aiwi = aiw.unsqueeze(-2).unsqueeze(-2)
+    print(aiwi.shape)
+    aiwj = aiw.unsqueeze(-3).unsqueeze(-2)
+    print(aiwj.shape)
+    aiwk = aiw.unsqueeze(-3).unsqueeze(-3)
+    print(aiwk.shape)
+    alphas = aiwi * aiwj * aiwk
+    print(alphas.shape)
+    print("")
+
+    thopi = 3.0 / 3.141592653589793238462643383279502884197
+
+    weights = torch.tensor(
+        [
+            2.4999500000000000e-002,
+            4.9999500000000000e-002,
+            7.5000000000000010e-002,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1500000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.3500000000000000,
+            0.5000000000000000,
+            0.7500000000000000,
+            1.0000000000000000,
+            1.7500000000000000,
+            2.5000000000000000,
+            1.2500000000000000,
+        ],
+        device=positions.device,
+        dtype=positions.dtype,
     )
+
+    c9 = s9 * thopi * torch.einsum("...ijkw,w->...ijk", alphas, weights)
     print("c9", c9.shape)
-    print()
 
     rad = data.R4R2.to(**dd)[numbers]
     radii = rad.unsqueeze(-1) * rad.unsqueeze(-2)

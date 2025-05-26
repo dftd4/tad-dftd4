@@ -21,5 +21,6 @@ Damping schemes
 Available damping schemes for two- and three-body dispersion terms.
 """
 from .atm import *
+from .exact import *
 from .parameters import *
 from .rational import *
