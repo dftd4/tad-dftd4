@@ -38,7 +38,7 @@ Instead of using the approximation to the C9 via
 
     C_9 = \sqrt{C_{6}^{AB} C_{6}^{AC} C_{6}^{BC}}
 
-the exact C9 is calculated from via the Casimir-Polder formula
+the exact C9 is calculated using the Casimir-Polder formula
 
 .. math::
 
@@ -51,8 +51,9 @@ from tad_mctc import storch
 from tad_mctc.batch import real_pairs, real_triples
 
 from .. import data, defaults
-from ..model.utils import trapzd_noref
-from ..typing import DD, Tensor
+from ..damping import zero_damping
+from ..typing import DD, Callable, Tensor
+from ..utils import trapzd_atm
 
 __all__ = ["get_exact_atm_dispersion"]
 
@@ -62,6 +63,8 @@ def get_exact_atm_dispersion(
     positions: Tensor,
     cutoff: Tensor,
     aiw: Tensor,
+    radii: Tensor,
+    damping_function: Callable[[Tensor, Tensor], Tensor] = zero_damping,
     s9: Tensor = torch.tensor(defaults.S9),
     a1: Tensor = torch.tensor(defaults.A1),
     a2: Tensor = torch.tensor(defaults.A2),
@@ -111,52 +114,13 @@ def get_exact_atm_dispersion(
     zero = torch.tensor(0.0, **dd)
     one = torch.tensor(1.0, **dd)
 
-    # C9_ABC = aiw_A * aiw_B * aiw_C
-    print(aiw.shape)
+    # C9_ABC = integral (aiw_A * aiw_B * aiw_C)
     aiwi = aiw.unsqueeze(-2).unsqueeze(-2)
-    print(aiwi.shape)
     aiwj = aiw.unsqueeze(-3).unsqueeze(-2)
-    print(aiwj.shape)
     aiwk = aiw.unsqueeze(-3).unsqueeze(-3)
-    print(aiwk.shape)
     alphas = aiwi * aiwj * aiwk
-    print(alphas.shape)
-    print("")
 
-    thopi = 3.0 / 3.141592653589793238462643383279502884197
-
-    weights = torch.tensor(
-        [
-            2.4999500000000000e-002,
-            4.9999500000000000e-002,
-            7.5000000000000010e-002,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1000000000000000,
-            0.1500000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.2000000000000000,
-            0.3500000000000000,
-            0.5000000000000000,
-            0.7500000000000000,
-            1.0000000000000000,
-            1.7500000000000000,
-            2.5000000000000000,
-            1.2500000000000000,
-        ],
-        device=positions.device,
-        dtype=positions.dtype,
-    )
-
-    c9 = s9 * thopi * torch.einsum("...ijkw,w->...ijk", alphas, weights)
-    print("c9", c9.shape)
+    c9 = s9 * trapzd_atm(alphas)
 
     rad = data.R4R2.to(**dd)[numbers]
     radii = rad.unsqueeze(-1) * rad.unsqueeze(-2)
@@ -193,11 +157,7 @@ def get_exact_atm_dispersion(
 
     # to fix the previous mask, we mask again (not strictly necessary because
     # `ang` is also masked and we later multiply with `ang`)
-    fdamp = torch.where(
-        mask_triples,
-        1.0 / (1.0 + 6.0 * base ** (alp / 3.0)),
-        zero,
-    )
+    fdamp = torch.where(mask_triples, damping_function(base, alp / 3.0), zero)
 
     s = torch.where(
         mask_triples,
