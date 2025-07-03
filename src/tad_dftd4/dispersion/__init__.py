@@ -15,12 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Data: Chemical hardnesses
-=========================
+Dispersion Methods
+==================
 
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
+Collection of dispersion methods..
 """
-from tad_mctc.data import GAM
 
-__all__ = ["GAM"]
+from .base import *
+from .twobody import *
+from .threebody import *
+from .d4 import *

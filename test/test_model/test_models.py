@@ -190,7 +190,7 @@ def test_weighted_pol(name: str, dtype: torch.dtype, model: str) -> None:
     # Molecular C6 is always smaller than sqrt(C6_ii * C6_jj).
     # (Cauchy-Schwarz inequality)
     diff = c6.sum() - ref.sum()
-    assert diff < 0.0
+    assert diff.cpu().item() <= 0.0
 
 
 def test_d4sdebug() -> None:

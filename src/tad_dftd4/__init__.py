@@ -92,8 +92,6 @@ from . import cutoff, damping, data, disp, model, ncoord, typing
 from .__version__ import __version__
 from .cutoff import Cutoff
 from .damping import get_params
-from .damping.atm import get_atm_dispersion
-from .damping.exact import get_exact_atm_dispersion
 from .disp import dftd4
 from .model import D4Model, D4SModel
 
@@ -105,8 +103,6 @@ __all__ = [
     "data",
     "dftd4",
     "disp",
-    "get_atm_dispersion",
-    "get_exact_atm_dispersion",
     "get_params",
     "model",
     "ncoord",

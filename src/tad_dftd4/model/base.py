@@ -189,8 +189,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[False] = ...,
     ) -> Tensor: ...
 
     @overload
@@ -199,8 +200,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[False] = ...,
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -209,8 +211,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -219,8 +222,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor, Tensor]: ...
 
     @abstractmethod
@@ -228,6 +232,7 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
+        *,
         with_dgwdq: bool = False,
         with_dgwdcn: bool = False,
     ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
@@ -422,8 +427,8 @@ class BaseModel(TensorLike):
 
         mask = refsys > 0
 
-        zeff = data.ZEFF.to(self.device)[refsys]
-        gam = data.GAM.to(**self.dd)[refsys] * self.gc
+        zeff = data.ZEFF(self.device)[refsys]
+        gam = data.GAM(**self.dd)[refsys] * self.gc
 
         # charge scaling
         zeta = torch.where(

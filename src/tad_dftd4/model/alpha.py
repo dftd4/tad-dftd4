@@ -404,8 +404,8 @@ class AlphaModel(TensorLike):
 
         mask = refsys > 0
 
-        zeff = data.ZEFF.to(self.device)[refsys]
-        gam = data.GAM.to(**self.dd)[refsys] * self.gc
+        zeff = data.ZEFF(self.device)[refsys]
+        gam = data.GAM(**self.dd)[refsys] * self.gc
 
         # charge scaling
         zeta = torch.where(

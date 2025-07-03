@@ -30,19 +30,39 @@ positions = torch.tensor(
 charge = torch.tensor(0.0)
 
 # TPSSh-D4-ATM parameters
-param = {
-    "s6": positions.new_tensor(1.0),
-    "s8": positions.new_tensor(1.85897750),
-    "s9": positions.new_tensor(1.0),
-    "a1": positions.new_tensor(0.44286966),
-    "a2": positions.new_tensor(4.60230534),
-}
+param = d4.damping.Param(
+    s6=positions.new_tensor(1.0),
+    s8=positions.new_tensor(1.85897750),
+    s9=positions.new_tensor(1.0),
+    a1=positions.new_tensor(0.44286966),
+    a2=positions.new_tensor(4.60230534),
+)
 
 # parameters can also be obtained using the functional name:
 # param = d4.get_params("tpssh")
 
 energy = d4.dftd4(numbers, positions, charge, param)
 torch.set_printoptions(precision=10)
+
+ref = torch.tensor(
+    [
+        -0.0020841344,
+        -0.0018971195,
+        -0.0018107513,
+        -0.0018305695,
+        -0.0021737693,
+        -0.0019484236,
+        -0.0022788253,
+        -0.0004080658,
+        -0.0004261866,
+        -0.0004199839,
+        -0.0004280768,
+        -0.0005108935,
+    ]
+)
+assert torch.allclose(energy, ref, atol=1e-8), "Energy does not match"
+
+
 print(energy)
 # tensor([-0.0020841344, -0.0018971195, -0.0018107513, -0.0018305695,
 #         -0.0021737693, -0.0019484236, -0.0022788253, -0.0004080658,

@@ -26,9 +26,9 @@ from tad_dftd4.damping import get_params
 
 def test_unknown_func() -> None:
     with pytest.raises(KeyError):
-        get_params("unknown")
+        get_params(method="d4", variant="d4-eeq-bj", functional="unknown")
 
 
 def test_unknown_variant() -> None:
     with pytest.raises(KeyError):
-        get_params("pbe", variant="unknown")  # type: ignore
+        get_params(method="d4", functional="pbe", variant="unknown")

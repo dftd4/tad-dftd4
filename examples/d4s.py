@@ -32,7 +32,7 @@ charge = torch.tensor(0.0)
 # Create the D4S model
 model = d4.model.D4SModel(numbers)
 
-param = d4.get_params("tpssh")
+param = d4.get_params(method="d4", functional="tpssh")
 energy = d4.dftd4(numbers, positions, charge, param, model=model)
 torch.set_printoptions(precision=10)
 print(energy)

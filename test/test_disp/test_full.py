@@ -25,7 +25,7 @@ from tad_dftd4 import data
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import dftd4
 from tad_dftd4.model import D4Model
-from tad_dftd4.typing import DD
+from tad_dftd4.typing import DD, Param
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -58,19 +58,19 @@ def single(name: str, dtype: torch.dtype) -> None:
     ref = sample["disp"].to(**dd)
 
     # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
+    param = Param(
+        s6=torch.tensor(1.00000000, **dd),
+        s8=torch.tensor(1.85897750, **dd),
+        s9=torch.tensor(1.00000000, **dd),
+        s10=torch.tensor(0.0000000, **dd),
+        alp=torch.tensor(16.000000, **dd),
+        a1=torch.tensor(0.44286966, **dd),
+        a2=torch.tensor(4.60230534, **dd),
+    )
 
     model = D4Model(numbers, **dd)
-    rcov = data.COV_D3.to(**dd)[numbers]
-    r4r2 = data.R4R2.to(**dd)[numbers]
+    rcov = data.COV_D3(**dd)[numbers]
+    r4r2 = data.R4R2(**dd)[numbers]
     cutoff = Cutoff(**dd)
 
     energy = dftd4(
@@ -131,15 +131,15 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
     )
 
     # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
+    param = Param(
+        s6=torch.tensor(1.00000000, **dd),
+        s8=torch.tensor(1.85897750, **dd),
+        s9=torch.tensor(1.00000000, **dd),
+        s10=torch.tensor(0.0000000, **dd),
+        alp=torch.tensor(16.000000, **dd),
+        a1=torch.tensor(0.44286966, **dd),
+        a2=torch.tensor(4.60230534, **dd),
+    )
 
     energy = dftd4(numbers, positions, charge, param)
     assert energy.dtype == dtype

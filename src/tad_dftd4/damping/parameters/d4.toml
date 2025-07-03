@@ -4,6 +4,7 @@ d4 = ["bj-eeq-atm"]
 [default.parameter]
 d4.bj-eeq-two = { s6=1.0, s9=0.0, alp=16.0, damping="bj", mbd="none" }
 d4.bj-eeq-atm = { s6=1.0, s9=1.0, alp=16.0, damping="bj", mbd="approx-atm" }
+d4.bj-eeq-xct = { s6=1.0, s9=1.0, alp=16.0, damping="bj", mbd="exact-atm" }
 d4.bj-eeq-mbd = { s6=1.0, s9=1.0, alp=16.0, damping="bj", mbd="rpa-like" }
 
 [parameter.am05]

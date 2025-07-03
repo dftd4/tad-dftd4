@@ -22,6 +22,7 @@ from __future__ import annotations
 import pytest
 import torch
 
+from tad_dftd4.damping import Param
 from tad_dftd4.disp import dftd4
 
 
@@ -29,7 +30,7 @@ def test_fail() -> None:
     numbers = torch.tensor([1, 1])
     positions = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     charge = torch.tensor(0.0)
-    param = {"s6": torch.tensor(1.0)}
+    param = Param(s6=torch.tensor(1.0))
 
     # rcov wrong shape
     with pytest.raises(ValueError):

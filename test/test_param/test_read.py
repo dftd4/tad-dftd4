@@ -21,24 +21,26 @@ from __future__ import annotations
 
 import pytest
 
-from tad_dftd4.damping.parameters import get_params, get_params_default
+from tad_dftd4.damping.parameters import get_params
 
 
 def test_default() -> None:
-    params = get_params_default()
+    params = get_params(method="d4", variant="bj-eeq-atm", functional=None)
     assert isinstance(params, dict)
     assert "s6" in params
 
 
 @pytest.mark.parametrize("func", ["pbe", "b3lyp", "revpbe"])
 def test_func(func: str) -> None:
-    params = get_params(func)
+    params = get_params(method="d4", variant="bj-eeq-atm", functional=func)
     assert isinstance(params, dict)
     assert "a1" in params
     assert "a2" in params
 
 
 def test_with_doi() -> None:
-    params = get_params("pbe", with_reference=True)
+    params = get_params(
+        method="d4", variant="bj-eeq-atm", functional="pbe", keep_doi=True
+    )
     assert isinstance(params, dict)
     assert "doi" in params
