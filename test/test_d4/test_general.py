@@ -21,12 +21,12 @@ from __future__ import annotations
 
 import pytest
 import torch
+from tad_mctc.typing import Any, Tensor
 
 from tad_dftd4.damping import Param, ZeroDamping
-from tad_dftd4.disp import dftd4
-from tad_dftd4.dispersion import dispersion2, Damping
 from tad_dftd4.data import R4R2
-from tad_mctc.typing import Tensor, Any
+from tad_dftd4.disp import dftd4
+from tad_dftd4.dispersion import Damping, dispersion2
 
 
 def test_fail() -> None:

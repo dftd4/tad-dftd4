@@ -19,18 +19,18 @@ Test calculation of two-body and three-body dispersion terms.
 """
 import pytest
 import torch
+from tad_mctc.ncoord import cn_d4
 from tad_mctc.typing import DD
 
-from tad_mctc.ncoord import cn_d4
+from tad_dftd4.damping import Damping, Param
 from tad_dftd4.damping.functions import (
-    RationalDamping,
-    ZeroDamping,
     MZeroDamping,
     OptimisedPowerDamping,
+    RationalDamping,
+    ZeroDamping,
 )
 from tad_dftd4.dispersion import Disp, TwoBodyTerm
-from tad_dftd4.dispersion.d4 import DispD4Exact, D4ATMExact
-from tad_dftd4.damping import Damping, Param
+from tad_dftd4.dispersion.d4 import D4ATMExact, DispD4Exact
 
 from ..conftest import DEVICE
 
