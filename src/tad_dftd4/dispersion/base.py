@@ -68,7 +68,8 @@ class DispTerm(TensorLike, ABC):
         r4r2: Tensor,
         rvdw: Tensor,
         cutoff: Cutoff,
-    ) -> Tensor: ...
+    ) -> Tensor:
+        """Evaluate the energy for the dispersion term."""
 
 
 class Disp(TensorLike):

@@ -186,7 +186,29 @@ class Damping(ABC):
         alp: Tensor | float | int | None = None,
         bet: Tensor | float | int | None = None,
         only_damping: bool = False,
-    ) -> Tensor: ...
+    ) -> Tensor:
+        """
+        Calculate the damping function values.
+
+        Parameters
+        ----------
+        distances : Tensor
+            Pairwise distances between atoms in the system.
+            (shape: ``(..., nat, nat)``).
+        radii : Tensor
+            Critical radii for all atom pairs (shape: ``(..., nat, nat)``).
+        order : int
+            Order of the dispersion interaction, e.g.
+            6 for dipole-dipole, 8 for dipole-quadrupole and so on.
+        only_damping : bool
+            If True, return only the damping function values without division by
+            the distance raised to the power of the order.
+
+        Returns
+        -------
+        Tensor
+            Values of the damping function.
+        """
 
 
 # concrete damping models
