@@ -20,13 +20,21 @@ Data: Weight Factors
 
 Reduces weight factor exponents to improve smoothness of the potential.
 """
+from __future__ import annotations
+
+from functools import lru_cache
+
 import torch
+from tad_mctc.typing import Tensor
+
+__all__ = ["WFPAIR"]
+
 
 MAX_ELEMENT = 119
 """Maximum element in the periodic table plus dummy."""
 
 # fmt: off
-wfpair = torch.tensor([
+_wfpair = [
     0.000000000,
     0.000000000, 0.000000000, 0.000000000, 0.000000000,
     0.000000000, 0.000000000, 0.000000000, 0.000000000,
@@ -3716,4 +3724,14 @@ wfpair = torch.tensor([
     6.000000000, 6.000000000, 6.000000000, 6.000000000,
     6.000000000, 6.000000000, 6.000000000, 6.000000000,
     6.000000000, 6.000000000, ########################
-], dtype=torch.double).reshape(MAX_ELEMENT, MAX_ELEMENT)
+]
+# fmt: on
+
+
+@lru_cache(maxsize=None)
+def WFPAIR(
+    device: torch.device | None = None, dtype: torch.dtype | None = None
+) -> Tensor:
+    return torch.tensor(_wfpair, device=device, dtype=dtype).reshape(
+        MAX_ELEMENT, MAX_ELEMENT
+    )

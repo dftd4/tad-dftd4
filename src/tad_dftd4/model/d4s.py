@@ -58,9 +58,9 @@ class D4SModel(BaseModel):
 
     def _get_wf(self) -> Tensor:
         """Pairwise weighting factor."""
-        from ..data.wfpair import wfpair
+        from ..data.wfpair import WFPAIR
 
-        return wfpair.to(**self.dd)[self.unique][:, self.unique]
+        return WFPAIR(**self.dd)[self.unique][:, self.unique]
 
     @overload
     def weight_references(
