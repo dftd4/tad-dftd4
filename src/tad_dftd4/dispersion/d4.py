@@ -20,7 +20,6 @@ Dispersion Methods: D4
 
 DFT-D4 dispersion method implementation.
 """
-
 from __future__ import annotations
 
 import torch

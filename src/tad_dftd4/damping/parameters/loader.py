@@ -23,7 +23,6 @@ Fortran GitHub repository.
 - https://github.com/dftd3/s-dftd3/blob/main/assets/parameters.toml
 - https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml
 """
-
 from __future__ import annotations
 
 from functools import lru_cache

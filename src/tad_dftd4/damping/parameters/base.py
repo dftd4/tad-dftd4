@@ -22,11 +22,10 @@ Read damping parameters from toml file. The TOML file is coped from the DFT-D4
 Fortran GitHub repository.
 (https://github.com/dftd4/dftd4/blob/main/assets/parameters.toml)
 """
-
 from __future__ import annotations
 
 from enum import Enum
-from typing import Type
+from typing import Optional, Type
 
 from pydantic import BaseModel, Field
 from tad_mctc.typing import Tensor, TypedDict
@@ -108,7 +107,7 @@ class BaseParams(BaseModel):
     s6: float = Field(1.0)
     s8: float = Field(1.0)
     s10: float = Field(0.0)
-    doi: str | None = Field(None, description="Optional reference")
+    doi: Optional[str] = Field(None, description="Optional reference")
 
 
 class RationalParams(BaseParams):
