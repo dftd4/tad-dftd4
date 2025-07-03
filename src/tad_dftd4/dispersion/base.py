@@ -27,13 +27,11 @@ from abc import ABC, abstractmethod
 
 import torch
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import CNFunction
+from tad_mctc.typing import DD, Any, CNFunction, Literal, Tensor, TensorLike
 
 from ..cutoff import Cutoff
-from ..damping import Damping
+from ..damping import Damping, Param
 from ..model import D4Model, D4SModel
-from tad_mctc.typing import DD, Any, Literal, Tensor, TensorLike
-from ..damping import Param
 
 
 class DispTerm(TensorLike, ABC):

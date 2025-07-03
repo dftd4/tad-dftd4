@@ -26,12 +26,12 @@ from __future__ import annotations
 import torch
 from tad_mctc import storch
 from tad_mctc.batch import real_pairs
+from tad_mctc.typing import DD, Tensor
 
 from .. import defaults
 from ..cutoff import Cutoff
-from ..damping import Damping, RationalDamping, Param
+from ..damping import Damping, Param, RationalDamping
 from ..model import D4Model, D4SModel
-from tad_mctc.typing import DD, Tensor
 from .base import DispTerm
 
 

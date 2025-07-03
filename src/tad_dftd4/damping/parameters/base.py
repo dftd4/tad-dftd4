@@ -29,8 +29,6 @@ from enum import Enum
 from typing import Type
 
 from pydantic import BaseModel, Field
-
-
 from tad_mctc.typing import Tensor, TypedDict
 from typing_extensions import NotRequired
 

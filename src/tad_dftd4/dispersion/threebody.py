@@ -37,16 +37,15 @@ from abc import ABC, abstractmethod
 
 import torch
 from tad_mctc import storch
-from tad_mctc.convert import any_to_tensor
 from tad_mctc.batch import real_pairs, real_triples
+from tad_mctc.convert import any_to_tensor
+from tad_mctc.typing import DD, Tensor
 
 from .. import defaults
 from ..cutoff import Cutoff
-from ..damping import Param, Damping, ZeroDamping
+from ..damping import Damping, Param, ZeroDamping
 from ..model import D4Model, D4SModel
-from tad_mctc.typing import Tensor, DD
 from .base import DispTerm
-
 
 __all__ = ["ATM", "get_atm_dispersion"]
 

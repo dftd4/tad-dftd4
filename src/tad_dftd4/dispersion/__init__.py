@@ -22,6 +22,6 @@ Collection of dispersion methods..
 """
 
 from .base import *
-from .twobody import *
-from .threebody import *
 from .d4 import *
+from .threebody import *
+from .twobody import *
