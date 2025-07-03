@@ -202,7 +202,7 @@ def trapzd_atm(pol: Tensor) -> Tensor:
         dtype=pol.dtype,
     )
 
-    return thopi * einsum(("...ijkw,w->...ijk", pol, weights))
+    return thopi * einsum("...ijkw,w->...ijk", pol, weights)
 
 
 def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:

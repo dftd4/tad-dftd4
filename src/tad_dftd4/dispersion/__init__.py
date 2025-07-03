@@ -18,7 +18,7 @@
 Dispersion Methods
 ==================
 
-Collection of dispersion methods..
+Collection of dispersion methods.
 """
 
 from .base import *

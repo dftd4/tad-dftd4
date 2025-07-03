@@ -14,13 +14,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Dispersion Models
-=================
-
-Collection of dispersion models. Currently, the D4 and D4S models are available.
-"""
-
-from .base import *
-from .d4 import *
-from .d4s import *

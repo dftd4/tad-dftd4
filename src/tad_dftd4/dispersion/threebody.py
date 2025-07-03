@@ -50,6 +50,61 @@ from .base import DispTerm
 __all__ = ["ATM", "get_atm_dispersion"]
 
 
+def dispersion3(
+    numbers: Tensor,
+    positions: Tensor,
+    param: Param,
+    c6: Tensor,
+    radii: Tensor,
+    cutoff: Tensor | None = None,
+) -> Tensor:
+    """
+    Three-body dispersion term. Currently this is only a wrapper for the
+    Axilrod-Teller-Muto dispersion term.
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
+    positions : Tensor
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
+    param : Param
+        Dictionary of dispersion parameters. Default values are used for
+        missing keys.
+    c6 : Tensor
+        Atomic C6 dispersion coefficients.
+    cutoff : Tensor | None
+        Real-space cutoff. Defaults to `None`, i.e, `defaults.D4_DISP3_CUTOFF`.
+
+    Returns
+    -------
+    Tensor
+        Atom-resolved three-body dispersion energy.
+    """
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
+
+    if cutoff is None:
+        cutoff = torch.tensor(defaults.D4_DISP3_CUTOFF, **dd)
+
+    c9 = storch.sqrt(
+        torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
+    )
+
+    a1 = param.get("a1", torch.tensor(defaults.A1, **dd))
+    a2 = param.get("a2", torch.tensor(defaults.A2, **dd))
+    rad = a1 * storch.sqrt(3.0 * radii.unsqueeze(-1) * radii.unsqueeze(-2)) + a2
+
+    return get_atm_dispersion(
+        numbers,
+        positions,
+        c9,
+        rad,
+        cutoff,
+        s9=param.get("s9", torch.tensor(defaults.S9, **dd)),
+        alp=param.get("alp", torch.tensor(defaults.ALP, **dd)),
+    )
+
+
 def get_atm_dispersion(
     numbers: Tensor,
     positions: Tensor,
@@ -208,7 +263,7 @@ class ATM(ThreeBodyTerm, ABC):
     ) -> Tensor:
         """Compute critical radii used in damping function."""
 
-    def compute(
+    def calculate(
         self,
         numbers: Tensor,
         positions: Tensor,

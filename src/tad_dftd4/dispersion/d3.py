@@ -28,9 +28,8 @@ from tad_mctc.ncoord import cn_d3
 from tad_mctc.typing import CNFunction
 
 from ..damping import Damping, RationalDamping, ZeroDamping
-from ..model import D4Model
 from ..typing import Tensor
-from .base import DispCalc
+from .base import Disp
 from .threebody import ATM, C9ApproxMixin, RadiiVDWMixin
 from .twobody import TwoBodyTerm
 
@@ -39,7 +38,7 @@ class D3ATM(C9ApproxMixin, RadiiVDWMixin, ATM):
     """D3 ATM: approximate C9 + pair-wise VDW radii."""
 
 
-class DispD3(DispCalc):
+class DispD3(Disp):
     """Standard DFT-D4 dispersion method."""
 
     def __init__(

@@ -47,7 +47,7 @@ class TwoBodyTerm(DispTerm):
         super().__init__(damping_fn, charge_dependent)
         self.damping_fn = damping_fn
 
-    def compute(
+    def calculate(
         self,
         numbers: Tensor,
         positions: Tensor,

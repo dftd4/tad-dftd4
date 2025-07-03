@@ -31,7 +31,7 @@ Example
 >>> import tad_dftd4 as d4
 >>>
 >>> numbers = torch.tensor([14, 1, 1, 1, 1]) # SiH4
->>> model = d4.D4SModel(numbers)
+>>> model = d4.D4Model(numbers)
 >>>
 >>> # calculate Gaussian weights, optionally pass CN and partial charges
 >>> gw = model.weight_references()
@@ -44,8 +44,8 @@ from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, overload
+from ..utils import is_exceptional
 from .base import WF_DEFAULT, BaseModel
-from .utils import is_exceptional
 
 __all__ = ["D4Model"]
 

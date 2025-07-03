@@ -43,11 +43,12 @@ from abc import abstractmethod
 
 import torch
 from tad_mctc import storch
+from tad_mctc.convert import any_to_tensor
 from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, TensorLike, overload
-from .utils import trapzd
+from ..utils import trapzd
 
 __all__ = ["BaseModel", "WF_DEFAULT"]
 
@@ -145,11 +146,8 @@ class BaseModel(TensorLike):
         self.gc = gc
         self.ref_charges = ref_charges
 
-        if wf is None:
-            self.wf = self._get_wf()
-
-        if rc6 is None:
-            self.rc6 = self._get_refc6()
+        self.wf = self._get_wf() if wf is None else any_to_tensor(wf, **self.dd)
+        self.rc6 = self._get_refc6() if rc6 is None else rc6
 
     ####################
     # Abstract methods #

@@ -27,8 +27,8 @@ from tad_mctc.typing import Tensor
 
 from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.model.d4s import D4SDebug
-from tad_dftd4.model.utils import trapzd_noref
 from tad_dftd4.typing import DD
+from tad_dftd4.utils import trapzd_noref
 
 from ..conftest import DEVICE
 from .samples import samples

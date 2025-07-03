@@ -25,69 +25,72 @@ from __future__ import annotations
 
 import torch
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import CNFunction
+from tad_mctc.typing import Any, CNFunction, Literal
 
-from ..damping import Damping, RationalDamping, ZeroDamping
-from ..model import D4Model
-from ..typing import Tensor
-from .base import DispCalc
-from .threebody import ATM, C9ApproxMixin, RadiiBJMixin
+from ..damping import RationalDamping, ZeroDamping
+from .base import Disp
+from .threebody import ATM, C9ApproxMixin, C9ExactMixin, RadiiBJMixin
 from .twobody import TwoBodyTerm
 
+__all__ = ["DispD4"]
 
-class D4ATM(C9ApproxMixin, RadiiBJMixin, ATM):
+
+class D4ATMApprox(C9ApproxMixin, RadiiBJMixin, ATM):
     """D4 ATM: approximate C9 + Becke-Johnson radii."""
 
 
-class DispD4(DispCalc):
+class DispD4(Disp):
     """Standard DFT-D4 dispersion method."""
+
+    ALLOWED_MODELS = ("d4", "d4s")
 
     def __init__(
         self,
+        model: Literal["d4", "d4s"] = "d4",
+        model_kwargs: dict[str, Any] | None = None,
         cn_fn: CNFunction = cn_d4,
-        damping_fn_2: Damping = RationalDamping(),
-        damping_fn_3: Damping = ZeroDamping(),
-        charge_dependent_2: bool = True,
-        charge_dependent_3: bool = False,
-    ):
-        super().__init__(cn_fn=cn_fn, model="d4")
-
-        # D4(BJ)-ATM
-        super().register(
-            TwoBodyTerm(
-                damping_fn=damping_fn_2, charge_dependent=charge_dependent_2
-            )
-        )
-        super().register(
-            D4ATM(damping_fn=damping_fn_3, charge_dependent=charge_dependent_3)
+        cn_fn_kwargs: dict[str, Any] | None = None,
+        *,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> None:
+        super().__init__(
+            model=model,
+            model_kwargs=model_kwargs,
+            cn_fn=cn_fn,
+            cn_fn_kwargs=cn_fn_kwargs,
+            device=device,
+            dtype=dtype,
         )
 
-    def _default_model(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ) -> D4Model:
-        return D4Model(numbers=numbers, device=device, dtype=dtype)
+        # D4(BJ)-ATM(approx)
+        super().register(
+            TwoBodyTerm(damping_fn=RationalDamping(), charge_dependent=True)
+        )
+        super().register(
+            D4ATMApprox(damping_fn=ZeroDamping(), charge_dependent=False)
+        )
 
-    def _default_rcov(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ):
-        # pylint: disable=import-outside-toplevel
-        from tad_mctc.data import COV_D3
 
-        return COV_D3(device=device, dtype=dtype)[numbers]
+##############################################################################
 
-    def _default_r4r2(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ):
-        # pylint: disable=import-outside-toplevel
-        from ..data import R4R2
 
-        return R4R2(device=device, dtype=dtype)[numbers]
+class D4ATMExact(C9ExactMixin, RadiiBJMixin, ATM):
+    """D4 ATM: approximate C9 + Becke-Johnson radii."""
+
+
+class DispD4Exact(Disp):
+    """DFT-D4 with exact C9 coefficients via Casimir--Polder formula."""
+
+    ALLOWED_MODELS = ("d4", "d4s")
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        # D4(BJ)-ATM(exact)
+        super().register(
+            TwoBodyTerm(damping_fn=RationalDamping(), charge_dependent=True)
+        )
+        super().register(
+            D4ATMExact(damping_fn=ZeroDamping(), charge_dependent=False)
+        )

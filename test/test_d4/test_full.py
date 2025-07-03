@@ -73,6 +73,7 @@ def single(name: str, dtype: torch.dtype) -> None:
     rcov = data.COV_D3(**dd)[numbers]
     r4r2 = data.R4R2(**dd)[numbers]
     cutoff = Cutoff(**dd)
+    rvdw = data.VDW_PAIRWISE(**dd)[numbers.unsqueeze(-1), numbers.unsqueeze(-2)]
 
     energy = dftd4(
         numbers,
@@ -82,6 +83,7 @@ def single(name: str, dtype: torch.dtype) -> None:
         model=model,
         rcov=rcov,
         r4r2=r4r2,
+        rvdw=rvdw,
         q=q,
         cutoff=cutoff,
     )

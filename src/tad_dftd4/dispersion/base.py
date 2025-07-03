@@ -50,8 +50,14 @@ class DispTerm(TensorLike, ABC):
         self.damping_fn = damping_fn
         self.charge_dependent = charge_dependent
 
+    def __eq__(self, other: Any):
+        return (
+            self.__class__ is other.__class__
+            and self.__dict__ == other.__dict__
+        )
+
     @abstractmethod
-    def compute(
+    def calculate(
         self,
         numbers: Tensor,
         positions: Tensor,
@@ -65,42 +71,54 @@ class DispTerm(TensorLike, ABC):
     ) -> Tensor: ...
 
 
-class DispCalc(TensorLike, ABC):
+class Disp(TensorLike):
     """Base class for DFT-D dispersion calculations."""
+
+    terms: list[DispTerm]
+    """List of dispersion terms for which the calculation is performed."""
+
+    cn_fn: CNFunction
+    """Coordination number."""
+
+    cn_fn_kwargs: dict[str, Any]
+    """Keyword arguments for the coordination number function."""
+
+    model: Literal["d3", "d4", "d4s", "d5"]
+    """DFT-D model to use for the calculation."""
+
+    model_kwargs: dict[str, Any]
+    """Keyword arguments for the DFT-D model."""
+
+    ALLOWED_MODELS = ("d3", "d4", "d4s", "d5")
+    """Allowed DFT-D models for the calculation."""
+
+    __slots__ = ("terms", "cn_fn", "cn_fn_kwargs", "model", "model_kwargs")
 
     def __init__(
         self,
-        model: Literal["d3", "d4", "d4s"],
-        cn_fn: CNFunction = cn_d4,
-        *,
+        model: Literal["d3", "d4", "d4s", "d5"] = "d4",
         model_kwargs: dict[str, Any] | None = None,
-        cn_kwargs: dict[str, Any] | None = None,
+        cn_fn: CNFunction = cn_d4,
+        cn_fn_kwargs: dict[str, Any] | None = None,
+        *,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ):
         super().__init__(device=device, dtype=dtype)
 
+        if model not in self.ALLOWED_MODELS:
+            raise ValueError(
+                f"Unknown model '{model}'. "
+                f"Please use {', '.join(self.ALLOWED_MODELS)}."
+            )
+
+        self.model = model
+        self.model_kwargs = model_kwargs if model_kwargs is not None else {}
+
         self.cn_fn = cn_fn
-        self.cn_kwargs = cn_kwargs or {}
+        self.cn_fn_kwargs = cn_fn_kwargs if cn_fn_kwargs is not None else {}
 
         self.terms: list[DispTerm] = []
-
-        if model == "d3":
-            raise NotImplementedError(
-                "DFT-D3 is not implemented in tad-dftd4. "
-                "Please use tad-dftd3 for DFT-D3 calculations.",
-            )
-        elif model == "d4":
-            from ..model import D4Model as _Model
-        elif model == "d4s":
-            from ..model import D4SModel as _Model
-        else:
-            raise ValueError(
-                f"Unknown model '{model}'. " "Please use 'd3', 'd4', or 'd4s'.",
-            )
-
-        self.model = _Model
-        self.model_kwargs = model_kwargs or {}
 
     def register(self, term: DispTerm) -> None:
         self.terms.append(term)
@@ -108,44 +126,59 @@ class DispCalc(TensorLike, ABC):
     def deregister(self, term: DispTerm) -> None:
         self.terms.remove(term)
 
-    @abstractmethod
-    def _default_model(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ) -> D4Model | D4SModel: ...
+    def get_model(self, numbers: Tensor) -> D4Model | D4SModel:
+        """
+        Get the DFT-D4 model for the given atomic numbers.
 
-    @abstractmethod
-    def _default_rcov(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ) -> Tensor: ...
+        Parameters
+        ----------
+        numbers : Tensor
+            Atomic numbers of the atoms in the system.
 
-    @abstractmethod
-    def _default_r4r2(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ) -> Tensor: ...
+        Returns
+        -------
+        D4Model | D4SModel
+            The DFT-D4 model initialized with the atomic numbers.
+        """
+        # if self.model.casefold() == "d3":
+        #     return D3Model(numbers=numbers, **self.model_kwargs, **self.dd)
 
-    def _default_rvdw(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ):
+        if self.model.casefold() == "d4":
+            return D4Model(numbers=numbers, **self.model_kwargs, **self.dd)
+
+        if self.model.casefold() == "d4s":
+            return D4SModel(numbers=numbers, **self.model_kwargs, **self.dd)
+
+        raise ValueError(
+            f"Unknown model '{self.model}'. "
+            "Please use 'd3', 'd4', 'd4s', or 'd5'."
+        )
+
+    # Radii
+
+    def get_rcov(self, numbers: Tensor):
+        # pylint: disable=import-outside-toplevel
+        from tad_mctc.data import COV_D3
+
+        return COV_D3(**self.dd)[numbers]
+
+    def get_r4r2(self, numbers: Tensor):
+        # pylint: disable=import-outside-toplevel
+        from tad_dftd4.data import R4R2
+
+        return R4R2(**self.dd)[numbers]
+
+    def get_rvdw(self, numbers: Tensor):
         # pylint: disable=import-outside-toplevel
         from tad_mctc.data import VDW_PAIRWISE
 
-        return VDW_PAIRWISE(device=device, dtype=dtype)[
+        return VDW_PAIRWISE(**self.dd)[
             numbers.unsqueeze(-1), numbers.unsqueeze(-2)
         ]
 
-    def compute(
+    # Calculation
+
+    def calculate(
         self,
         numbers: Tensor,
         positions: Tensor,
@@ -221,11 +254,11 @@ class DispCalc(TensorLike, ABC):
         if cutoff is None:
             cutoff = Cutoff(**dd)
 
-        model = self.model(numbers=numbers, **self.model_kwargs, **dd)
+        model = self.get_model(numbers=numbers, **self.model_kwargs)
 
         # 2) radii defaults
         if r4r2 is None:
-            r4r2 = self._default_r4r2(numbers, **dd)
+            r4r2 = self.get_r4r2(numbers)
         if numbers.shape != r4r2.shape:
             raise ValueError(
                 f"Shape of expectation values r4r2 ({r4r2.shape}) is not "
@@ -233,7 +266,7 @@ class DispCalc(TensorLike, ABC):
             )
 
         if rcov is None:
-            rcov = self._default_rcov(numbers, **dd)
+            rcov = self.get_rcov(numbers)
         if numbers.shape != rcov.shape:
             raise ValueError(
                 f"Shape of covalent radii ({rcov.shape}) is not consistent "
@@ -241,7 +274,7 @@ class DispCalc(TensorLike, ABC):
             )
 
         if rvdw is None:
-            rvdw = self._default_rvdw(numbers, **dd)
+            rvdw = self.get_rvdw(numbers)
         if numbers.shape != rvdw.shape[:-1]:
             raise ValueError(
                 f"Shape of van der Waals radii ({rvdw.shape}) is not "
@@ -281,7 +314,7 @@ class DispCalc(TensorLike, ABC):
         # 5) delegate
         energy = torch.zeros_like(numbers, **dd)
         for term in self.terms:
-            energy = energy + term.compute(
+            energy = energy + term.calculate(
                 numbers=numbers,
                 positions=positions,
                 param=param,

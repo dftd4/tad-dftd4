@@ -39,9 +39,14 @@ param = d4.damping.Param(
 )
 
 # parameters can also be obtained using the functional name:
-# param = d4.get_params("tpssh")
+# param = d4.get_params(method="d4", functional="tpssh")
 
-energy = d4.dftd4(numbers, positions, charge, param)
+energy1 = d4.dftd4(numbers, positions, charge, param)
+
+# class-based interface
+disp = d4.dispersion.DispD4()
+energy2 = disp.calculate(numbers, positions, charge, param)
+
 torch.set_printoptions(precision=10)
 
 ref = torch.tensor(
@@ -60,10 +65,11 @@ ref = torch.tensor(
         -0.0005108935,
     ]
 )
-assert torch.allclose(energy, ref, atol=1e-8), "Energy does not match"
+assert torch.allclose(energy1, ref, atol=1e-8), "Energy does not match"
+assert torch.allclose(energy2, ref, atol=1e-8), "Energy does not match"
 
 
-print(energy)
+print(energy1)
 # tensor([-0.0020841344, -0.0018971195, -0.0018107513, -0.0018305695,
 #         -0.0021737693, -0.0019484236, -0.0022788253, -0.0004080658,
 #         -0.0004261866, -0.0004199839, -0.0004280768, -0.0005108935])
