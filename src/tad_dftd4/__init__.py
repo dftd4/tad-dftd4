@@ -88,23 +88,28 @@ tensor(-0.0034314217)
 """
 import torch
 
-from . import cutoff, damping, data, disp, model, ncoord, typing
+from . import cutoff, damping, data, dispersion, model, ncoord, typing
 from .__version__ import __version__
-from .damping import get_params
-from .disp import dftd4
+from .cutoff import Cutoff
+from .damping import Param, get_params
+from .disp import dftd4, get_properties
 from .model import D4Model, D4SModel
 
 __all__ = [
     "__version__",
     "cutoff",
+    "Cutoff",
     "damping",
     "data",
+    "dispersion",
     "dftd4",
     "disp",
     "get_params",
+    "get_properties",
     "model",
     "ncoord",
     "typing",
     "D4Model",
     "D4SModel",
+    "Param",
 ]

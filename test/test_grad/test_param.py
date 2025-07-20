@@ -26,6 +26,7 @@ from tad_mctc.batch import pack
 from tad_mctc.data.molecules import mols as samples
 
 from tad_dftd4 import dftd4
+from tad_dftd4.damping import Param
 from tad_dftd4.typing import DD, Callable, Tensor
 
 from ..conftest import DEVICE
@@ -50,7 +51,7 @@ def gradchecker(dtype: torch.dtype, name: str) -> tuple[
     param = (
         torch.tensor(1.00000000, **dd, requires_grad=True),
         torch.tensor(0.78981345, **dd, requires_grad=True),
-        torch.tensor(1.00000000, **dd, requires_grad=True),
+        torch.tensor(1.00000000, **dd, requires_grad=True),  # s9
         torch.tensor(0.00000000, **dd, requires_grad=True),  # s10
         torch.tensor(0.49484001, **dd, requires_grad=True),
         torch.tensor(5.73083694, **dd, requires_grad=True),
@@ -59,7 +60,8 @@ def gradchecker(dtype: torch.dtype, name: str) -> tuple[
     label = ("s6", "s8", "s9", "s10", "a1", "a2", "alp")
 
     def func(*inputs: Tensor) -> Tensor:
-        input_param = {label[i]: input for i, input in enumerate(inputs)}
+        pars = {label[i]: input for i, input in enumerate(inputs)}
+        input_param = Param(**pars)  # type: ignore
         return dftd4(numbers, positions, charge, input_param)
 
     return func, param
@@ -134,7 +136,8 @@ def gradchecker_batch(dtype: torch.dtype, name1: str, name2: str) -> tuple[
     label = ("s6", "s8", "s9", "s10", "a1", "a2", "alp")
 
     def func(*inputs: Tensor) -> Tensor:
-        input_param = {label[i]: input for i, input in enumerate(inputs)}
+        pars = {label[i]: input for i, input in enumerate(inputs)}
+        input_param = Param(**pars)  # type: ignore
         return dftd4(numbers, positions, charge, input_param)
 
     return func, param

@@ -15,19 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Model: Utils
-============
+Utils
+=====
 
-Utility for dispersion model construction.
+Utility functions for this project.
 """
 from __future__ import annotations
 
 import torch
 from tad_mctc.math import einsum
 
-from ..typing import Tensor
+from .typing import Tensor
 
-__all__ = ["trapzd", "trapzd_noref", "is_exceptional"]
+__all__ = ["trapzd", "trapzd_atm", "trapzd_noref", "is_exceptional"]
 
 
 def trapzd(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
@@ -150,6 +150,59 @@ def trapzd_noref(pol1: Tensor, pol2: Tensor | None = None) -> Tensor:
         "w,...iw,...jw->...ij",
         *(weights, pol1, pol1 if pol2 is None else pol2),
     )
+
+
+def trapzd_atm(pol: Tensor) -> Tensor:
+    """
+    Numerical Casimir--Polder integration for ATM term.
+
+    This version takes polarizabilities of shape
+    ``(..., nat, nat, nat, 23)``, i.e., the reference dimension has
+    already been summed over.
+
+    Parameters
+    ----------
+    pol : Tensor
+        Polarizabilities of shape ``(..., nat, nat, nat, 23)``.
+
+    Returns
+    -------
+    Tensor
+        C9 coefficients of shape ``(..., nat, nat, nat)``.
+    """
+    thopi = 3.0 / 3.141592653589793238462643383279502884197
+
+    weights = torch.tensor(
+        [
+            2.4999500000000000e-002,
+            4.9999500000000000e-002,
+            7.5000000000000010e-002,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1000000000000000,
+            0.1500000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.2000000000000000,
+            0.3500000000000000,
+            0.5000000000000000,
+            0.7500000000000000,
+            1.0000000000000000,
+            1.7500000000000000,
+            2.5000000000000000,
+            1.2500000000000000,
+        ],
+        device=pol.device,
+        dtype=pol.dtype,
+    )
+
+    return thopi * einsum("...ijkw,w->...ijk", pol, weights)
 
 
 def is_exceptional(x: Tensor, dtype: torch.dtype) -> Tensor:

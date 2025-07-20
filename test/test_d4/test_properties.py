@@ -22,12 +22,12 @@ import torch
 from tad_mctc.batch import pack
 from tad_mctc.math import einsum
 from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
 
 from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.disp import get_properties
 from tad_dftd4.model import D4Model
-from tad_dftd4.model.utils import trapzd, trapzd_noref
-from tad_dftd4.typing import DD
+from tad_dftd4.utils import trapzd, trapzd_noref
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -64,7 +64,7 @@ def single(name: str, dtype: torch.dtype) -> None:
 
     _cn, _, _c6, _ = get_properties(numbers, positions)
 
-    assert pytest.approx(cn, rel=tol) == _cn
+    assert pytest.approx(cn.cpu(), rel=tol) == _cn.cpu()
     assert pytest.approx(c6ref.cpu(), rel=tol) == _c6.sum((-2, -1)).cpu()
 
     # Manually calculate C6 values
@@ -131,7 +131,7 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
 
     _cn, _, _c6, _ = get_properties(numbers, positions, charge, cutoff=cutoff)
 
-    assert pytest.approx(cn, rel=tol) == _cn
+    assert pytest.approx(cn.cpu(), rel=tol) == _cn.cpu()
     assert pytest.approx(c6ref.cpu(), rel=tol) == _c6.sum((-2, -1)).cpu()
 
     # Manually calculate C6 values

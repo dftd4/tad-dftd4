@@ -58,8 +58,18 @@ A1 = 0.4
 A2 = 5.0
 """Offset parameter for the critical radius (5.0)."""
 
+RS6 = 1.0
+"""
+Default scaling of dipole-dipole term for (modified) zero damping (1.0).
+"""
+
 S6 = 1.0
 """Default scaling of dipole-dipole term (1.0 to retain correct limit)."""
+
+RS8 = 1.0
+"""
+Default scaling of dipole-quadrupole term for (modified) zero damping (1.0).
+"""
 
 S8 = 1.0
 """Default scaling of dipole-quadrupole term (1.0)."""
@@ -70,8 +80,15 @@ S9 = 1.0
 S10 = 0.0
 """Default scaling of quadrupole-quadrupole term (0.0)."""
 
-RS9 = 4.0 / 3.0
-"""Scaling for van-der-Waals radii in damping function (4.0/3.0)."""
+RS9 = 1.0  # 4.0 / 3.0
+"""
+Scaling for van-der-Waals radii in damping function.
+- D3: 4.0 / 3.0
+- D4: 1.0
+"""
 
 ALP = 16.0
 """Exponent of zero damping function (16.0)."""
+
+BET = 0.0
+"""Exponent of mzero or optimized-power damping function (0.0)."""

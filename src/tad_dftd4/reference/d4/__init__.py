@@ -15,12 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Data: Chemical hardnesses
-=========================
+Reference Parameters: D4
+========================
 
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
+Parameters of reference systems for the DFT-D4 method.
 """
-from tad_mctc.data import GAM
 
-__all__ = ["GAM"]
+from .params import *

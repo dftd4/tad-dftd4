@@ -24,6 +24,7 @@ as well as the coordination number within D4 and the EEQ Model.
 from __future__ import annotations
 
 import torch
+from tad_mctc.convert import any_to_tensor
 
 from . import defaults
 from .typing import Tensor, TensorLike
@@ -77,14 +78,10 @@ class Cutoff(TensorLike):
     ) -> None:
         super().__init__(device, dtype)
 
-        if isinstance(disp2, (int, float)):
-            disp2 = torch.tensor(disp2, device=device, dtype=dtype)
-        if isinstance(disp3, (int, float)):
-            disp3 = torch.tensor(disp3, device=device, dtype=dtype)
-        if isinstance(cn, (int, float)):
-            cn = torch.tensor(cn, device=device, dtype=dtype)
-        if isinstance(cn_eeq, (int, float)):
-            cn_eeq = torch.tensor(cn_eeq, device=device, dtype=dtype)
+        disp2 = any_to_tensor(disp2, device=device, dtype=dtype)
+        disp3 = any_to_tensor(disp3, device=device, dtype=dtype)
+        cn = any_to_tensor(cn, device=device, dtype=dtype)
+        cn_eeq = any_to_tensor(cn_eeq, device=device, dtype=dtype)
 
         self.disp2 = disp2
         self.disp3 = disp3

@@ -22,17 +22,18 @@ from __future__ import annotations
 
 import torch
 
-from tad_dftd4 import data, reference
-from tad_dftd4.reference import charge_eeq, charge_gfn2
+from tad_dftd4 import data
+from tad_dftd4.reference import d4 as d4ref
+from tad_dftd4.reference.d4 import charge_eeq, charge_gfn2
 
 
 def test_params_shape() -> None:
     maxel = 104  # 103 elements + dummy
-    assert reference.refc.shape == torch.Size((maxel, 7))
-    assert reference.refascale.shape == torch.Size((maxel, 7))
-    assert reference.refcovcn.shape == torch.Size((maxel, 7))
-    assert reference.refsys.shape == torch.Size((maxel, 7))
-    assert reference.refalpha.shape == torch.Size((maxel, 7, 23))
+    assert d4ref.refc.shape == torch.Size((maxel, 7))
+    assert d4ref.refascale.shape == torch.Size((maxel, 7))
+    assert d4ref.refcovcn.shape == torch.Size((maxel, 7))
+    assert d4ref.refsys.shape == torch.Size((maxel, 7))
+    assert d4ref.refalpha.shape == torch.Size((maxel, 7, 23))
 
     assert charge_eeq.clsq.shape == torch.Size((maxel, 7))
     assert charge_eeq.clsh.shape == torch.Size((maxel, 7))
@@ -43,5 +44,5 @@ def test_params_shape() -> None:
 
 
 def test_data_shape() -> None:
-    assert data.GAM.shape == torch.Size((119,))
-    assert data.R4R2.shape == torch.Size((119,))
+    assert data.GAM().shape == torch.Size((119,))
+    assert data.R4R2().shape == torch.Size((119,))

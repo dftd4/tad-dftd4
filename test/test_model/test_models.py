@@ -27,8 +27,8 @@ from tad_mctc.typing import Tensor
 
 from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.model.d4s import D4SDebug
-from tad_dftd4.model.utils import trapzd_noref
 from tad_dftd4.typing import DD
+from tad_dftd4.utils import trapzd_noref
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -190,7 +190,7 @@ def test_weighted_pol(name: str, dtype: torch.dtype, model: str) -> None:
     # Molecular C6 is always smaller than sqrt(C6_ii * C6_jj).
     # (Cauchy-Schwarz inequality)
     diff = c6.sum() - ref.sum()
-    assert diff < 0.0
+    assert diff.cpu().item() <= 0.0
 
 
 def test_d4sdebug() -> None:

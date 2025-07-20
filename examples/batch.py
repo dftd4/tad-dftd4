@@ -48,13 +48,13 @@ positions = mctc.batch.pack(
 charge = torch.tensor([0.0, 0.0])
 
 # TPSSh-D4-ATM parameters
-param = {
-    "s6": positions.new_tensor(1.0),
-    "s8": positions.new_tensor(1.85897750),
-    "s9": positions.new_tensor(1.0),
-    "a1": positions.new_tensor(0.44286966),
-    "a2": positions.new_tensor(4.60230534),
-}
+param = d4.Param(
+    s6=positions.new_tensor(1.0),
+    s8=positions.new_tensor(1.85897750),
+    s9=positions.new_tensor(1.0),
+    a1=positions.new_tensor(0.44286966),
+    a2=positions.new_tensor(4.60230534),
+)
 
 # calculate dispersion energy in Hartree
 energy = torch.sum(d4.dftd4(numbers, positions, charge, param), -1)

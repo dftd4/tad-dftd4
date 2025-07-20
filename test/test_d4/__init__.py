@@ -14,13 +14,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Data: Chemical hardnesses
-=========================
-
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
-"""
-from tad_mctc.data import GAM
-
-__all__ = ["GAM"]

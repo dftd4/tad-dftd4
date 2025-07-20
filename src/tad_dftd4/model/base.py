@@ -43,11 +43,12 @@ from abc import abstractmethod
 
 import torch
 from tad_mctc import storch
+from tad_mctc.convert import any_to_tensor
 from tad_mctc.math import einsum
 
-from .. import data, reference
+from .. import data
 from ..typing import Literal, Tensor, TensorLike, overload
-from .utils import trapzd
+from ..utils import trapzd
 
 __all__ = ["BaseModel", "WF_DEFAULT"]
 
@@ -145,11 +146,8 @@ class BaseModel(TensorLike):
         self.gc = gc
         self.ref_charges = ref_charges
 
-        if wf is None:
-            self.wf = self._get_wf()
-
-        if rc6 is None:
-            self.rc6 = self._get_refc6()
+        self.wf = self._get_wf() if wf is None else any_to_tensor(wf, **self.dd)
+        self.rc6 = self._get_refc6() if rc6 is None else rc6
 
     ####################
     # Abstract methods #
@@ -189,8 +187,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[False] = ...,
     ) -> Tensor: ...
 
     @overload
@@ -199,8 +198,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[False] = ...,
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -209,8 +209,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -219,8 +220,9 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor, Tensor]: ...
 
     @abstractmethod
@@ -228,6 +230,7 @@ class BaseModel(TensorLike):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
+        *,
         with_dgwdq: bool = False,
         with_dgwdcn: bool = False,
     ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
@@ -397,6 +400,9 @@ class BaseModel(TensorLike):
         Tensor
             Reference polarizabilities of shape `(..., nat, ref, 23)`.
         """
+        # pylint: disable=import-outside-toplevel
+        from ..reference import d4 as reference
+
         zero = torch.tensor(0.0, **self.dd)
 
         numbers = self.unique
@@ -409,12 +415,12 @@ class BaseModel(TensorLike):
 
         if self.ref_charges == "eeq":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_eeq import clsh as _refsq
+            from ..reference.d4.charge_eeq import clsh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_gfn2 import refh as _refsq
+            from ..reference.d4.charge_gfn2 import refh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         else:
@@ -422,8 +428,8 @@ class BaseModel(TensorLike):
 
         mask = refsys > 0
 
-        zeff = data.ZEFF.to(self.device)[refsys]
-        gam = data.GAM.to(**self.dd)[refsys] * self.gc
+        zeff = data.ZEFF(self.device)[refsys]
+        gam = data.GAM(**self.dd)[refsys] * self.gc
 
         # charge scaling
         zeta = torch.where(

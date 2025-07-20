@@ -15,12 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Data: Chemical hardnesses
-=========================
+Model: D3
+=========
 
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
+This module contains the definition of the D3 dispersion model for the
+evaluation of C6 coefficients.
 """
-from tad_mctc.data import GAM
+from __future__ import annotations
 
-__all__ = ["GAM"]
+from .base import BaseModel
+
+__all__ = ["D3Model"]
+
+
+class D3Model(BaseModel):
+    """
+    The D3 dispersion model.
+    """

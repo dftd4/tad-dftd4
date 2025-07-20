@@ -21,5 +21,7 @@ Dispersion Models
 Collection of dispersion models. Currently, the D4 and D4S models are available.
 """
 
+from .base import *
 from .d4 import *
 from .d4s import *
+from .typing import *

@@ -20,11 +20,13 @@ Test calculation of two-body and three-body dispersion terms.
 import pytest
 import torch
 from tad_mctc.batch import pack
-from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
 
-from tad_dftd4.disp import dftd4, dispersion3
+from tad_dftd4 import data
+from tad_dftd4.cutoff import Cutoff
+from tad_dftd4.damping import Param
+from tad_dftd4.disp import dftd4
 from tad_dftd4.model import D4Model
-from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
 from .samples import samples
@@ -52,58 +54,42 @@ def single(name: str, dtype: torch.dtype) -> None:
     sample = samples[name]
     numbers = sample["numbers"].to(DEVICE)
     positions = sample["positions"].to(**dd)
-    ref = sample["disp3"].to(**dd)
+    q = sample["q"].to(**dd)
+    charge = torch.tensor(0.0, **dd)
+    ref = sample["disp"].to(**dd)
 
     # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
+    param = Param(
+        s6=torch.tensor(1.00000000, **dd),
+        s8=torch.tensor(1.85897750, **dd),
+        s9=torch.tensor(1.00000000, **dd),
+        s10=torch.tensor(0.0000000, **dd),
+        alp=torch.tensor(16.000000, **dd),
+        a1=torch.tensor(0.44286966, **dd),
+        a2=torch.tensor(4.60230534, **dd),
+    )
 
     model = D4Model(numbers, **dd)
-    cn = cn_d4(numbers, positions)
-    weights = model.weight_references(cn, q=None)
-    c6 = model.get_atomic_c6(weights)
-    cutoff = torch.tensor(40.0, **dd)
+    rcov = data.COV_D3(**dd)[numbers]
+    r4r2 = data.R4R2(**dd)[numbers]
+    cutoff = Cutoff(**dd)
+    rvdw = data.VDW_PAIRWISE(**dd)[numbers.unsqueeze(-1), numbers.unsqueeze(-2)]
 
-    energy = dispersion3(numbers, positions, param, c6, cutoff=cutoff)
-
-    assert energy.dtype == dtype
-    assert pytest.approx(ref.cpu().cpu(), abs=tol) == energy.cpu()
-
-
-@pytest.mark.parametrize("dtype", [torch.float, torch.double])
-@pytest.mark.parametrize("name", sample_list)
-def test_s6_s8_zero(name: str, dtype: torch.dtype) -> None:
-    dd: DD = {"device": DEVICE, "dtype": dtype}
-    tol = torch.finfo(dtype).eps ** 0.5 * 10
-
-    sample = samples[name]
-    numbers = sample["numbers"].to(DEVICE)
-    positions = sample["positions"].to(**dd)
-    charge = torch.tensor(0.0, **dd)
-    ref = sample["disp3"].to(**dd)
-
-    # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(0.00000000, **dd),
-        "s8": torch.tensor(0.00000000, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
-
-    energy = dftd4(numbers, positions, charge, param)
+    energy = dftd4(
+        numbers,
+        positions,
+        charge,
+        param,
+        model=model,
+        rcov=rcov,
+        r4r2=r4r2,
+        rvdw=rvdw,
+        q=q,
+        cutoff=cutoff,
+    )
 
     assert energy.dtype == dtype
-    assert pytest.approx(ref.cpu().cpu(), abs=tol) == energy.cpu()
+    assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
@@ -138,30 +124,26 @@ def batch(name1: str, name2: str, dtype: torch.dtype) -> None:
             sample2["positions"].to(**dd),
         ]
     )
+
+    charge = positions.new_zeros(numbers.shape[0])
     ref = pack(
         [
-            sample1["disp3"].to(**dd),
-            sample2["disp3"].to(**dd),
+            sample1["disp"].to(**dd),
+            sample2["disp"].to(**dd),
         ]
     )
 
     # TPSSh-D4-ATM parameters
-    param = {
-        "s6": torch.tensor(1.00000000, **dd),
-        "s8": torch.tensor(1.85897750, **dd),
-        "s9": torch.tensor(1.00000000, **dd),
-        "s10": torch.tensor(0.0000000, **dd),
-        "alp": torch.tensor(16.000000, **dd),
-        "a1": torch.tensor(0.44286966, **dd),
-        "a2": torch.tensor(4.60230534, **dd),
-    }
+    param = Param(
+        s6=torch.tensor(1.00000000, **dd),
+        s8=torch.tensor(1.85897750, **dd),
+        s9=torch.tensor(1.00000000, **dd),
+        s10=torch.tensor(0.0000000, **dd),
+        alp=torch.tensor(16.000000, **dd),
+        a1=torch.tensor(0.44286966, **dd),
+        a2=torch.tensor(4.60230534, **dd),
+    )
 
-    model = D4Model(numbers, **dd)
-    cn = cn_d4(numbers, positions)
-    weights = model.weight_references(cn, q=None)
-    c6 = model.get_atomic_c6(weights)
-
-    energy = dispersion3(numbers, positions, param, c6)
-
+    energy = dftd4(numbers, positions, charge, param)
     assert energy.dtype == dtype
     assert pytest.approx(ref.cpu(), abs=tol) == energy.cpu()

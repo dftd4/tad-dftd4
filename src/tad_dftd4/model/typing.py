@@ -15,12 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Data: Chemical hardnesses
-=========================
+Model: Typing
+=============
 
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
+Type annotations for models.
 """
-from tad_mctc.data import GAM
+from __future__ import annotations
 
-__all__ = ["GAM"]
+from typing import Union
+
+from tad_mctc.typing import Literal, TypeAlias
+
+from .d3 import D3Model
+from .d4 import D4Model
+from .d4s import D4SModel
+from .d5 import D5Model
+
+__all__ = ["ModelKey", "ModelInst", "ModelInstD3", "ModelInstD4"]
+
+
+ModelKey: TypeAlias = Literal["d3", "d4", "d4s", "d5"]
+
+ModelInstD3: TypeAlias = D3Model
+ModelInstD4: TypeAlias = Union[D4Model, D4SModel]
+ModelInstD5: TypeAlias = D5Model
+
+ModelInst: TypeAlias = Union[ModelInstD3, ModelInstD4, ModelInstD5]

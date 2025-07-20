@@ -93,3 +93,12 @@ def test_ref_charges_fail_2(model: str) -> None:
     d4.ref_charges = "wrong"  # type: ignore
     with pytest.raises(ValueError):
         d4.weight_references()
+
+
+def test_args() -> None:
+    numbers = torch.tensor([14, 1, 1, 1, 1])
+    model = D4Model(numbers, wf=6)
+    assert model.wf == 6
+
+    model = D4SModel(numbers, rc6=torch.tensor(1.0))
+    assert model.rc6 == torch.tensor(1.0)

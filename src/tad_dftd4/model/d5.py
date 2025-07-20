@@ -15,12 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Data: Chemical hardnesses
-=========================
+Model: D5
+=========
 
-Element-specific chemical hardnesses for the charge scaling function used
-to extrapolate the C6 coefficients in DFT-D4.
+This module contains the definition of the D5 dispersion model.
 """
-from tad_mctc.data import GAM
+from __future__ import annotations
 
-__all__ = ["GAM"]
+from .base import BaseModel
+
+__all__ = ["D5Model"]
+
+
+class D5Model(BaseModel):
+    """
+    The D5 dispersion model.
+    """

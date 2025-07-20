@@ -31,7 +31,7 @@ Example
 >>> import tad_dftd4 as d4
 >>>
 >>> numbers = torch.tensor([14, 1, 1, 1, 1]) # SiH4
->>> model = d4.D4SModel(numbers)
+>>> model = d4.D4Model(numbers)
 >>>
 >>> # calculate Gaussian weights, optionally pass CN and partial charges
 >>> gw = model.weight_references()
@@ -44,8 +44,8 @@ from tad_mctc.math import einsum
 
 from .. import data, reference
 from ..typing import Literal, Tensor, overload
+from ..utils import is_exceptional
 from .base import WF_DEFAULT, BaseModel
-from .utils import is_exceptional
 
 __all__ = ["D4Model"]
 
@@ -64,8 +64,9 @@ class D4Model(BaseModel):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[False] = ...,
     ) -> Tensor: ...
 
     @overload
@@ -73,8 +74,9 @@ class D4Model(BaseModel):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[False] = False,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[False] = ...,
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -82,8 +84,9 @@ class D4Model(BaseModel):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[False] = False,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[False] = ...,
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor]: ...
 
     @overload
@@ -91,14 +94,16 @@ class D4Model(BaseModel):
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
-        with_dgwdq: Literal[True] = True,
-        with_dgwdcn: Literal[True] = True,
+        *,
+        with_dgwdq: Literal[True],
+        with_dgwdcn: Literal[True],
     ) -> tuple[Tensor, Tensor, Tensor]: ...
 
     def weight_references(
         self,
         cn: Tensor | None = None,
         q: Tensor | None = None,
+        *,
         with_dgwdq: bool = False,
         with_dgwdcn: bool = False,
     ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
@@ -135,21 +140,22 @@ class D4Model(BaseModel):
 
         if self.ref_charges == "eeq":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_eeq import clsq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
+            from ..reference.d4.charge_eeq import clsq as _refq
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_gfn2 import refq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
+            from ..reference.d4.charge_gfn2 import refq as _refq
         else:
             raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        # pylint: disable=import-outside-toplevel
+        from ..reference import d4 as d4ref
+
+        refq = _refq.to(**self.dd)[self.numbers]
 
         zero = torch.tensor(0.0, **self.dd)
         zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
 
-        refc = reference.refc.to(self.device)[self.numbers]
+        refc = d4ref.refc.to(self.device)[self.numbers]
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -160,7 +166,7 @@ class D4Model(BaseModel):
         # double`. In order to avoid this error, which is also difficult to
         # detect, this part always uses `torch.double`. `params.refcovcn` is
         # saved with `torch.double`, but I still made sure...
-        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
+        refcn = d4ref.refcovcn.to(device=self.device, dtype=torch.double)[
             self.numbers
         ]
 
@@ -210,8 +216,8 @@ class D4Model(BaseModel):
         )
 
         # unsqueeze for reference dimension
-        zeff = data.ZEFF.to(self.device)[self.numbers].unsqueeze(-1)
-        gam = data.GAM.to(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
+        zeff = data.ZEFF(self.device)[self.numbers].unsqueeze(-1)
+        gam = data.GAM(**self.dd)[self.numbers].unsqueeze(-1) * self.gc
         q = q.unsqueeze(-1)
 
         # charge scaling
