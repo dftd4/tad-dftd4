@@ -22,6 +22,8 @@ Type annotations for models.
 """
 from __future__ import annotations
 
+from typing import Union
+
 from tad_mctc.typing import Literal, TypeAlias
 
 from .d3 import D3Model
@@ -35,7 +37,7 @@ __all__ = ["ModelKey", "ModelInst", "ModelInstD3", "ModelInstD4"]
 ModelKey: TypeAlias = Literal["d3", "d4", "d4s", "d5"]
 
 ModelInstD3: TypeAlias = D3Model
-ModelInstD4: TypeAlias = D4Model | D4SModel
+ModelInstD4: TypeAlias = Union[D4Model, D4SModel]
 ModelInstD5: TypeAlias = D5Model
 
-ModelInst: TypeAlias = ModelInstD3 | ModelInstD4 | ModelInstD5
+ModelInst: TypeAlias = Union[ModelInstD3, ModelInstD4, ModelInstD5]
