@@ -20,5 +20,3 @@ Reference Parameters
 
 Parameters of reference systems.
 """
-
-from .params import *

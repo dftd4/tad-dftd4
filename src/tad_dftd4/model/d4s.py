@@ -43,7 +43,7 @@ import torch
 from tad_mctc.batch.mask import real_atoms
 from tad_mctc.math import einsum
 
-from .. import data, reference
+from .. import data
 from ..typing import Literal, Tensor, overload
 from ..utils import is_exceptional
 from .base import WF_DEFAULT, BaseModel
@@ -143,21 +143,24 @@ class D4SModel(BaseModel):
 
         if self.ref_charges == "eeq":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_eeq import clsq as _refq
+            from ..reference.d4.charge_eeq import clsq as _refq
 
             refq = _refq.to(**self.dd)[self.numbers]
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_gfn2 import refq as _refq
+            from ..reference.d4.charge_gfn2 import refq as _refq
 
             refq = _refq.to(**self.dd)[self.numbers]
         else:
             raise ValueError(f"Unknown reference charges: {self.ref_charges}")
 
+        # pylint: disable=import-outside-toplevel
+        from ..reference import d4 as d4ref
+
         zero = torch.tensor(0.0, **self.dd)
         zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
 
-        _refc = reference.refc.to(self.device)[self.numbers]
+        _refc = d4ref.refc.to(self.device)[self.numbers]
 
         # (..., nat1, nref) -> (..., nat2, nat1, nref)
         shp = (*_refc.shape[:-1], _refc.shape[-2], _refc.shape[-1])
@@ -173,7 +176,7 @@ class D4SModel(BaseModel):
         # double`. In order to avoid this error, which is also difficult to
         # detect, this part always uses `torch.double`. `params.refcovcn` is
         # saved with `torch.double`, but I still made sure...
-        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
+        refcn = d4ref.refcovcn.to(device=self.device, dtype=torch.double)[
             self.numbers
         ]
         refcn = refcn.unsqueeze(-3).expand(*shp)

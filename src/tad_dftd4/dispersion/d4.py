@@ -22,10 +22,6 @@ DFT-D4 dispersion method implementation.
 """
 from __future__ import annotations
 
-import torch
-from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import Any, CNFunction, Literal
-
 from ..damping import RationalDamping, ZeroDamping
 from .base import Disp
 from .threebody import ATM, C9ApproxMixin, C9ExactMixin, RadiiBJMixin
@@ -34,41 +30,34 @@ from .twobody import TwoBodyTerm
 __all__ = ["DispD4"]
 
 
+class _DispD4(Disp):
+    """Standard DFT-D4 dispersion method."""
+
+    ALLOWED_MODELS = ("d4", "d4s")
+    """Allowed DFT-D models for the calculation."""
+
+
+##############################################################################
+
+
 class D4ATMApprox(C9ApproxMixin, RadiiBJMixin, ATM):
     """D4 ATM: approximate C9 + Becke-Johnson radii."""
 
 
-class DispD4(Disp):
+class DispD4(_DispD4):
     """Standard DFT-D4 dispersion method."""
 
-    ALLOWED_MODELS = ("d4", "d4s")
-
-    def __init__(
-        self,
-        model: Literal["d4", "d4s"] = "d4",
-        model_kwargs: dict[str, Any] | None = None,
-        cn_fn: CNFunction = cn_d4,
-        cn_fn_kwargs: dict[str, Any] | None = None,
-        *,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ) -> None:
-        super().__init__(
-            model=model,
-            model_kwargs=model_kwargs,
-            cn_fn=cn_fn,
-            cn_fn_kwargs=cn_fn_kwargs,
-            device=device,
-            dtype=dtype,
-        )
-
-        # D4(BJ)-ATM(approx)
-        super().register(
-            TwoBodyTerm(damping_fn=RationalDamping(), charge_dependent=True)
-        )
-        super().register(
-            D4ATMApprox(damping_fn=ZeroDamping(), charge_dependent=False)
-        )
+    TERMS = [
+        (
+            TwoBodyTerm,
+            {"damping_fn": RationalDamping(), "charge_dependent": True},
+        ),
+        (
+            D4ATMApprox,
+            {"damping_fn": ZeroDamping(), "charge_dependent": False},
+        ),
+    ]
+    """List of dispersion terms to be registered in the constructor."""
 
 
 ##############################################################################
@@ -81,15 +70,14 @@ class D4ATMExact(C9ExactMixin, RadiiBJMixin, ATM):
 class DispD4Exact(Disp):
     """DFT-D4 with exact C9 coefficients via Casimir--Polder formula."""
 
-    ALLOWED_MODELS = ("d4", "d4s")
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        # D4(BJ)-ATM(exact)
-        super().register(
-            TwoBodyTerm(damping_fn=RationalDamping(), charge_dependent=True)
-        )
-        super().register(
-            D4ATMExact(damping_fn=ZeroDamping(), charge_dependent=False)
-        )
+    TERMS = [
+        (
+            TwoBodyTerm,
+            {"damping_fn": RationalDamping(), "charge_dependent": True},
+        ),
+        (
+            D4ATMExact,
+            {"damping_fn": ZeroDamping(), "charge_dependent": False},
+        ),
+    ]
+    """List of dispersion terms to be registered in the constructor."""

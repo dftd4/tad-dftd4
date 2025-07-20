@@ -33,9 +33,9 @@ from functools import wraps
 
 import torch
 from tad_mctc import storch
+from tad_mctc.typing import Any, Literal, Tensor
 
 from .. import defaults
-from ..typing import Literal, Tensor
 
 _MISSING = object()
 
@@ -209,6 +209,29 @@ class Damping(ABC):
         Tensor
             Values of the damping function.
         """
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Check for equality between two Damping instances.
+
+        Two damping instances are considered equal if they are of the exact
+        same type. The specific damping behavior is defined by the class
+        itself, and they don't hold any state that would differentiate
+        instances of the same class.
+
+        Parameters
+        ----------
+        other : Any
+            The object to compare with.
+
+        Returns
+        -------
+        bool
+            ``True`` if the objects are of the same class, ``False`` otherwise.
+        """
+        if not isinstance(other, Damping):
+            return False
+        return self.__class__ is other.__class__
 
 
 # concrete damping models

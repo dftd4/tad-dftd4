@@ -140,21 +140,22 @@ class D4Model(BaseModel):
 
         if self.ref_charges == "eeq":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_eeq import clsq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
+            from ..reference.d4.charge_eeq import clsq as _refq
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_gfn2 import refq as _refq
-
-            refq = _refq.to(**self.dd)[self.numbers]
+            from ..reference.d4.charge_gfn2 import refq as _refq
         else:
             raise ValueError(f"Unknown reference charges: {self.ref_charges}")
+
+        # pylint: disable=import-outside-toplevel
+        from ..reference import d4 as d4ref
+
+        refq = _refq.to(**self.dd)[self.numbers]
 
         zero = torch.tensor(0.0, **self.dd)
         zero_double = torch.tensor(0.0, device=self.device, dtype=torch.double)
 
-        refc = reference.refc.to(self.device)[self.numbers]
+        refc = d4ref.refc.to(self.device)[self.numbers]
         mask = refc > 0
 
         # Due to the exponentiation, `norm` and `expw` may become very small
@@ -165,7 +166,7 @@ class D4Model(BaseModel):
         # double`. In order to avoid this error, which is also difficult to
         # detect, this part always uses `torch.double`. `params.refcovcn` is
         # saved with `torch.double`, but I still made sure...
-        refcn = reference.refcovcn.to(device=self.device, dtype=torch.double)[
+        refcn = d4ref.refcovcn.to(device=self.device, dtype=torch.double)[
             self.numbers
         ]
 

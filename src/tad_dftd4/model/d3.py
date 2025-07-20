@@ -15,13 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Dispersion Models
-=================
+Model: D3
+=========
 
-Collection of dispersion models. Currently, the D4 and D4S models are available.
+This module contains the definition of the D3 dispersion model for the
+evaluation of C6 coefficients.
 """
+from __future__ import annotations
 
-from .base import *
-from .d4 import *
-from .d4s import *
-from .typing import *
+from .base import BaseModel
+
+__all__ = ["D3Model"]
+
+
+class D3Model(BaseModel):
+    """
+    The D3 dispersion model.
+    """

@@ -30,12 +30,22 @@ from tad_mctc.typing import DD, Tensor
 from .. import defaults
 from ..cutoff import Cutoff
 from ..damping import Damping, Param, RationalDamping
-from ..model import D4Model, D4SModel
+from ..model import ModelInst
 from .base import DispTerm
 
 
 class TwoBodyTerm(DispTerm):
-    """Base class for two-body dispersion terms."""
+    """
+    Base class for two-body dispersion terms.
+
+    Parameters
+    ----------
+    damping_fn : Damping, optional
+        Damping function to evaluate distance-dependent contributions.
+        Defaults to :class:`.RationalDamping`.
+    charge_dependent : bool, optional
+        Whether the term is charge-dependent. Defaults to ``True``.
+    """
 
     def __init__(
         self,
@@ -52,14 +62,12 @@ class TwoBodyTerm(DispTerm):
         positions: Tensor,
         param: Param,
         cn: Tensor,
-        model: D4Model | D4SModel,
+        model: ModelInst,
         q: Tensor | None,
         r4r2: Tensor,
         rvdw: Tensor,
         cutoff: Cutoff,
     ) -> Tensor:
-        cutoff_val = getattr(cutoff, "disp2")
-
         weights = model.weight_references(
             cn, q if self.charge_dependent else None
         )
@@ -73,7 +81,7 @@ class TwoBodyTerm(DispTerm):
             r4r2,
             rvdw,
             self.damping_fn,
-            cutoff_val,
+            cutoff.disp2,
         )
 
 

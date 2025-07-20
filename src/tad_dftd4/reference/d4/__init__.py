@@ -15,13 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Dispersion Models
-=================
+Reference Parameters: D4
+========================
 
-Collection of dispersion models. Currently, the D4 and D4S models are available.
+Parameters of reference systems for the DFT-D4 method.
 """
 
-from .base import *
-from .d4 import *
-from .d4s import *
-from .typing import *
+from .params import *

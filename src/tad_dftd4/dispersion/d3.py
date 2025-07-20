@@ -15,77 +15,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Dispersion Methods: D4
+Dispersion Methods: D3
 ======================
 
-DFT-D4 dispersion method implementation.
+DFT-D3 dispersion method implementation.
 """
 from __future__ import annotations
 
-import torch
-from tad_mctc.ncoord import cn_d3
-from tad_mctc.typing import CNFunction
-
-from ..damping import Damping, RationalDamping, ZeroDamping
-from ..typing import Tensor
+from ..damping import RationalDamping, ZeroDamping
 from .base import Disp
 from .threebody import ATM, C9ApproxMixin, RadiiVDWMixin
 from .twobody import TwoBodyTerm
+
+__all__ = ["DispD3BJ", "DispD3Zero"]
+
+
+class _DispD3(Disp):
+    """Standard DFT-D3 dispersion method."""
+
+    ALLOWED_MODELS = ("d3",)
+    """Allowed DFT-D models for the calculation."""
+
+
+##############################################################################
 
 
 class D3ATM(C9ApproxMixin, RadiiVDWMixin, ATM):
     """D3 ATM: approximate C9 + pair-wise VDW radii."""
 
 
-class DispD3(Disp):
-    """Standard DFT-D4 dispersion method."""
+class DispD3BJ(_DispD3):
+    """Standard DFT-D3 dispersion method."""
 
-    def __init__(
-        self,
-        cn_fn: CNFunction = cn_d3,
-        damping_fn_2: Damping = RationalDamping(),
-        damping_fn_3: Damping = ZeroDamping(),
-        charge_dependent_2: bool = False,
-        charge_dependent_3: bool = False,
-    ):
-        super().__init__(cn_fn=cn_fn, model="d3")
+    TERMS = [
+        (
+            TwoBodyTerm,
+            {"damping_fn": RationalDamping(), "charge_dependent": False},
+        ),
+        (
+            D3ATM,
+            {"damping_fn": ZeroDamping(), "charge_dependent": False},
+        ),
+    ]
+    """List of dispersion terms to be registered in the constructor."""
 
-        # D3(BJ)-ATM
-        super().register(
-            TwoBodyTerm(
-                damping_fn=damping_fn_2, charge_dependent=charge_dependent_2
-            )
-        )
-        super().register(
-            D3ATM(damping_fn=damping_fn_3, charge_dependent=charge_dependent_3)
-        )
 
-    # def _default_model(
-    #     self,
-    #     numbers: Tensor,
-    #     device: torch.device | None = None,
-    #     dtype: torch.dtype | None = None,
-    # ) -> D4Model:
-    #     return D4Model(numbers=numbers, device=device, dtype=dtype)
+##############################################################################
 
-    def _default_rcov(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ):
-        # pylint: disable=import-outside-toplevel
-        from tad_mctc.data import COV_D3
 
-        return COV_D3(device=device, dtype=dtype)[numbers]
+class DispD3Zero(_DispD3):
+    """Zero-damping DFT-D3 dispersion method."""
 
-    def _default_r4r2(
-        self,
-        numbers: Tensor,
-        device: torch.device | None = None,
-        dtype: torch.dtype | None = None,
-    ):
-        # pylint: disable=import-outside-toplevel
-        from ..data import R4R2
-
-        return R4R2(device=device, dtype=dtype)[numbers]
+    TERMS = [
+        (
+            TwoBodyTerm,
+            {"damping_fn": ZeroDamping(), "charge_dependent": False},
+        ),
+        (
+            D3ATM,
+            {"damping_fn": ZeroDamping(), "charge_dependent": False},
+        ),
+    ]
+    """List of dispersion terms to be registered in the constructor."""

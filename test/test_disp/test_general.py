@@ -20,9 +20,11 @@ General checks for dispersion classes.
 import pytest
 import torch
 
+from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.damping import Damping, Param
 from tad_dftd4.damping.functions import OptimisedPowerDamping, RationalDamping
-from tad_dftd4.dispersion import Disp, DispD4, TwoBodyTerm
+from tad_dftd4.dispersion import Disp, DispD4, DispTerm, TwoBodyTerm
+from tad_dftd4.model import D4Model, ModelInst
 
 
 def test_fail_class() -> None:
@@ -102,6 +104,9 @@ def test_fail_damping_param(damping_fn: Damping) -> None:
         )
 
 
+##############################################################################
+
+
 def test_fail_model() -> None:
     with pytest.raises(ValueError):
         DispD4(model="wrong")  # type: ignore
@@ -109,7 +114,7 @@ def test_fail_model() -> None:
 
 def test_fail_model_later() -> None:
     disp = Disp(model="d4s")
-    disp.model = "wrong"  # type: ignore
+    disp._model_key = "wrong"  # type: ignore
 
     with pytest.raises(ValueError):
         disp.get_model(numbers=torch.tensor([1, 1]))
@@ -124,3 +129,25 @@ def test_terms() -> None:
 
     disp.deregister(TwoBodyTerm())
     assert len(disp.terms) == 0
+
+
+def test_disp_model_input() -> None:
+    numbers = torch.tensor([1, 1])
+    model = D4Model(numbers)
+
+    with pytest.warns(RuntimeWarning):
+        Disp(model=model, model_kwargs={"damping_fn": "wrong"})
+
+
+def test_disp_cn_input() -> None:
+    # pylint: disable=import-outside-toplevel
+    from tad_mctc.ncoord import cn_d3, cn_d4
+
+    disp = Disp(model="d3", cn_fn=None)
+    assert disp.cn_fn is cn_d3
+
+    disp = Disp(model="d4s", cn_fn=None)
+    assert disp.cn_fn is cn_d4
+
+    disp = Disp(model="d5", cn_fn=None)
+    assert disp.cn_fn is cn_d3

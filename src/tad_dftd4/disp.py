@@ -20,25 +20,23 @@ Dispersion energy
 
 This module provides the dispersion energy evaluation for the pairwise
 interactions. It contains the main entrypoint for the dispersion energy
-(:func:`.dftd4`) as well as wrappers for the two-body
-(:func:`.dispersion2`) and the three-body
-(:func:`.dispersion3`) dispersion energy.
+(:func:`.dftd4`).
 """
 from __future__ import annotations
 
 import torch
-from tad_mctc.typing import DD, CountingFunction, Tensor
+from tad_mctc.typing import DD, CNFunction, CountingFunction, Tensor
 from tad_multicharge import get_eeq_charges
 
-from . import data
 from .cutoff import Cutoff
-from .damping import Damping, Param, RationalDamping
-from .dispersion.threebody import dispersion3
-from .dispersion.twobody import dispersion2
-from .model import D4Model, D4SModel
+from .damping import Damping, Param, RationalDamping, ZeroDamping
+from .dispersion import Disp
+from .dispersion.d4 import D4ATMApprox
+from .dispersion.twobody import TwoBodyTerm
+from .model import D4Model, ModelInst, ModelKey
 from .ncoord import cn_d4, erf_count
 
-__all__ = ["dftd4", "dispersion3", "get_properties"]
+__all__ = ["dftd4", "get_properties"]
 
 
 def dftd4(
@@ -47,12 +45,13 @@ def dftd4(
     charge: Tensor,
     param: Param,
     *,
-    model: D4Model | D4SModel | None = None,
+    model: ModelKey | ModelInst = "d4",
     rcov: Tensor | None = None,
     r4r2: Tensor | None = None,
     rvdw: Tensor | None = None,
     q: Tensor | None = None,
     cutoff: Cutoff | None = None,
+    cn_function: CNFunction = cn_d4,
     counting_function: CountingFunction = erf_count,
     damping_function: Damping = RationalDamping(),
 ) -> Tensor:
@@ -87,6 +86,10 @@ def dftd4(
     cutoff : Cutoff | None, optional
         Collection of real-space cutoffs. Defaults to ``None``, i.e.,
         :class:`tad_dftd4.cutoff.Cutoff` is initialized with its defaults.
+    cn_function : CNFunction, optional
+        Function to calculate the coordination number. Defaults to
+        :func:`tad_dftd4.ncoord.cn_d4`, which uses the
+        :func:`tad_mctc.ncoord.count.erf_count` counting function.
     counting_function : CountingFunction, optional
         Counting function used for the DFT-D4 coordination number. Defaults to
         the error function counting function
@@ -109,89 +112,36 @@ def dftd4(
     """
     dd: DD = {"device": positions.device, "dtype": positions.dtype}
 
-    if numbers.shape != positions.shape[:-1]:
-        raise ValueError(
-            f"Shape of positions ({positions.shape}) is not consistent "
-            f"with atomic numbers ({numbers.shape}).",
-        )
-
-    if model is None:
-        model = D4Model(numbers, **dd)
-    if cutoff is None:
-        cutoff = Cutoff(**dd)
-
-    if r4r2 is None:
-        r4r2 = data.R4R2(**dd)[numbers]
-    if numbers.shape != r4r2.shape:
-        raise ValueError(
-            f"Shape of expectation values r4r2 ({r4r2.shape}) is not "
-            f"consistent with atomic numbers ({numbers.shape}).",
-        )
-
-    if rcov is None:
-        rcov = data.COV_D3(**dd)[numbers]
-    if numbers.shape != rcov.shape:
-        raise ValueError(
-            f"Shape of covalent radii ({rcov.shape}) is not consistent with "
-            f"atomic numbers ({numbers.shape}).",
-        )
-
-    if rvdw is None:
-        rvdw = data.VDW_PAIRWISE(**dd)[
-            numbers.unsqueeze(-1), numbers.unsqueeze(-2)
-        ]
-    if numbers.shape != rvdw.shape[:-1]:
-        raise ValueError(
-            f"Shape of van der Waals radii ({rvdw.shape}) is not consistent "
-            f"with atomic numbers ({numbers.shape}).",
-        )
-
-    # No charges required for ATM only (e.g. for GFN2 non-sc part)
-    s6_nonzero = "s6" in param and param["s6"] != 0.0
-    s8_nonzero = "s8" in param and param["s8"] != 0.0
-    if q is None and (s6_nonzero or s8_nonzero):
-        q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
-
-    if q is not None:
-        if numbers.shape != q.shape:
-            raise ValueError(
-                f"Shape of atomic charges ({q.shape}) is not consistent with "
-                f"atomic numbers ({numbers.shape}).",
-            )
-
-    energy = torch.zeros(numbers.shape, **dd)
-
-    cn = cn_d4(
-        numbers,
-        positions,
-        counting_function=counting_function,
-        rcov=rcov,
-        cutoff=cutoff.cn,
+    disp = Disp(
+        cn_fn=cn_function,
+        cn_fn_kwargs={"counting_function": counting_function},
+        model=model,
+        **dd,
     )
 
-    weights = model.weight_references(cn, q)
-    c6 = model.get_atomic_c6(weights)
+    twobody_term = TwoBodyTerm(
+        damping_fn=damping_function,
+        charge_dependent=True,
+    )
+    disp.register(twobody_term)
 
-    if s6_nonzero or s8_nonzero:
-        energy += dispersion2(
-            numbers,
-            positions,
-            param,
-            c6,
-            r4r2=r4r2,
-            rvdw=rvdw,
-            damping_function=damping_function,
-            cutoff=cutoff.disp2,
-        )
+    threebody_term = D4ATMApprox(
+        damping_fn=ZeroDamping(),
+        charge_dependent=False,
+    )
+    disp.register(threebody_term)
 
-    # three-body dispersion
-    if "s9" in param and param["s9"] != 0.0:
-        weights = model.weight_references(cn, q=None)
-        c6 = model.get_atomic_c6(weights)
-
-        energy += dispersion3(numbers, positions, param, c6, r4r2, cutoff.disp3)
-
-    return energy
+    return disp.calculate(
+        numbers,
+        positions,
+        charge,
+        param,
+        cutoff=cutoff,
+        q=q,
+        rcov=rcov,
+        r4r2=r4r2,
+        rvdw=rvdw,
+    )
 
 
 def get_properties(

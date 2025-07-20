@@ -46,7 +46,7 @@ from tad_mctc import storch
 from tad_mctc.convert import any_to_tensor
 from tad_mctc.math import einsum
 
-from .. import data, reference
+from .. import data
 from ..typing import Literal, Tensor, TensorLike, overload
 from ..utils import trapzd
 
@@ -400,6 +400,9 @@ class BaseModel(TensorLike):
         Tensor
             Reference polarizabilities of shape `(..., nat, ref, 23)`.
         """
+        # pylint: disable=import-outside-toplevel
+        from ..reference import d4 as reference
+
         zero = torch.tensor(0.0, **self.dd)
 
         numbers = self.unique
@@ -412,12 +415,12 @@ class BaseModel(TensorLike):
 
         if self.ref_charges == "eeq":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_eeq import clsh as _refsq
+            from ..reference.d4.charge_eeq import clsh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
-            from ..reference.charge_gfn2 import refh as _refsq
+            from ..reference.d4.charge_gfn2 import refh as _refsq
 
             refsq = _refsq.to(**self.dd)[numbers]
         else:

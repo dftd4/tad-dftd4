@@ -28,7 +28,8 @@ from tad_multicharge import get_eeq_charges
 
 from tad_dftd4 import data
 from tad_dftd4.damping import Param
-from tad_dftd4.disp import dftd4, dispersion2
+from tad_dftd4.disp import dftd4
+from tad_dftd4.dispersion.twobody import dispersion2
 from tad_dftd4.model import D4Model, D4SModel
 
 from ..conftest import DEVICE

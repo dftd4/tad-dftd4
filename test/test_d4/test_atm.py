@@ -19,19 +19,76 @@ Test calculation of two-body and three-body dispersion terms.
 """
 import pytest
 import torch
+from tad_mctc import storch
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import DD
+from tad_mctc.typing import DD, Tensor
 
-from tad_dftd4 import data
+from tad_dftd4 import data, defaults
 from tad_dftd4.damping import Param
-from tad_dftd4.disp import dftd4, dispersion3
+from tad_dftd4.disp import dftd4
+from tad_dftd4.dispersion.threebody import get_atm_dispersion
 from tad_dftd4.model import D4Model
 
 from ..conftest import DEVICE
 from .samples import samples
 
 sample_list = ["LiH", "SiH4", "MB16_43_01", "MB16_43_02", "AmF3", "actinides"]
+
+
+def dispersion3(
+    numbers: Tensor,
+    positions: Tensor,
+    param: Param,
+    c6: Tensor,
+    radii: Tensor,
+    cutoff: Tensor | None = None,
+) -> Tensor:
+    """
+    Three-body dispersion term. Currently this is only a wrapper for the
+    Axilrod-Teller-Muto dispersion term.
+
+    Parameters
+    ----------
+    numbers : Tensor
+        Atomic numbers for all atoms in the system of shape ``(..., nat)``.
+    positions : Tensor
+        Cartesian coordinates of all atoms (shape: ``(..., nat, 3)``).
+    param : Param
+        Dictionary of dispersion parameters. Default values are used for
+        missing keys.
+    c6 : Tensor
+        Atomic C6 dispersion coefficients.
+    cutoff : Tensor | None
+        Real-space cutoff. Defaults to `None`, i.e, `defaults.D4_DISP3_CUTOFF`.
+
+    Returns
+    -------
+    Tensor
+        Atom-resolved three-body dispersion energy.
+    """
+    dd: DD = {"device": positions.device, "dtype": positions.dtype}
+
+    if cutoff is None:
+        cutoff = torch.tensor(defaults.D4_DISP3_CUTOFF, **dd)
+
+    c9 = storch.sqrt(
+        torch.abs(c6.unsqueeze(-1) * c6.unsqueeze(-2) * c6.unsqueeze(-3)),
+    )
+
+    a1 = param.get("a1", torch.tensor(defaults.A1, **dd))
+    a2 = param.get("a2", torch.tensor(defaults.A2, **dd))
+    rad = a1 * storch.sqrt(3.0 * radii.unsqueeze(-1) * radii.unsqueeze(-2)) + a2
+
+    return get_atm_dispersion(
+        numbers,
+        positions,
+        c9,
+        rad,
+        cutoff,
+        s9=param.get("s9", torch.tensor(defaults.S9, **dd)),
+        alp=param.get("alp", torch.tensor(defaults.ALP, **dd)),
+    )
 
 
 @pytest.mark.parametrize("dtype", [torch.float, torch.double])
