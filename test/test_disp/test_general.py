@@ -20,11 +20,10 @@ General checks for dispersion classes.
 import pytest
 import torch
 
-from tad_dftd4.cutoff import Cutoff
 from tad_dftd4.damping import Damping, Param
 from tad_dftd4.damping.functions import OptimisedPowerDamping, RationalDamping
-from tad_dftd4.dispersion import Disp, DispD4, DispTerm, TwoBodyTerm
-from tad_dftd4.model import D4Model, ModelInst
+from tad_dftd4.dispersion import Disp, DispD4, TwoBodyTerm
+from tad_dftd4.model import D4Model
 
 
 def test_fail_class() -> None:
