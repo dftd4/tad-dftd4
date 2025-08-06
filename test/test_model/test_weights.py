@@ -26,9 +26,9 @@ from tad_mctc._version import __tversion__
 from tad_mctc.autograd import jacrev
 from tad_mctc.batch import pack
 from tad_mctc.ncoord import cn_d4
+from tad_mctc.typing import DD
 
 from tad_dftd4.model import D4Model, D4SModel
-from tad_dftd4.typing import DD
 
 from ..conftest import DEVICE
 from .samples import samples

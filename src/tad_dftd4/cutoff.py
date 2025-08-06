@@ -25,9 +25,9 @@ from __future__ import annotations
 
 import torch
 from tad_mctc.convert import any_to_tensor
+from tad_mctc.typing import Tensor, TensorLike
 
 from . import defaults
-from .typing import Tensor, TensorLike
 
 __all__ = ["Cutoff"]
 

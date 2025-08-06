@@ -22,7 +22,7 @@ This module contains the definition of the D4 dispersion model for the
 evaluation of C6 coefficients.
 
 Upon instantiation, the reference polarizabilities are calculated for the
-unique species/elements of the molecule(s) and stored in the model class.
+all atoms of the molecule(s) and stored in the model class.
 
 
 Example
@@ -41,9 +41,9 @@ from __future__ import annotations
 
 import torch
 from tad_mctc.math import einsum
+from tad_mctc.typing import Literal, Tensor, overload
 
-from .. import data, reference
-from ..typing import Literal, Tensor, overload
+from .. import data
 from ..utils import is_exceptional
 from .base import WF_DEFAULT, BaseModel
 

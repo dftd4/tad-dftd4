@@ -22,8 +22,6 @@ Reduces weight factor exponents to improve smoothness of the potential.
 """
 from __future__ import annotations
 
-from functools import lru_cache
-
 import torch
 from tad_mctc.typing import Tensor
 
@@ -34,7 +32,6 @@ MAX_ELEMENT = 119
 """Maximum element in the periodic table plus dummy."""
 
 
-@lru_cache(maxsize=None)
 def WFPAIR(
     device: torch.device | None = None, dtype: torch.dtype | None = None
 ) -> Tensor:

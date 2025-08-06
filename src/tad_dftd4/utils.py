@@ -24,8 +24,7 @@ from __future__ import annotations
 
 import torch
 from tad_mctc.math import einsum
-
-from .typing import Tensor
+from tad_mctc.typing import Tensor
 
 __all__ = ["trapzd", "trapzd_atm", "trapzd_noref", "is_exceptional"]
 

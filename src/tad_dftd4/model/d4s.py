@@ -22,8 +22,9 @@ This module contains the definition of the D4 dispersion model for the
 evaluation of C6 coefficients.
 
 Upon instantiation, the reference polarizabilities are calculated for the
-unique species/elements of the molecule(s) and stored in the model class.
+all atoms of the molecule(s) and stored in the model class.
 Moreover, the weighting factors ``wf`` are gathered from the parameter file.
+
 
 Example
 -------
@@ -42,9 +43,9 @@ from __future__ import annotations
 import torch
 from tad_mctc.batch.mask import real_atoms
 from tad_mctc.math import einsum
+from tad_mctc.typing import Literal, Tensor, overload
 
 from .. import data
-from ..typing import Literal, Tensor, overload
 from ..utils import is_exceptional
 from .base import WF_DEFAULT, BaseModel
 
@@ -60,7 +61,9 @@ class D4SModel(BaseModel):
         """Pairwise weighting factor."""
         from ..data.wfpair import WFPAIR
 
-        return WFPAIR(**self.dd)[self.unique][:, self.unique]
+        return WFPAIR(**self.dd)[
+            self.numbers.unsqueeze(-1), self.numbers.unsqueeze(-2)
+        ]
 
     @overload
     def weight_references(
@@ -186,17 +189,11 @@ class D4SModel(BaseModel):
         # Gaussian weighting function part 1: exp(-wf * (cn - cn_ref)^2)
         dcn = cn.type(torch.double).unsqueeze(-1).unsqueeze(-3) - refcn
 
-        # Expand from unique indices to all atoms
-        # (..., n, 1) , (..., 1, n) -> (..., n, n)
-        wf = self.wf[
-            self.atom_to_unique.unsqueeze(-1), self.atom_to_unique.unsqueeze(-2)
-        ]
-
         # We have to create the additional dimension in `-3` to match the
         # ordering of the zeta function. Inserting in `-2` does not work!
         #
         # (..., n1, nref) * (..., n1, nref) * (n1, n2) -> (..., n2, n1, nref)
-        arg = einsum("...mnr,...mnr,...nm->...mnr", -dcn, dcn, wf)
+        arg = einsum("...mnr,...mnr,...nm->...mnr", -dcn, dcn, self.wf)
         tmp = torch.where(mask, torch.exp(arg), zero_double)
 
         # Gaussian weighting function part 2: tmp^(igw)
@@ -327,5 +324,5 @@ class D4SDebug(D4SModel):
 
     def _get_wf(self) -> Tensor:
         """Pairwise weighting factor."""
-        s = self.unique.size(0)
+        s = self.numbers.size(0)
         return torch.full((s, s), WF_DEFAULT, **self.dd)

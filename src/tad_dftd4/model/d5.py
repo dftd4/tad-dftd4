@@ -18,7 +18,7 @@
 Model: D5
 =========
 
-This module contains the definition of the D5 dispersion model.
+This module could contain the definition of the D5 dispersion model.
 """
 from __future__ import annotations
 

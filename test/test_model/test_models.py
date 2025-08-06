@@ -23,11 +23,10 @@ import torch
 from tad_mctc.batch import pack
 from tad_mctc.math import einsum
 from tad_mctc.ncoord import cn_d4
-from tad_mctc.typing import Tensor
+from tad_mctc.typing import DD, Tensor
 
 from tad_dftd4.model import D4Model, D4SModel
 from tad_dftd4.model.d4s import D4SDebug
-from tad_dftd4.typing import DD
 from tad_dftd4.utils import trapzd_noref
 
 from ..conftest import DEVICE
