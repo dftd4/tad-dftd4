@@ -75,7 +75,7 @@ def get_atm_dispersion(
         Pairwise critical radii for all atom pairs (shape: ``(..., nat, nat)``).
     cutoff : Tensor
         Real-space cutoff.
-    damping_function : Callable, optional
+    damping_function : Damping, optional
         Damping function to use. Defaults to :func:`zero_damping`.
     s9 : Tensor, optional
         Scaling for dispersion coefficients. Defaults to ``1.0``.

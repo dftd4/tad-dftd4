@@ -22,7 +22,7 @@ This module contains the definition of the base dispersion model for the
 evaluation of C6 coefficients.
 
 Upon instantiation, the reference polarizabilities are calculated for the
-unique species/elements of the molecule(s) and stored in the model class.
+all atoms of the molecule(s) and stored in the model class.
 
 
 Example
@@ -45,9 +45,9 @@ import torch
 from tad_mctc import storch
 from tad_mctc.convert import any_to_tensor
 from tad_mctc.math import einsum
+from tad_mctc.typing import Literal, Tensor, TensorLike, overload
 
 from .. import data
-from ..typing import Literal, Tensor, TensorLike, overload
 from ..utils import trapzd
 
 __all__ = ["BaseModel", "WF_DEFAULT"]
@@ -96,7 +96,7 @@ class BaseModel(TensorLike):
 
     rc6: Tensor
     """
-    Reference C6 coefficients of unique species.
+    Reference C6 coefficients of all atoms.
 
     :default: ``None`` (calculated upon instantiation)
     """
@@ -133,7 +133,7 @@ class BaseModel(TensorLike):
         ref_charges : Literal["eeq", "gfn2"], optional
             Reference charges to use for the model. Defaults to `"eeq"`.
         rc6 : Tensor | None, optional
-            Reference C6 coefficients of unique species. Defaults to `None`.
+            Reference C6 coefficients of all atoms. Defaults to `None`.
         device : torch.device | None, optional
             Pytorch device for calculations. Defaults to `None`.
         dtype : torch.dtype | None, optional
@@ -278,34 +278,6 @@ class BaseModel(TensorLike):
             Weighted polarizabilities of shape ``(..., nat, 23)``.
         """
 
-    ##############
-    # Properties #
-    ##############
-
-    @property
-    def unique(self) -> Tensor:
-        """
-        Unique species (elements) in molecule(s). Sorted in ascending order.
-
-        Returns
-        -------
-        Tensor
-            Unique species within `D4Model.numbers`.
-        """
-        return torch.unique(self.numbers)
-
-    @property
-    def atom_to_unique(self) -> Tensor:
-        """
-        Mapping of atoms to unique species.
-
-        Returns
-        -------
-        Tensor
-            Mapping of atoms (:attr:`.D4Model.numbers`) to unique species.
-        """
-        return torch.unique(self.numbers, return_inverse=True)[1]
-
     ##################
     # Public methods #
     ##################
@@ -405,11 +377,10 @@ class BaseModel(TensorLike):
 
         zero = torch.tensor(0.0, **self.dd)
 
-        numbers = self.unique
-        refsys = reference.refsys.to(self.device)[numbers]
-        refascale = reference.refascale.to(**self.dd)[numbers]
-        refalpha = reference.refalpha.to(**self.dd)[numbers]
-        refscount = reference.refscount.to(**self.dd)[numbers]
+        refsys = reference.refsys.to(self.device)[self.numbers]
+        refascale = reference.refascale.to(**self.dd)[self.numbers]
+        refalpha = reference.refalpha.to(**self.dd)[self.numbers]
+        refscount = reference.refscount.to(**self.dd)[self.numbers]
         secscale = reference.secscale.to(**self.dd)
         secalpha = reference.secalpha.to(**self.dd)
 
@@ -417,12 +388,12 @@ class BaseModel(TensorLike):
             # pylint: disable=import-outside-toplevel
             from ..reference.d4.charge_eeq import clsh as _refsq
 
-            refsq = _refsq.to(**self.dd)[numbers]
+            refsq = _refsq.to(**self.dd)[self.numbers]
         elif self.ref_charges == "gfn2":
             # pylint: disable=import-outside-toplevel
             from ..reference.d4.charge_gfn2 import refh as _refsq
 
-            refsq = _refsq.to(**self.dd)[numbers]
+            refsq = _refsq.to(**self.dd)[self.numbers]
         else:
             raise ValueError(f"Unknown reference charges: {self.ref_charges}")
 
@@ -442,8 +413,8 @@ class BaseModel(TensorLike):
         h = refalpha - refscount.unsqueeze(-1) * aiw
         alpha = refascale.unsqueeze(-1) * h
 
-        # (..., nunique, r, 23) -> (..., n, r, 23)
-        return torch.where(alpha > 0.0, alpha, zero)[self.atom_to_unique]
+        # (..., n, r, 23)
+        return torch.where(alpha > 0.0, alpha, zero)
 
     def _get_refc6(self) -> Tensor:
         """
@@ -466,7 +437,6 @@ class BaseModel(TensorLike):
         """Return a string representation of the model."""
         return (
             f"{self.__class__.__name__}(\n"
-            f"  unique={self.unique},\n"
             f"  ga={self.ga},\n"
             f"  gc={self.gc},\n"
             f"  wf={self.wf},\n"

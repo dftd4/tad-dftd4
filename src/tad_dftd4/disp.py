@@ -25,6 +25,7 @@ interactions. It contains the main entrypoint for the dispersion energy
 from __future__ import annotations
 
 import torch
+from tad_mctc.ncoord import cn_d4, erf_count
 from tad_mctc.typing import DD, CNFunction, CountingFunction, Tensor
 from tad_multicharge import get_eeq_charges
 
@@ -34,7 +35,6 @@ from .dispersion import Disp
 from .dispersion.d4 import D4ATMApprox
 from .dispersion.twobody import TwoBodyTerm
 from .model import D4Model, ModelInst, ModelKey
-from .ncoord import cn_d4, erf_count
 
 __all__ = ["dftd4", "get_properties"]
 
@@ -88,7 +88,7 @@ def dftd4(
         :class:`tad_dftd4.cutoff.Cutoff` is initialized with its defaults.
     cn_function : CNFunction, optional
         Function to calculate the coordination number. Defaults to
-        :func:`tad_dftd4.ncoord.cn_d4`, which uses the
+        :func:`tad_mctc.ncoord.cn_d4`, which uses the
         :func:`tad_mctc.ncoord.count.erf_count` counting function.
     counting_function : CountingFunction, optional
         Counting function used for the DFT-D4 coordination number. Defaults to

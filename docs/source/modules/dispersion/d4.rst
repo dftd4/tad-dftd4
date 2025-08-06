@@ -1,0 +1,2 @@
+.. automodule:: tad_dftd4.dispersion.d4
+   :members:

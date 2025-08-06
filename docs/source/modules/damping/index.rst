@@ -4,6 +4,5 @@
 
 .. toctree::
 
-   rational
-   atm
+   functions
    parameters
