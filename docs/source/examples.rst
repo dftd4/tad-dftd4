@@ -7,6 +7,8 @@ Below, you find the most common usage examples for ``tad-dftd4``.
 Single Molecule
 ~~~~~~~~~~~~~~~
 
+Calculate the DFT-D4 energy of a single molecule.
+
 .. literalinclude:: ../../examples/single.py
    :language: python
    :linenos:
@@ -26,6 +28,7 @@ Gradient / Forces
 .. literalinclude:: ../../examples/forces.py
    :language: python
    :linenos:
+
 
 D4S Model
 ~~~~~~~~~
