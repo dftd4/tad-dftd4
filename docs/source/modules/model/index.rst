@@ -5,5 +5,6 @@
 .. toctree::
 
    base
+   d3
    d4
    d4s

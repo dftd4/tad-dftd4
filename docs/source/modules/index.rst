@@ -9,7 +9,7 @@ The following modules are contained with `tad-dftd4`.
 
    cutoff
    damping/index
+   dispersion/index
    data/index
    defaults
    model/index
-   typing/index
