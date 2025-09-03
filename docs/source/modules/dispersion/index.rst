@@ -4,5 +4,8 @@
 
 .. toctree::
 
-   functions
-   parameters
+   base
+   d3
+   d4
+   twobody
+   threebody

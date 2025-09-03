@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Damping Parameters
+Damping: Parameters
 ==================
 
 Access damping parameters for all supported DFAs.

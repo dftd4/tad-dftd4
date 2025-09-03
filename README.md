@@ -185,6 +185,13 @@ tox -- test
 
 ## Examples
 
+All examples can also be found in the [examples directory](examples).
+- [single.py](examples/single.py)
+- [batch.py](examples/batch.py)
+- [forces.py](examples/forces.py)
+- [d4s.py](examples/d4s.py)
+
+
 The following example shows how to calculate the DFT-D4 dispersion energy for a single structure.
 
 ```python
@@ -330,6 +337,7 @@ model = d4.model.D4SModel(numbers, **dd)
 
 param = d4.get_params("tpssh")
 energy = d4.dftd4(numbers, positions, charge, param, model=model)
+
 torch.set_printoptions(precision=10)
 print(energy)
 # tensor([-0.0020843975, -0.0019013016, -0.0018165035, -0.0018363572,
@@ -337,10 +345,21 @@ print(energy)
 #         -0.0004439871, -0.0004362087, -0.0004454589, -0.0005344027])
 ```
 
+## Limitations
+
+The current implementation only works molecular structures.
+Periodic boundary conditions are **not** implemented.
+
+The code is fully vectorized for maximum efficiency.
+Therefore, all quantities are stored as full tensors, which makes calculations rather **memory intensive**.
+Especially, the ATM term can become limiting as it requires a 3D tensor of dimension `(n_atoms, n_atoms, n_atoms)`.
+
+
 ## Contributing
 
 This is a volunteer open source projects and contributions are always welcome.
 Please, take a moment to read the [contributing guidelines](CONTRIBUTING.md).
+
 
 ## License
 

@@ -88,7 +88,7 @@ def dftd4(
         :class:`tad_dftd4.cutoff.Cutoff` is initialized with its defaults.
     cn_function : CNFunction, optional
         Function to calculate the coordination number. Defaults to
-        :func:`tad_mctc.ncoord.cn_d4`, which uses the
+        :func:`tad_mctc.ncoord.d4.cn_d4`, which uses the
         :func:`tad_mctc.ncoord.count.erf_count` counting function.
     counting_function : CountingFunction, optional
         Counting function used for the DFT-D4 coordination number. Defaults to
@@ -97,7 +97,7 @@ def dftd4(
     damping_function : DampingFunction, optional
         Damping function to evaluate distance dependent contributions. Defaults
         to the Becke-Johnson rational damping function
-        :func:`tad_dftd4.damping.rational.rational_damping`.
+        :class:`tad_dftd4.damping.functions.RationalDamping`.
 
     Returns
     -------
