@@ -17,6 +17,7 @@
 """
 General checks for dispersion classes.
 """
+
 from __future__ import annotations
 
 import torch

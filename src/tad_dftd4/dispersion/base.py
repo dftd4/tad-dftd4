@@ -20,6 +20,7 @@ Dispersion Methods: Base
 
 Base classes and interfaces for dispersion terms.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

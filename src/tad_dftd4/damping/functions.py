@@ -25,6 +25,7 @@ Collections of damping functions including:
 - Optimised power damping
 - Becke's Z-damping
 """
+
 from __future__ import annotations
 
 import inspect

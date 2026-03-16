@@ -20,6 +20,7 @@ Model: Typing
 
 Type annotations for models.
 """
+
 from __future__ import annotations
 
 from typing import Union

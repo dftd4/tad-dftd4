@@ -22,6 +22,7 @@ This module provides the dispersion energy evaluation for the pairwise
 interactions. It contains the main entrypoint for the dispersion energy
 (:func:`.dftd4`).
 """
+
 from __future__ import annotations
 
 import torch

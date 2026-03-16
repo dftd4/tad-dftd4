@@ -17,6 +17,7 @@
 """
 Check shape of tensors.
 """
+
 from __future__ import annotations
 
 import pytest

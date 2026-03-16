@@ -21,6 +21,7 @@ Model: D3
 This module contains the definition of the D3 dispersion model for the
 evaluation of C6 coefficients.
 """
+
 from __future__ import annotations
 
 from .base import BaseModel

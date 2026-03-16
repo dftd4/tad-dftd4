@@ -20,6 +20,7 @@ Utils
 
 Utility functions for this project.
 """
+
 from __future__ import annotations
 
 import torch

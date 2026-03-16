@@ -17,6 +17,7 @@
 """
 Setup for pytest.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -114,9 +115,9 @@ def pytest_configure(config: pytest.Config) -> None:
         torch.autograd.anomaly_mode.set_detect_anomaly(True)
 
     if config.getoption("--jit"):
-        torch.jit._state.enable()  # type:ignore  # pylint: disable=protected-access
+        torch.jit._state.enable()  # type: ignore  # pylint: disable=protected-access
     else:
-        torch.jit._state.disable()  # type:ignore # pylint: disable=protected-access
+        torch.jit._state.disable()  # type: ignore # pylint: disable=protected-access
 
     if config.getoption("--fast"):
         FAST_MODE = True

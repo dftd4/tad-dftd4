@@ -17,6 +17,7 @@
 """
 Data for testing D4 coordination number (taken from D4 testsuite).
 """
+
 from __future__ import annotations
 
 import torch
