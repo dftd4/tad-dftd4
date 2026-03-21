@@ -27,6 +27,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 import torch
+from tad_mctc.convert import any_to_tensor
 from tad_mctc.typing import DD, Any, CNFunc, Tensor, TensorLike
 
 from ..cutoff import Cutoff
@@ -285,7 +286,7 @@ class Disp(TensorLike):
         self,
         numbers: Tensor,
         positions: Tensor,
-        charge: Tensor,
+        charge: Tensor | float | int,
         param: Param,
         *,
         cutoff: Cutoff | None = None,
@@ -347,6 +348,8 @@ class Disp(TensorLike):
             them.
         """
         dd: DD = {"device": positions.device, "dtype": positions.dtype}
+
+        charge = any_to_tensor(charge, **dd)
 
         if numbers.shape != positions.shape[:-1]:
             raise ValueError(
