@@ -18,6 +18,7 @@
 Sanity check for parameters since they are created from the Fortran parameters
 with a script.
 """
+
 from __future__ import annotations
 
 import torch

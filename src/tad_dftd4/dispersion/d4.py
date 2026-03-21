@@ -20,6 +20,7 @@ Dispersion Methods: D4
 
 DFT-D4 dispersion method implementation.
 """
+
 from __future__ import annotations
 
 from ..damping import RationalDamping, ZeroDamping

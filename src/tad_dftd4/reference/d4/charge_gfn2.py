@@ -20,6 +20,7 @@ Parameters: GFN2
 
 Reference GFN2 charges.
 """
+
 import torch
 
 __all__ = ["refq", "refh"]

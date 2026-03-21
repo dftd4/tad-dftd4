@@ -17,6 +17,7 @@
 """
 Test the correct handling of types in the `Cutoff` class.
 """
+
 from __future__ import annotations
 
 import pytest

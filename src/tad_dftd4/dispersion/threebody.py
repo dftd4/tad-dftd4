@@ -31,6 +31,7 @@ Implementation of the 3-body Axilrod-Teller-Muto dispersion terms.
     f_\text{damp} &=
     \dfrac{1}{1+ 6 \left(\overline{R}_\text{ABC}\right)^{-16}}
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

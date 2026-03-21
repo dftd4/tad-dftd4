@@ -17,6 +17,7 @@
 """
 General checks for dispersion classes.
 """
+
 import pytest
 import torch
 

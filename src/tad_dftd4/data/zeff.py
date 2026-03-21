@@ -20,6 +20,7 @@ Data: Charges
 
 Effective charges (imported from *tad-mctc*).
 """
+
 from tad_mctc.data.zeff import ZEFF
 
 __all__ = ["ZEFF"]

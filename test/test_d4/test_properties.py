@@ -17,6 +17,7 @@
 """
 Test calculation of dispersion model properties.
 """
+
 import pytest
 import torch
 from tad_mctc.batch import pack
