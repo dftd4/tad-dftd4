@@ -34,7 +34,7 @@ from .base import Param
 
 try:
     import tomli as toml
-except ImportError as e:
+except ImportError as e:  # pragma: no cover
     raise ImportError(
         "A TOML package is required for TOML support. "
         "You can install it via `pip install tomli`."
