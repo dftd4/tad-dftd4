@@ -37,6 +37,7 @@ Example
 >>> gw = model.weight_references()
 >>> c6 = model.get_atomic_c6(gw)
 """
+
 from __future__ import annotations
 
 import torch

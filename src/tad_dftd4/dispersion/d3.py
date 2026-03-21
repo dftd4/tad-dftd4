@@ -20,6 +20,7 @@ Dispersion Methods: D3
 
 DFT-D3 dispersion method implementation.
 """
+
 from __future__ import annotations
 
 from ..damping import RationalDamping, ZeroDamping

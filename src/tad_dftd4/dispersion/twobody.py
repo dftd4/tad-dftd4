@@ -20,6 +20,7 @@ Dispersion: 2-body terms
 
 Implementation of the 2-body dispersion terms.
 """
+
 from __future__ import annotations
 
 import torch

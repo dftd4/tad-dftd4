@@ -31,9 +31,6 @@
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/ubuntu.yaml/badge.svg" alt="Test Status Ubuntu"/>
       </a>
-      <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/macos.yaml">
-        <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-x86.yaml/badge.svg" alt="Test Status macOS (x86)"/>
-      </a>
       <a href="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml">
         <img src="https://github.com/dftd4/tad-dftd4/actions/workflows/macos-arm.yaml/badge.svg" alt="Test Status macOS (ARM)"/>
       </a>

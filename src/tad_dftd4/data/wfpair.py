@@ -20,6 +20,7 @@ Data: Weight Factors
 
 Reduces weight factor exponents to improve smoothness of the potential.
 """
+
 from __future__ import annotations
 
 import torch
