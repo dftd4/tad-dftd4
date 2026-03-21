@@ -27,7 +27,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 import torch
-from tad_mctc.typing import DD, Any, CNFunction, Tensor, TensorLike
+from tad_mctc.typing import DD, Any, CNFunc, Tensor, TensorLike
 
 from ..cutoff import Cutoff
 from ..damping import Damping, Param
@@ -106,7 +106,7 @@ class Disp(TensorLike):
     terms: list[DispTerm]
     """List of dispersion terms for which the calculation is performed."""
 
-    cn_fn: CNFunction
+    cn_fn: CNFunc
     """Coordination number."""
 
     cn_fn_kwargs: dict[str, Any]
@@ -140,7 +140,7 @@ class Disp(TensorLike):
         self,
         model: ModelKey | ModelInst = "d4",
         model_kwargs: dict[str, Any] | None = None,
-        cn_fn: CNFunction | None = None,
+        cn_fn: CNFunc | None = None,
         cn_fn_kwargs: dict[str, Any] | None = None,
         *,
         device: torch.device | None = None,
@@ -312,8 +312,9 @@ class Disp(TensorLike):
             coefficients. Defaults to ``None``, which creates
             :class:`tad_dftd4.model.d4.D4Model`.
         rcov : Tensor | None, optional
-            Covalent radii of the atoms in the system. Defaults to
-            ``None``, i.e., default values are used.
+            Covalent radii of the atoms in the system. Accepted for backwards
+            compatibility, but the coordination number function now handles
+            radii internally.
         r4r2 : Tensor | None, optional
             r⁴ over r² expectation values of the atoms in the system. Defaults
             to ``None``, i.e., default values are used.
@@ -340,8 +341,7 @@ class Disp(TensorLike):
         Raises
         ------
         ValueError
-            Shape inconsistencies between ``numbers``, ``positions``, ``r4r2``,
-            or, ``rcov``.
+            Shape inconsistencies between ``numbers``, ``positions``, ``r4r2``.
         RuntimeError
             If atomic charges are explicitly provided, but no term requires
             them.
@@ -360,20 +360,19 @@ class Disp(TensorLike):
         model = self.get_model(numbers=numbers)
 
         # 2) radii defaults
+        if rcov is not None:
+            if numbers.shape != rcov.shape:
+                raise ValueError(
+                    f"Shape of covalent radii ({rcov.shape}) is not consistent "
+                    f"with atomic numbers ({numbers.shape}).",
+                )
+
         if r4r2 is None:
             r4r2 = self.get_r4r2(numbers)
         if numbers.shape != r4r2.shape:
             raise ValueError(
                 f"Shape of expectation values r4r2 ({r4r2.shape}) is not "
                 f"consistent with atomic numbers ({numbers.shape}).",
-            )
-
-        if rcov is None:
-            rcov = self.get_rcov(numbers)
-        if numbers.shape != rcov.shape:
-            raise ValueError(
-                f"Shape of covalent radii ({rcov.shape}) is not consistent "
-                f"with atomic numbers ({numbers.shape}).",
             )
 
         if rvdw is None:
@@ -385,9 +384,7 @@ class Disp(TensorLike):
             )
 
         # 3) Coordination numbers
-        cn = self.cn_fn(
-            numbers, positions, rcov=rcov, cutoff=cutoff.cn, **self.cn_fn_kwargs
-        )
+        cn = self.cn_fn(numbers, positions, **self.cn_fn_kwargs)
 
         # 4) charges if any term demands them
         is_c_dep = any(t.charge_dependent for t in self.terms)

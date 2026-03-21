@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import torch
 from tad_mctc.ncoord import cn_d4, erf_count
-from tad_mctc.typing import DD, CNFunction, CountingFunction, Tensor
+from tad_mctc.typing import DD, CNFunc, CountingFunction, Tensor
 from tad_multicharge import get_eeq_charges
 
 from .cutoff import Cutoff
@@ -52,7 +52,7 @@ def dftd4(
     rvdw: Tensor | None = None,
     q: Tensor | None = None,
     cutoff: Cutoff | None = None,
-    cn_function: CNFunction = cn_d4,
+    cn_function: CNFunc = cn_d4,
     counting_function: CountingFunction = erf_count,
     damping_function: Damping = RationalDamping(),
 ) -> Tensor:
@@ -183,7 +183,7 @@ def get_properties(
     if charge is None:
         charge = torch.tensor(0.0, **dd)
 
-    cn = cn_d4(numbers, positions, cutoff=cutoff.cn)
+    cn = cn_d4(numbers, positions)
     q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)
 
     model = D4Model(numbers, **dd)
