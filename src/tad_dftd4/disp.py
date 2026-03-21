@@ -26,6 +26,7 @@ interactions. It contains the main entrypoint for the dispersion energy
 from __future__ import annotations
 
 import torch
+from tad_mctc.convert import any_to_tensor
 from tad_mctc.ncoord import cn_d4, erf_count
 from tad_mctc.typing import DD, CNFunc, CountingFunction, Tensor
 from tad_multicharge import get_eeq_charges
@@ -43,7 +44,7 @@ __all__ = ["dftd4", "get_properties"]
 def dftd4(
     numbers: Tensor,
     positions: Tensor,
-    charge: Tensor,
+    charge: Tensor | float | int,
     param: Param,
     *,
     model: ModelKey | ModelInst = "d4",
@@ -135,7 +136,7 @@ def dftd4(
     return disp.calculate(
         numbers,
         positions,
-        charge,
+        any_to_tensor(charge),
         param,
         cutoff=cutoff,
         q=q,
@@ -148,7 +149,7 @@ def dftd4(
 def get_properties(
     numbers: Tensor,
     positions: Tensor,
-    charge: Tensor | None = None,
+    charge: Tensor | float | int | None = None,
     cutoff: Cutoff | None = None,
 ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
     """
@@ -182,6 +183,8 @@ def get_properties(
 
     if charge is None:
         charge = torch.tensor(0.0, **dd)
+    else:
+        charge = any_to_tensor(charge, **dd)
 
     cn = cn_d4(numbers, positions)
     q = get_eeq_charges(numbers, positions, charge, cutoff=cutoff.cn_eeq)

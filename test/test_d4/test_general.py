@@ -30,6 +30,28 @@ from tad_dftd4.disp import dftd4
 from tad_dftd4.dispersion import Damping, dispersion2
 
 
+def test_charge_as_int() -> None:
+    """Passing charge as a Python int should not raise."""
+    numbers = torch.tensor([1, 1])
+    positions = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    param = Param(
+        s6=torch.tensor(1.0),
+        s8=torch.tensor(1.0),
+        a1=torch.tensor(0.4),
+        a2=torch.tensor(5.0),
+    )
+
+    # Python int
+    energy_int = dftd4(numbers, positions, 0, param)
+    # Python float
+    energy_float = dftd4(numbers, positions, 0.0, param)
+    # Tensor (reference)
+    energy_tensor = dftd4(numbers, positions, torch.tensor(0.0), param)
+
+    assert torch.allclose(energy_int, energy_tensor)
+    assert torch.allclose(energy_float, energy_tensor)
+
+
 def test_fail() -> None:
     numbers = torch.tensor([1, 1])
     positions = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
