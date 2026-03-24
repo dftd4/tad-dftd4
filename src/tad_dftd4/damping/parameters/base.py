@@ -86,12 +86,16 @@ class Param(TypedDict, total=False):
 
 
 class DispersionMethod(str, Enum):
+    """Enumeration of supported dispersion methods."""
+
     d3 = "d3"
     d4 = "d4"
     d5 = "d5"
 
 
 class Variant(str, Enum):
+    """Enumeration of supported damping variants."""
+
     bj = "bj"
     bj_eeq_atm = "bj-eeq-atm"  # D4 default
     zero = "zero"
@@ -112,11 +116,15 @@ class BaseParams(BaseModel):
 
 
 class RationalParams(BaseParams):
+    """Fields for rational damping variants."""
+
     a1: float
     a2: float
 
 
 class ZeroParams(BaseParams):
+    """Fields for zero damping variants."""
+
     alp: float
     rs6: float
     rs8: float
@@ -125,6 +133,8 @@ class ZeroParams(BaseParams):
 
 
 class MZeroParams(ZeroParams):
+    """Fields for modified zero damping variants."""
+
     bet: float = Field(
         ...,  # ellipsis indicates this field is required
         description="exponent shift β (required for m-zero damping)",
@@ -132,6 +142,8 @@ class MZeroParams(ZeroParams):
 
 
 class OptimisedPowerParams(BaseParams):
+    """Fields for optimized power damping variants."""
+
     a1: float
     a2: float
     bet: float

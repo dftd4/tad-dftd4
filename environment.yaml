@@ -21,8 +21,8 @@ channels:
   - pytorch
 dependencies:
   - numpy<2
-  - python>=3.8,<3.13
+  - python>=3.8,<3.15
   - pytorch>=1.11.0,<3
-  - tad-mctc
-  - tad-multicharge
+  - tad-mctc==0.7.0
+  - tad-multicharge==0.5.0
   - tomli
