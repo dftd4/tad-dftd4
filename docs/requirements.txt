@@ -3,6 +3,7 @@ sphinx-book-theme
 sphinx-copybutton
 sphinx-design
 numpy
+pydantic>=2.0.0
 torch
 tad-mctc
 tad-multicharge
