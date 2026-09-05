@@ -26,10 +26,10 @@ Fortran GitHub repository.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, Type
+from typing import Optional, Type, TypedDict
 
 from pydantic import BaseModel, Field
-from tad_mctc.typing import Tensor, TypedDict
+from tad_mctc.typing import Tensor
 from typing_extensions import NotRequired
 
 __all__ = [

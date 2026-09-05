@@ -24,11 +24,13 @@ Base classes and interfaces for dispersion terms.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
 from tad_mctc.convert import any_to_tensor
-from tad_mctc.typing import DD, Any, CNFunc, Tensor, TensorLike
+from tad_mctc.typing import DD
+from tad_mctc.typing import CNFunction as CNFunc
+from tad_mctc.typing import Tensor, TensorLike
 
 from ..cutoff import Cutoff
 from ..damping import Damping, Param
@@ -387,7 +389,22 @@ class Disp(TensorLike):
             )
 
         # 3) Coordination numbers
-        cn = self.cn_fn(numbers, positions, **self.cn_fn_kwargs)
+        import inspect
+
+        sig = inspect.signature(self.cn_fn)
+        has_kwargs = any(
+            p.kind == inspect.Parameter.VAR_KEYWORD
+            for p in sig.parameters.values()
+        )
+        if has_kwargs:
+            cn = self.cn_fn(numbers, positions, **self.cn_fn_kwargs)
+        else:
+            filtered_kwargs = {
+                k: v
+                for k, v in self.cn_fn_kwargs.items()
+                if k in sig.parameters
+            }
+            cn = self.cn_fn(numbers, positions, **filtered_kwargs)
 
         # 4) charges if any term demands them
         is_c_dep = any(t.charge_dependent for t in self.terms)

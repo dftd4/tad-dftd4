@@ -41,12 +41,13 @@ Example
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Literal, overload
 
 import torch
 from tad_mctc import storch
 from tad_mctc.convert import any_to_tensor
 from tad_mctc.math import einsum
-from tad_mctc.typing import Literal, Tensor, TensorLike, overload
+from tad_mctc.typing import Tensor, TensorLike
 
 from .. import data
 from ..utils import trapzd

@@ -23,8 +23,6 @@ import sys
 
 sys.path.insert(0, op.join(op.dirname(__file__), "../../", "src"))
 
-import tad_dftd4
-
 project = "Torch autodiff DFT-D4"
 author = "Marvin Friede"
 copyright = f"2022 {author}"
@@ -65,6 +63,9 @@ templates_path = ["_templates"]
 autosummary_generate = True
 autosummary_imported_members = True
 
+# Documenting the sources requires no working PyTorch install: the compiled
+# dependencies are mocked so the docs build stays lightweight.
+autodoc_mock_imports = ["torch", "tad_mctc", "tad_multicharge"]
 autodoc_typehints = "description"
 autodoc_member_order = "groupwise"
 autoclass_content = "both"

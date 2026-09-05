@@ -40,9 +40,11 @@ Example
 
 from __future__ import annotations
 
+from typing import Literal, overload
+
 import torch
 from tad_mctc.math import einsum
-from tad_mctc.typing import Literal, Tensor, overload
+from tad_mctc.typing import Tensor
 
 from .. import data
 from ..utils import is_exceptional

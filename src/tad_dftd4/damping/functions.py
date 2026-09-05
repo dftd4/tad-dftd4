@@ -31,10 +31,11 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from functools import wraps
+from typing import Any, Literal
 
 import torch
 from tad_mctc import storch
-from tad_mctc.typing import Any, Literal, Tensor
+from tad_mctc.typing import Tensor
 
 from .. import defaults
 

@@ -2,9 +2,7 @@ sphinx
 sphinx-book-theme
 sphinx-copybutton
 sphinx-design
-numpy
 pydantic>=2.0.0
-torch
-tad-mctc
-tad-multicharge
-jinja2<3.1
+tomli
+typing-extensions
+jinja2>=3.1.6
