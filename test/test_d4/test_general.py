@@ -20,9 +20,11 @@ Check shape of tensors.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 import torch
-from tad_mctc.typing import Any, Tensor
+from tad_mctc.typing import Tensor
 
 from tad_dftd4.damping import Param, ZeroDamping
 from tad_dftd4.data import R4R2

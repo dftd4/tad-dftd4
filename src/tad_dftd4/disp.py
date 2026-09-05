@@ -28,7 +28,9 @@ from __future__ import annotations
 import torch
 from tad_mctc.convert import any_to_tensor
 from tad_mctc.ncoord import cn_d4, erf_count
-from tad_mctc.typing import DD, CNFunc, CountingFunction, Tensor
+from tad_mctc.typing import DD
+from tad_mctc.typing import CNFunction as CNFunc
+from tad_mctc.typing import CountingFunction, Tensor
 from tad_multicharge import get_eeq_charges
 
 from .cutoff import Cutoff

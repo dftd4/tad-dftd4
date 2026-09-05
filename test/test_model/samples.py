@@ -20,10 +20,12 @@ Data for testing D4 coordination number (taken from D4 testsuite).
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import torch
 from tad_mctc.convert import reshape_fortran
 from tad_mctc.data.molecules import merge_nested_dicts, mols
-from tad_mctc.typing import Molecule, Tensor, TypedDict
+from tad_mctc.typing import Molecule, Tensor
 
 
 class Refs(TypedDict):

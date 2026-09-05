@@ -23,9 +23,9 @@ Type annotations for models.
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Literal, Union
 
-from tad_mctc.typing import Literal, TypeAlias
+from tad_mctc.typing import TypeAlias
 
 from .d3 import D3Model
 from .d4 import D4Model
