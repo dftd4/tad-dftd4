@@ -28,9 +28,8 @@ from typing import Any, ClassVar
 
 import torch
 from tad_mctc.convert import any_to_tensor
-from tad_mctc.typing import DD
+from tad_mctc.typing import DD, Tensor, TensorLike
 from tad_mctc.typing import CNFunction as CNFunc
-from tad_mctc.typing import Tensor, TensorLike
 
 from ..cutoff import Cutoff
 from ..damping import Damping, Param
